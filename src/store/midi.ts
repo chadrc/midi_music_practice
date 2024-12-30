@@ -29,6 +29,7 @@ interface NotePlayData {
 }
 
 interface MIDIStore {
+    audioContext: AudioContext;
     midi: MIDIAccess | null;
     err: any | null;
     ioStates: Map<string, IOState>;
@@ -37,6 +38,7 @@ interface MIDIStore {
 
 export const useMidiStore = defineStore('midi', {
     state: (): MIDIStore => ({
+        audioContext: new AudioContext(),
         midi: null,
         err: null,
         ioStates: new Map(),
@@ -88,6 +90,30 @@ export const useMidiStore = defineStore('midi', {
                         case MIDIInstruction.NoteOn:
                             this.playData[data.data1].on = true;
                             this.playData[data.data1].velocity = data.data2;
+
+                            const sound = new OscillatorNode(
+                                this.audioContext,
+                                {
+                                    type: 'sine',
+                                    frequency: 440 * Math.pow(2, (data.data1 - 69) / 12),
+                                }
+                            )
+
+                            const playTime = 0.5
+                            const attackTime = 0.01
+
+                            const envelope = new GainNode(this.audioContext, {gain: playTime})
+                            envelope.gain.cancelScheduledValues(this.audioContext.currentTime)
+                            envelope.gain.setValueAtTime(0, this.audioContext.currentTime)
+                            envelope.gain.linearRampToValueAtTime(this.playData[data.data1].velocity / 127, this.audioContext.currentTime + attackTime)
+                            envelope.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + playTime)
+
+                            sound
+                                .connect(envelope)
+                                .connect(this.audioContext.destination)
+
+                            sound.start();
+                            sound.stop(this.audioContext.currentTime + 0.5);
                             break
                         default:
                             // currently unsupported
