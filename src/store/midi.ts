@@ -23,10 +23,16 @@ interface MIDIData {
     data2: number;
 }
 
+interface NotePlayData {
+    on: boolean;
+    velocity: number;
+}
+
 interface MIDIStore {
     midi: MIDIAccess | null;
     err: any | null;
     ioStates: Map<string, IOState>;
+    playData: NotePlayData[]
 }
 
 export const useMidiStore = defineStore('midi', {
@@ -34,6 +40,7 @@ export const useMidiStore = defineStore('midi', {
         midi: null,
         err: null,
         ioStates: new Map(),
+        playData: Array.from({length: 128}, () => ({on: false, velocity: 0}))
     }),
     getters: {
         inputs: (state): MIDIInput[] => {
@@ -72,6 +79,19 @@ export const useMidiStore = defineStore('midi', {
             if (currentState === undefined || currentState.receiving === false) {
                 device.onmidimessage = (event: MIDIMessageEvent) => {
                     let data = makeMidiData(event.data);
+
+                    switch (data.instruction) {
+                        case MIDIInstruction.NoteOff:
+                            this.playData[data.data1].on = false;
+                            this.playData[data.data1].velocity = data.data2;
+                            break
+                        case MIDIInstruction.NoteOn:
+                            this.playData[data.data1].on = true;
+                            this.playData[data.data1].velocity = data.data2;
+                            break
+                        default:
+                            // currently unsupported
+                    }
 
                     console.log(`${formatMidiNote(data.data1)} ${MIDIInstruction[data.instruction]}`);
                 }
