@@ -17,17 +17,18 @@ export const startKeySound = (
         }
     )
 
-    const attackTime = 0.1
+    const attackTime = 0.01
     const sustainTime = 0.2
 
     const fullGain = velocity / 127
     const sustainGain = fullGain * 0.8
 
+    console.log(audioContext.currentTime)
     const gainEnvelope = new GainNode(audioContext)
     gainEnvelope.gain.cancelScheduledValues(audioContext.currentTime)
-    gainEnvelope.gain.setValueAtTime(0, audioContext.currentTime)
-    gainEnvelope.gain.linearRampToValueAtTime(fullGain, audioContext.currentTime + attackTime)
-    gainEnvelope.gain.linearRampToValueAtTime(sustainGain, audioContext.currentTime + sustainTime)
+        .setValueAtTime(0, audioContext.currentTime)
+        .linearRampToValueAtTime(fullGain, audioContext.currentTime + attackTime)
+        // .linearRampToValueAtTime(sustainGain, audioContext.currentTime + sustainTime)
 
     oscillator
         .connect(gainEnvelope)
@@ -46,9 +47,13 @@ export const endKeySound = (
     audioContext: AudioContext,
     sound: KeySound
 ) => {
-    const releaseTime = 0.2
+    const releaseTime = 1.0
 
-    sound.gainEnvelope.gain.setValueAtTime(sound.sustainGain, audioContext.currentTime)
-    sound.gainEnvelope.gain.linearRampToValueAtTime(0, audioContext.currentTime + releaseTime)
+    console.log(audioContext.currentTime)
+    sound.gainEnvelope.gain
+        .cancelScheduledValues(audioContext.currentTime)
+        .setTargetAtTime(0, audioContext.currentTime, .1)
+        // .linearRampToValueAtTime(0, audioContext.currentTime + releaseTime)
+
     sound.oscillator.stop(audioContext.currentTime + releaseTime);
 }
