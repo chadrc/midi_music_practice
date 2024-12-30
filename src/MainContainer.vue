@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {useMidiStore} from "./store/midi";
+import NoteTestGrid from "./components/NoteTestGrid.vue";
 
 const midiStore = useMidiStore();
 
@@ -45,8 +46,10 @@ function getIsReceiving(id: string) {
     </tr>
     </tbody>
   </table>
+
+  <NoteTestGrid />
 </template>
 
-<style scoped>
-
+<style>
+@import "./variables.css";
 </style>
