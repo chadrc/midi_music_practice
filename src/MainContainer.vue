@@ -23,7 +23,7 @@ function getIsReceiving(id: string) {
       <th>Name</th>
       <th>Manufacturer</th>
       <th>Receiving</th>
-      <th>Sending</th>
+<!--      <th>Sending</th>-->
     </tr>
     </thead>
     <tbody>
@@ -38,10 +38,10 @@ function getIsReceiving(id: string) {
                :value="getIsReceiving(input.id)"
                @click="midiStore.toggleReceiving(input.id)">
       </td>
-      <td>
-        <input type="checkbox"
-               :value="false">
-      </td>
+<!--      <td>-->
+<!--        <input type="checkbox"-->
+<!--               :value="false">-->
+<!--      </td>-->
     </tr>
     </tbody>
   </table>
