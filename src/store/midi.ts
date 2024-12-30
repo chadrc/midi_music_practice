@@ -1,5 +1,6 @@
 import {defineStore} from 'pinia'
 import {formatMidiNote} from "../notes";
+import {endKeySound, KeySound, startKeySound} from "../notes/sound";
 
 interface IOState {
     receiving: boolean;
@@ -26,6 +27,7 @@ interface MIDIData {
 interface NotePlayData {
     on: boolean;
     velocity: number;
+    sound: KeySound | null;
 }
 
 interface MIDIStore {
@@ -42,7 +44,11 @@ export const useMidiStore = defineStore('midi', {
         midi: null,
         err: null,
         ioStates: new Map(),
-        playData: Array.from({length: 128}, () => ({on: false, velocity: 0}))
+        playData: Array.from({length: 128}, () => ({
+            on: false,
+            velocity: 0,
+            sound: null as KeySound | null
+        }))
     }),
     getters: {
         inputs: (state): MIDIInput[] => {
@@ -84,39 +90,23 @@ export const useMidiStore = defineStore('midi', {
 
                     switch (data.instruction) {
                         case MIDIInstruction.NoteOff:
+                            endKeySound(this.audioContext, this.playData[data.data1].sound)
+
                             this.playData[data.data1].on = false;
                             this.playData[data.data1].velocity = data.data2;
+                            this.playData[data.data1].sound = null;
                             break
                         case MIDIInstruction.NoteOn:
                             this.playData[data.data1].on = true;
                             this.playData[data.data1].velocity = data.data2;
-
-                            const sound = new OscillatorNode(
+                            this.playData[data.data1].sound = startKeySound(
                                 this.audioContext,
-                                {
-                                    type: 'sine',
-                                    frequency: 440 * Math.pow(2, (data.data1 - 69) / 12),
-                                }
+                                data.data1,
+                                data.data2
                             )
-
-                            const playTime = 0.5
-                            const attackTime = 0.01
-
-                            const envelope = new GainNode(this.audioContext, {gain: playTime})
-                            envelope.gain.cancelScheduledValues(this.audioContext.currentTime)
-                            envelope.gain.setValueAtTime(0, this.audioContext.currentTime)
-                            envelope.gain.linearRampToValueAtTime(this.playData[data.data1].velocity / 127, this.audioContext.currentTime + attackTime)
-                            envelope.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + playTime)
-
-                            sound
-                                .connect(envelope)
-                                .connect(this.audioContext.destination)
-
-                            sound.start();
-                            sound.stop(this.audioContext.currentTime + 0.5);
                             break
                         default:
-                            // currently unsupported
+                        // currently unsupported
                     }
 
                     console.log(`${formatMidiNote(data.data1)} ${MIDIInstruction[data.instruction]}`);
