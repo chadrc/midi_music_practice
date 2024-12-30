@@ -30,7 +30,10 @@ export const useMidiStore = defineStore('midi', {
     actions: {
         requestAccess() {
             console.log("Requesting MIDI access...")
-            navigator.requestMIDIAccess()
+            navigator.requestMIDIAccess({
+                sysex: true,
+                software: true,
+            })
                 .then(
                     (midiAccess: MIDIAccess) => {
                         this.midi = midiAccess;

@@ -18,12 +18,15 @@ function getIsReceiving(id: string) {
     Load MIDI Devices
   </button>
   <table>
+    <thead>
     <tr>
       <th>Name</th>
       <th>Manufacturer</th>
       <th>Receiving</th>
       <th>Sending</th>
     </tr>
+    </thead>
+    <tbody>
     <tr
         v-for="input in midiStore.inputs"
         :key="input.id"
@@ -40,6 +43,7 @@ function getIsReceiving(id: string) {
                :value="false">
       </td>
     </tr>
+    </tbody>
   </table>
 </template>
 
