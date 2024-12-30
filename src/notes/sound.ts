@@ -30,8 +30,13 @@ export const startKeySound = (
         .linearRampToValueAtTime(fullGain, audioContext.currentTime + attackTime)
         // .linearRampToValueAtTime(sustainGain, audioContext.currentTime + sustainTime)
 
+    const distortion = audioContext.createWaveShaper();
+    distortion.curve = makeDistortionCurve(400);
+    distortion.oversample = "4x";
+
     oscillator
         .connect(gainEnvelope)
+        .connect(distortion)
         .connect(audioContext.destination)
 
     oscillator.start();
@@ -56,4 +61,17 @@ export const endKeySound = (
         // .linearRampToValueAtTime(0, audioContext.currentTime + releaseTime)
 
     sound.oscillator.stop(audioContext.currentTime + releaseTime);
+}
+
+function makeDistortionCurve(amount: number) {
+    const k = typeof amount === "number" ? amount : 50;
+    const n_samples = 44100;
+    const curve = new Float32Array(n_samples);
+    const deg = Math.PI / 180;
+
+    for (let i = 0; i < n_samples; i++) {
+        const x = (i * 2) / n_samples - 1;
+        curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+    }
+    return curve;
 }
