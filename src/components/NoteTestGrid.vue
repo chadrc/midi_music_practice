@@ -5,12 +5,26 @@ import {useMidiStore} from "../store/midi";
 const midiStore = useMidiStore();
 const noteOrder = Array.from(Array(128).keys());
 
+const hueIncrement = 360 / 128;
+
 function opacityForNote(note: number) {
   let playData = midiStore.playData[note];
   if (playData.on) {
     return 1;
   }
   return 0.25;
+}
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function colorForNote(note: number) {
+  let playData = midiStore.playData[note];
+  let hue = note * hueIncrement;
+  let saturation = lerp(25, 100, playData.velocity/127);
+
+  return `hsl(${hue}, ${saturation}%, 50%)`;
 }
 </script>
 
@@ -19,7 +33,7 @@ function opacityForNote(note: number) {
     <div
       v-for="i in noteOrder"
       :key="i"
-      :style="{opacity: opacityForNote(i)}"
+      :style="{opacity: opacityForNote(i), 'background-color': colorForNote(i)}"
       class="note-test-cell"
     >
       <span>{{ formatMidiNote(i) }}</span>
