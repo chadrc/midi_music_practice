@@ -28,10 +28,13 @@
 
 import './index.css';
 import {createApp} from "vue";
+import {createPinia} from "pinia";
 import Main from "./MainContainer.vue"
 
 const app = createApp(Main)
+const pinia = createPinia()
 
+app.use(pinia)
 app.mount('#app');
 
 navigator.permissions.query({
@@ -47,27 +50,3 @@ navigator.permissions.query({
         console.log("MIDI access denied");
     }
 })
-
-function onMidiSuccess(midiAccess: MIDIAccess) {
-    console.log(midiAccess)
-
-    for (const entry of midiAccess.inputs) {
-        const input = entry[1];
-        console.log(
-            `Input port [type:'${input.type}']` +
-            ` id:'${input.id}'` +
-            ` manufacturer:'${input.manufacturer}'` +
-            ` name:'${input.name}'` +
-            ` version:'${input.version}'`,
-        );
-    }
-
-    for (const entry of midiAccess.outputs) {
-        const output = entry[1];
-        console.log(
-            `Output port [type:'${output.type}'] id:'${output.id}' manufacturer:'${output.manufacturer}' name:'${output.name}' version:'${output.version}'`,
-        );
-    }
-}
-
-navigator.requestMIDIAccess().then(onMidiSuccess);
