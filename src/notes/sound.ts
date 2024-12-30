@@ -34,9 +34,15 @@ export const startKeySound = (
     distortion.curve = makeDistortionCurve(400);
     distortion.oversample = "4x";
 
+    const filter = audioContext.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+    filter.gain.setValueAtTime(25, audioContext.currentTime);
+
     oscillator
         .connect(gainEnvelope)
         .connect(distortion)
+        .connect(filter)
         .connect(audioContext.destination)
 
     oscillator.start();
