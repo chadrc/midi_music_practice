@@ -27,8 +27,8 @@
  */
 
 import './index.css';
-import {createApp, ref} from "vue";
-import Main from "./Main.vue"
+import {createApp} from "vue";
+import Main from "./MainContainer.vue"
 
 const app = createApp(Main)
 
@@ -36,9 +36,10 @@ app.mount('#app');
 
 navigator.permissions.query({
     name: "midi",
+    // @ts-ignore
     sysex: true,
 }).then(result => {
-    if (result.state === "granted" || result.state === "prompt") {
+    if (result.state === "granted") {
         console.log("MIDI access granted");
     } else if (result.state === "prompt") {
         console.log("MIDI access prompt");
@@ -47,7 +48,7 @@ navigator.permissions.query({
     }
 })
 
-function onMidiSuccess(midiAccess: any) {
+function onMidiSuccess(midiAccess: MIDIAccess) {
     console.log(midiAccess)
 
     for (const entry of midiAccess.inputs) {

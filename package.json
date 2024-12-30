@@ -21,15 +21,16 @@
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron-forge/plugin-vite": "^7.6.0",
     "@electron/fuses": "^1.8.0",
-    "@typescript-eslint/eslint-plugin": "^5.62.0",
-    "@typescript-eslint/parser": "^5.62.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "@vitejs/plugin-vue": "^5.2.1",
     "electron": "33.2.1",
-    "eslint": "^8.57.1",
+    "eslint": "^9.17.0",
     "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-vue": "^9.32.0",
     "ts-node": "^10.9.2",
-    "typescript": "~4.5.4",
-    "vite": "^5.4.11",
-    "@vitejs/plugin-vue": "^5.2.1"
+    "typescript": "~5.7.2",
+    "vite": "^6.0.6"
   },
   "keywords": [],
   "author": {
@@ -38,9 +39,9 @@
   },
   "license": "MIT",
   "dependencies": {
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0",
+    "electron-squirrel-startup": "^1.0.1",
     "pinia": "^2.3.0",
-    "electron-squirrel-startup": "^1.0.1"
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0"
   }
 }
