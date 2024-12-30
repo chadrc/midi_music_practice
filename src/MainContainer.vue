@@ -15,6 +15,10 @@ function getIsReceiving(id: string) {
 
 <template>
   <h1>MIDI Music Practice</h1>
+  <section>
+    <span>Instrument Audio Enabled: </span>
+    <input type="checkbox" v-model="midiStore.instrumentAudioEnabled">
+  </section>
   <button @click="midiStore.requestAccess()">
     Load MIDI Devices
   </button>

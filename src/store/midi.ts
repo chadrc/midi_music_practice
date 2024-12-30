@@ -31,6 +31,7 @@ interface NotePlayData {
 }
 
 interface MIDIStore {
+    instrumentAudioEnabled: boolean,
     audioContext: AudioContext;
     midi: MIDIAccess | null;
     err: any | null;
@@ -40,6 +41,7 @@ interface MIDIStore {
 
 export const useMidiStore = defineStore('midi', {
     state: (): MIDIStore => ({
+        instrumentAudioEnabled: true,
         audioContext: new AudioContext(),
         midi: null,
         err: null,
@@ -90,7 +92,9 @@ export const useMidiStore = defineStore('midi', {
 
                     switch (data.instruction) {
                         case MIDIInstruction.NoteOff:
-                            endKeySound(this.audioContext, this.playData[data.data1].sound)
+                            if (this.instrumentAudioEnabled) {
+                                endKeySound(this.audioContext, this.playData[data.data1].sound)
+                            }
 
                             this.playData[data.data1].on = false;
                             this.playData[data.data1].velocity = data.data2;
@@ -99,11 +103,14 @@ export const useMidiStore = defineStore('midi', {
                         case MIDIInstruction.NoteOn:
                             this.playData[data.data1].on = true;
                             this.playData[data.data1].velocity = data.data2;
-                            this.playData[data.data1].sound = startKeySound(
-                                this.audioContext,
-                                data.data1,
-                                data.data2
-                            )
+
+                            if (this.instrumentAudioEnabled) {
+                                this.playData[data.data1].sound = startKeySound(
+                                    this.audioContext,
+                                    data.data1,
+                                    data.data2
+                                )
+                            }
                             break
                         default:
                         // currently unsupported
