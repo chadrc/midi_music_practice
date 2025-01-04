@@ -32,6 +32,7 @@ function colorForNote(note: number) {
 
 <template>
   <section class="note-test-grid-options">
+    <span>Formatted</span>
     <input type="checkbox" v-model="settingsStore.noteGrid.formatted">
   </section>
   <section class="note-test-grid">

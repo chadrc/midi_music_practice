@@ -3,8 +3,10 @@ import {useMidiStore} from "./store/midi";
 import NoteTestGrid from "./components/NoteTestGrid.vue";
 import FretBoard from "./components/FretBoard.vue";
 import {Tabs, TabList, Tab, TabPanels, TabPanel} from "primevue";
+import {useSettingsStore} from "./store/settings";
 
 const midiStore = useMidiStore();
+const settingsStore = useSettingsStore();
 
 function isReceiving(id: string) {
   let device = midiStore.ioStates.get(id);
@@ -26,7 +28,7 @@ function isReceiving(id: string) {
         <h1>MIDI Music Practice</h1>
         <section>
           <span>Instrument Audio Enabled: </span>
-          <input type="checkbox" v-model="midiStore.instrumentAudioEnabled">
+          <input type="checkbox" v-model="settingsStore.audio.instrumentAudioEnabled">
         </section>
         <button @click="midiStore.requestAccess()">
           Load MIDI Devices
