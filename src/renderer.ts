@@ -30,11 +30,18 @@ import './index.css';
 import {createApp} from "vue";
 import {createPinia} from "pinia";
 import Main from "./MainContainer.vue"
+import PrimeVue from "primevue/config";
+import Aura from "@primevue/themes/aura"
 
 const app = createApp(Main)
 const pinia = createPinia()
 
 app.use(pinia)
+app.use(PrimeVue, {
+    theme: {
+        preset: Aura
+    }
+})
 app.mount('#app');
 
 navigator.permissions.query({
