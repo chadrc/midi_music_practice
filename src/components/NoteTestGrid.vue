@@ -2,6 +2,7 @@
 import {formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
 import {useSettingsStore} from "../store/settings";
+import {Checkbox} from "primevue";
 
 const midiStore = useMidiStore();
 const settingsStore = useSettingsStore();
@@ -33,7 +34,7 @@ function colorForNote(note: number) {
 <template>
   <section class="note-test-grid-options">
     <span>Formatted</span>
-    <input type="checkbox" v-model="settingsStore.noteGrid.formatted">
+    <Checkbox v-model="settingsStore.noteGrid.formatted" binary/>
   </section>
   <section class="note-test-grid">
     <div

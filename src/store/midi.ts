@@ -23,6 +23,13 @@ interface MIDIData {
     data2: number;
 }
 
+interface MIDIInputOption {
+    id: string;
+    name: string;
+    manufacturer: string;
+    receiving: boolean;
+}
+
 interface NotePlayData {
     on: boolean;
     velocity: number;
@@ -50,11 +57,16 @@ export const useMidiStore = defineStore('midi', {
         })),
     }),
     getters: {
-        inputs: (state): MIDIInput[] => {
-            let items: MIDIInput[] = []
+        inputs: (state): MIDIInputOption[] => {
+            let items: MIDIInputOption[] = []
             if (state.midi == null) return items;
 
-            state.midi.inputs.forEach((entry) => items.push(entry))
+            state.midi.inputs.forEach((entry) => items.push({
+                id: entry.id,
+                name: entry.name,
+                manufacturer: entry.manufacturer,
+                receiving: state.ioStates.get(entry.id).receiving
+            }))
 
             return items;
         }
@@ -68,13 +80,18 @@ export const useMidiStore = defineStore('midi', {
             }).then(
                 (midiAccess: MIDIAccess) => {
                     this.midi = midiAccess;
+                    this.midi.inputs.forEach((entry: MIDIInput) => {
+                        this.ioStates.set(entry.id, {receiving: false, sending: false});
+                    })
                 },
                 (err) => this.err = err
             );
         },
         toggleReceiving(deviceId: string) {
+            if (this.midi === null) return;
+
             let device: MIDIInput | null = null;
-            this.midi?.inputs.forEach((entry: MIDIInput) => {
+            this.midi.inputs.forEach((entry: MIDIInput) => {
                 if (entry.id == deviceId) device = entry;
             })
 
