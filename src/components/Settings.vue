@@ -16,8 +16,12 @@ function isReceiving(id: string) {
   return device.receiving;
 }
 
+function isAutoReceiving(id: string) {
+  return settingsStore.audio.autoReceiveInstruments.includes(id);
+}
+
 onMounted(() => {
-  midiStore.requestAccess();
+  midiStore.requestAccess(settingsStore.audio.autoReceiveInstruments);
 })
 </script>
 
@@ -26,7 +30,7 @@ onMounted(() => {
     <span>Instrument Audio Enabled: </span>
     <Checkbox v-model="settingsStore.audio.instrumentAudioEnabled" binary/>
   </section>
-  <Button @click="midiStore.requestAccess()" size="small">
+  <Button @click="midiStore.requestAccess(settingsStore.audio.autoReceiveInstruments)" size="small">
     Reload MIDI Devices
   </Button>
 
@@ -39,6 +43,15 @@ onMounted(() => {
                 :severity="isReceiving(slotProps.data.id) ? 'danger' : 'info'"
                 size="small">
           {{ isReceiving(slotProps.data.id) ? "Disable" : "Enable" }}
+        </Button>
+      </template>
+    </Column>
+    <Column header="Auto Receive">
+      <template #body="slotProps">
+        <Button @click="settingsStore.toggleAutoReceiveInstrument(slotProps.data.id)"
+                :severity="isAutoReceiving(slotProps.data.id) ? 'danger' : 'info'"
+                size="small">
+          {{ isAutoReceiving(slotProps.data.id) ? "Disable" : "Enable" }}
         </Button>
       </template>
     </Column>

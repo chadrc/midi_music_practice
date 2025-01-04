@@ -39,5 +39,17 @@ export const useSettingsStore = defineStore('settings', {
             audio: defaultAudio
         }
     },
-    getters: {}
+    getters: {},
+    actions: {
+        toggleAutoReceiveInstrument(deviceId: string) {
+            let index = this.audio.autoReceiveInstruments
+                .findIndex((id: string) => id === deviceId)
+
+            if (index === -1) {
+                this.audio.autoReceiveInstruments.push(deviceId)
+            } else {
+                this.audio.autoReceiveInstruments.splice(index, 1)
+            }
+        }
+    },
 })

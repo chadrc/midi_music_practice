@@ -72,7 +72,7 @@ export const useMidiStore = defineStore('midi', {
         }
     },
     actions: {
-        requestAccess() {
+        requestAccess(autoReceiveInstruments: string[]) {
             console.log("Requesting MIDI access...")
             navigator.requestMIDIAccess({
                 sysex: true,
@@ -82,6 +82,10 @@ export const useMidiStore = defineStore('midi', {
                     this.midi = midiAccess;
                     this.midi.inputs.forEach((entry: MIDIInput) => {
                         this.ioStates.set(entry.id, {receiving: false, sending: false});
+
+                        if (autoReceiveInstruments.includes(entry.id)) {
+                            this.toggleReceiving(entry.id);
+                        }
                     })
                 },
                 (err) => this.err = err
