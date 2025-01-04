@@ -27,7 +27,7 @@
  */
 
 import './index.css';
-import {createApp} from "vue";
+import {createApp, watch} from "vue";
 import {createPinia} from "pinia";
 import Main from "./MainContainer.vue"
 import PrimeVue from "primevue/config";
@@ -43,6 +43,14 @@ app.use(PrimeVue, {
     }
 })
 app.mount('#app');
+
+watch(
+    pinia.state,
+    (state) => {
+        localStorage.setItem("settings", JSON.stringify(state.settings))
+    },
+    { deep: true}
+)
 
 navigator.permissions.query({
     name: "midi",

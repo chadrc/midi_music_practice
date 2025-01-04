@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
+import {useSettingsStore} from "../store/settings";
 
 const midiStore = useMidiStore();
+const settingsStore = useSettingsStore();
 const noteOrder = Array.from(Array(128).keys());
 
 const hueIncrement = 360 / 128;
@@ -30,7 +32,7 @@ function colorForNote(note: number) {
 
 <template>
   <section class="note-test-grid-options">
-    <input type="checkbox" v-model="midiStore.noteGrid.formatted">
+    <input type="checkbox" v-model="settingsStore.noteGrid.formatted">
   </section>
   <section class="note-test-grid">
     <div
@@ -39,7 +41,7 @@ function colorForNote(note: number) {
       :style="{opacity: opacityForNote(i), 'background-color': colorForNote(i)}"
       class="note-test-cell"
     >
-      <span>{{ midiStore.noteGrid.formatted ? formatMidiNote(i) : i }}</span>
+      <span>{{ settingsStore.noteGrid.formatted ? formatMidiNote(i) : i }}</span>
     </div>
   </section>
 </template>
