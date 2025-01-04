@@ -29,13 +29,18 @@ interface NotePlayData {
     sound: KeySound | null;
 }
 
+interface NoteGridData {
+    formatted: boolean;
+}
+
 interface MIDIStore {
     instrumentAudioEnabled: boolean,
     audioContext: AudioContext;
     midi: MIDIAccess | null;
     err: any | null;
     ioStates: Map<string, IOState>;
-    playData: NotePlayData[]
+    playData: NotePlayData[];
+    noteGrid: NoteGridData
 }
 
 export const useMidiStore = defineStore('midi', {
@@ -49,7 +54,10 @@ export const useMidiStore = defineStore('midi', {
             on: false,
             velocity: 0,
             sound: null as KeySound | null
-        }))
+        })),
+        noteGrid: {
+            formatted: true
+        }
     }),
     getters: {
         inputs: (state): MIDIInput[] => {

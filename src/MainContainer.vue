@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {useMidiStore} from "./store/midi";
 import NoteTestGrid from "./components/NoteTestGrid.vue";
+import FretBoard from "./components/FretBoard.vue";
 
 const midiStore = useMidiStore();
 
@@ -52,6 +53,8 @@ function isReceiving(id: string) {
   </table>
 
   <NoteTestGrid />
+
+  <FretBoard />
 </template>
 
 <style>

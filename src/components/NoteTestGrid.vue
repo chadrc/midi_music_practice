@@ -29,6 +29,9 @@ function colorForNote(note: number) {
 </script>
 
 <template>
+  <section class="note-test-grid-options">
+    <input type="checkbox" v-model="midiStore.noteGrid.formatted">
+  </section>
   <section class="note-test-grid">
     <div
       v-for="i in noteOrder"
@@ -36,7 +39,7 @@ function colorForNote(note: number) {
       :style="{opacity: opacityForNote(i), 'background-color': colorForNote(i)}"
       class="note-test-cell"
     >
-      <span>{{ formatMidiNote(i) }}</span>
+      <span>{{ midiStore.noteGrid.formatted ? formatMidiNote(i) : i }}</span>
     </div>
   </section>
 </template>
