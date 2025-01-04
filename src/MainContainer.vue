@@ -4,7 +4,7 @@ import NoteTestGrid from "./components/NoteTestGrid.vue";
 
 const midiStore = useMidiStore();
 
-function getIsReceiving(id: string) {
+function isReceiving(id: string) {
   let device = midiStore.ioStates.get(id);
   if (device === null || device === undefined) return false;
 
@@ -40,7 +40,7 @@ function getIsReceiving(id: string) {
       <td>{{ input.manufacturer }}</td>
       <td>
         <input type="checkbox"
-               :value="getIsReceiving(input.id)"
+               :checked="isReceiving(input.id)"
                @click="midiStore.toggleReceiving(input.id)">
       </td>
 <!--      <td>-->

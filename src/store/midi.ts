@@ -1,5 +1,4 @@
 import {defineStore} from 'pinia'
-import {formatMidiNote} from "../notes";
 import {endKeySound, KeySound, startKeySound} from "../notes/sound";
 
 interface IOState {
@@ -41,7 +40,7 @@ interface MIDIStore {
 
 export const useMidiStore = defineStore('midi', {
     state: (): MIDIStore => ({
-        instrumentAudioEnabled: true,
+        instrumentAudioEnabled: false,
         audioContext: new AudioContext(),
         midi: null,
         err: null,
@@ -68,13 +67,12 @@ export const useMidiStore = defineStore('midi', {
             navigator.requestMIDIAccess({
                 sysex: true,
                 software: true,
-            })
-                .then(
-                    (midiAccess: MIDIAccess) => {
-                        this.midi = midiAccess;
-                    },
-                    (err) => this.err = err
-                );
+            }).then(
+                (midiAccess: MIDIAccess) => {
+                    this.midi = midiAccess;
+                },
+                (err) => this.err = err
+            );
         },
         toggleReceiving(deviceId: string) {
             let device: MIDIInput | null = null;
@@ -89,6 +87,7 @@ export const useMidiStore = defineStore('midi', {
             if (currentState === undefined || currentState.receiving === false) {
                 device.onmidimessage = (event: MIDIMessageEvent) => {
                     let data = makeMidiData(event.data);
+                    if (data === null) return;
 
                     switch (data.instruction) {
                         case MIDIInstruction.NoteOff:
@@ -113,10 +112,9 @@ export const useMidiStore = defineStore('midi', {
                             }
                             break
                         default:
-                        // currently unsupported
+                            // currently unsupported
+                            return
                     }
-
-                    console.log(`${formatMidiNote(data.data1)} ${MIDIInstruction[data.instruction]}`);
                 }
 
                 this.ioStates.set(deviceId, {receiving: true, sending: false});
@@ -137,7 +135,7 @@ function makeMidiData(bytes: Uint8Array): MIDIData | null {
     let data2 = bytes[2];
 
     if (status > 239) {
-        console.log("Unsupported MIDI instruction. Check back later for implementation.")
+        // console.log("Unsupported MIDI instruction. Check back later for implementation.")
         return null
     } else if (status >= 224) {
         instruction = MIDIInstruction.PitchBend;
