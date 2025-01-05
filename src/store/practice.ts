@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
-import {formatMidiLetter} from "../notes";
+import {formatMidiLetter, formatMidiNote} from "../notes";
 
 // CCS color variables for PrimeVue theme
 const colorOptions = [
@@ -50,10 +50,11 @@ export const usePracticeStore = defineStore('practice', () => {
     const startTime = ref(0);
     const practiceSessionTimer = ref(null);
     const practiceSessionTime = ref(0);
+    const successCount = ref(0);
 
     const prompts = ref<Prompt[]>([])
-    const numberOfActivePrompts = ref(5);
-    const activePrompts = ref<number[]>([]);
+    const numberOfActivePrompts = ref(6);
+    const activePrompts = ref<(number | null)[]>([]);
     const promptCursor = ref(0);
     const currentPrompt = ref(0);
 
@@ -118,24 +119,28 @@ export const usePracticeStore = defineStore('practice', () => {
         maxNote.value = Math.max(0, Math.min(MAX_MIDI_NOTES, max));
     }
 
-    function refreshPrompt(index: number) {
-        if (promptCursor.value < prompts.value.length) {
-            activePrompts.value[index] = promptCursor.value;
-            promptCursor.value += 1
-        } else {
-            console.log("finished prompts")
+    function refreshActivePrompts() {
+        activePrompts.value = []
+        const start = promptCursor.value;
+        const end = promptCursor.value + numberOfActivePrompts.value;
+
+        if (end >= prompts.value.length) {
+            generatePrompts()
         }
+
+        for (let i = start; i < end; i++) {
+            activePrompts.value.push(i)
+        }
+        promptCursor.value += numberOfActivePrompts.value
     }
 
     function start() {
         setNoteRange(40, 69)
         generatePrompts();
 
-        activePrompts.value = []
-        for (let i = 0; i <= numberOfActivePrompts.value; i++) {
-            activePrompts.value.push(i)
-        }
-        promptCursor.value = numberOfActivePrompts.value
+        promptCursor.value = 0
+
+        refreshActivePrompts()
 
         practiceSessionTimer.value = window.setInterval(() => {
             practiceSessionTime.value += 1
@@ -156,11 +161,13 @@ export const usePracticeStore = defineStore('practice', () => {
                     }
 
                     if (success) {
-                        refreshPrompt(currentPrompt.value)
+                        successCount.value += 1
+                        activePrompts.value[currentPrompt.value] = null;
 
                         currentPrompt.value += 1
                         if (currentPrompt.value >= activePrompts.value.length) {
                             currentPrompt.value = 0
+                            refreshActivePrompts()
                         }
                     }
                 } else if (name === 'midiNoteOff') {
@@ -183,6 +190,6 @@ export const usePracticeStore = defineStore('practice', () => {
         activePrompts,
         currentPrompt,
         requireOctave,
-        setNoteRange
+        successCount,
     }
 })

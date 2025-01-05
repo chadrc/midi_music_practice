@@ -65,6 +65,9 @@ function formatPracticeTime() {
       <span class="practice-time">
         Time: {{ formatPracticeTime() }}
       </span>
+      <span class="practice-time">
+        Notes Played: {{ practiceStore.successCount }}
+      </span>
     </section>
     <div class="prompt-area">
       <div
