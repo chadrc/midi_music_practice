@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 // reverse order so the lowest note is at bottom
-import {formatMidiLetter} from "../notes";
+import {formatMidiLetter, formatMidiNote} from "../notes";
 import {Panel, Button} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
@@ -29,6 +29,8 @@ const displayPrompts = computed(() => {
   return prompts;
 })
 
+const noteSize = computed(() => practiceStore.requireOctave ? 8 : 10)
+
 function formatPromptColor(prompt) {
   if (!prompt.color) return 'var(--p-gray-800)';
   return `var(--p-${prompt.color}-800`;
@@ -36,6 +38,10 @@ function formatPromptColor(prompt) {
 
 function formatPromptNote(prompt) {
   if (!prompt.note) return '';
+
+  if (practiceStore.requireOctave) {
+    return formatMidiNote(prompt.note)
+  }
   return formatMidiLetter(prompt.note)
 }
 
@@ -70,7 +76,10 @@ function formatPracticeTime() {
           class="prompt-card"
           :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <span class="prompt-text">
+          <span
+            class="prompt-text"
+            :style="{fontSize: `${noteSize}vh`}"
+          >
             {{ formatPromptNote(prompt) }}
           </span>
         </div>
@@ -126,7 +135,6 @@ function formatPracticeTime() {
 
 .prompt-text {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 7vh;
   font-weight: bold;
 }
 

@@ -47,19 +47,20 @@ const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
 
+    const startTime = ref(0);
+    const practiceSessionTimer = ref(null);
+    const practiceSessionTime = ref(0);
+
     const prompts = ref<Prompt[]>([])
     const numberOfActivePrompts = ref(5);
     const activePrompts = ref<number[]>([]);
     const promptCursor = ref(0);
     const currentPrompt = ref(0);
 
+    const requireOctave = ref(true);
     const minSuccessVelocity = ref(100);
-
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);
-    const startTime = ref(0);
-    const practiceSessionTimer = ref(null);
-    const practiceSessionTime = ref(0);
     const midiListener = ref(null);
     const noteRangeType = ref(NoteRangeType.Frets);
     const fretRangeOptions = ref<FretRangeOptions>({
@@ -149,7 +150,12 @@ export const usePracticeStore = defineStore('practice', () => {
                     let promptIndex = activePrompts.value[currentPrompt.value]
                     let prompt = prompts.value[promptIndex]
 
-                    if (formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0])) {
+                    let success = formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0]);
+                    if (requireOctave.value) {
+                        success = prompt.note === noteArgs[0]
+                    }
+
+                    if (success) {
                         refreshPrompt(currentPrompt.value)
 
                         currentPrompt.value += 1
@@ -176,6 +182,7 @@ export const usePracticeStore = defineStore('practice', () => {
         selectedNotes,
         activePrompts,
         currentPrompt,
+        requireOctave,
         setNoteRange
     }
 })
