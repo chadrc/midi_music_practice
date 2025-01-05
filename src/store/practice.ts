@@ -51,7 +51,8 @@ export const usePracticeStore = defineStore('practice', () => {
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);
     const startTime = ref(0);
-    const timer = ref(null);
+    const practiceSessionTimer = ref(null);
+    const practiceSessionTime = ref(0);
     const midiListener = ref(null);
     const noteRangeType = ref(NoteRangeType.Frets);
     const fretRangeOptions = ref<FretRangeOptions>({
@@ -104,8 +105,9 @@ export const usePracticeStore = defineStore('practice', () => {
     function start() {
         setNoteRange(40, 69)
         rollPrompt();
-        timer.value = window.setInterval(() => {
-            this.time += 1
+        practiceSessionTimer.value = window.setInterval(() => {
+            console.log("tick")
+            practiceSessionTime.value += 1
         }, 1000)
 
         midiListener.value = midiStore.$onAction(
@@ -131,7 +133,8 @@ export const usePracticeStore = defineStore('practice', () => {
         minNote,
         maxNote,
         startTime,
-        timer,
+        practiceSessionTimer,
+        practiceSessionTime,
         midiListener,
         start,
         selectedNotes,

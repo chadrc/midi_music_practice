@@ -8,17 +8,13 @@ import NoteGrid from "./NoteGrid.vue";
 
 const practiceStore = usePracticeStore()
 
-const fretMidiNotes = [64, 59, 55, 50, 45, 40]
-const fretCount = Array.from(Array(5).keys());
-
-
 function formatPromptColor(color: string) {
   return `var(--p-${color}-900`;
 }
 
 function formatPracticeTime() {
-  let seconds = practiceStore.startTime % 60;
-  let minutes = Math.floor(seconds / 60);
+  let seconds = practiceStore.practiceSessionTime % 60;
+  let minutes = Math.floor(practiceStore.practiceSessionTime / 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 </script>
