@@ -1,13 +1,21 @@
 <script setup lang="ts">
+
 import {formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
 import {useSettingsStore} from "../store/settings";
-import {Checkbox} from "primevue";
-import NoteGrid from "./NoteGrid.vue";
+
+interface NoteGridProps {
+  notes: Array<number>,
+  columns: number,
+  formatted?: boolean,
+}
+
+const props = withDefaults(defineProps<NoteGridProps>(), {
+  notes: () => [],
+  formatted: true,
+});
 
 const midiStore = useMidiStore();
-const settingsStore = useSettingsStore();
-const noteOrder = Array.from(Array(128).keys());
 
 const hueIncrement = 360 / 128;
 
@@ -33,24 +41,27 @@ function colorForNote(note: number) {
 </script>
 
 <template>
-  <section class="note-test-grid-options">
-    <span>Formatted</span>
-    <Checkbox v-model="settingsStore.noteGrid.formatted" binary/>
+  <section class="note-grid"
+           :style="{width: `calc(var(--note-test-grid-cell-size) * ${props.columns})`}">
+    <div
+        v-for="i in props.notes"
+        :key="i"
+        :style="{opacity: opacityForNote(i), 'background-color': colorForNote(i)}"
+        class="note-grid-cell"
+    >
+      <span>{{ props.formatted ? formatMidiNote(i) : i }}</span>
+    </div>
   </section>
-  <NoteGrid :notes="noteOrder"
-            :columns="12"
-            :formatted="settingsStore.noteGrid.formatted"/>
 </template>
 
 <style scoped>
-
-.note-test-grid {
+.note-grid {
   display: flex;
   flex-wrap: wrap-reverse;
   width: calc(var(--note-test-grid-cell-size) * 12);
 }
 
-.note-test-cell {
+.note-grid-cell {
   display: flex;
   width: var(--note-test-grid-cell-size);
   height: var(--note-test-grid-cell-size);

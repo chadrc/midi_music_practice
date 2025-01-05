@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {formatMidiLetter} from "../notes";
 
 // CCS color variables for PrimeVue theme
@@ -41,6 +41,16 @@ export const usePracticeStore = defineStore('practice', () => {
     const startTime = ref(0);
     const timer = ref(null);
     const midiListener = ref(null);
+
+    const selectedNotes = computed(() => {
+        let notes = []
+
+        for (let i=minNote.value; i<maxNote.value; i++) {
+            notes.push(i)
+        }
+
+        return notes
+    })
 
     function rollPrompt() {
         let colorRoll = Math.floor(Math.random() * colorOptions.length);
@@ -93,6 +103,7 @@ export const usePracticeStore = defineStore('practice', () => {
         timer,
         midiListener,
         start,
+        selectedNotes,
         setNoteRange
     }
 })

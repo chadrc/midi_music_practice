@@ -4,11 +4,13 @@
 import {formatMidiLetter, formatMidiNote} from "../notes";
 import {Panel, Card, Button} from "primevue";
 import {usePracticeStore} from "../store/practice";
+import NoteGrid from "./NoteGrid.vue";
 
 const practiceStore = usePracticeStore()
 
 const fretMidiNotes = [64, 59, 55, 50, 45, 40]
 const fretCount = Array.from(Array(5).keys());
+
 
 function formatPromptColor(color: string) {
   return `var(--p-${color}-900`;
@@ -43,21 +45,8 @@ function formatPracticeTime() {
       </div>
     </div>
     <Panel header="Instrument">
-      <section class="fret-board">
-        <ul
-            v-for="fret in fretCount"
-            :key="fret"
-            class="fret"
-        >
-          <li
-              v-for="fretNote in fretMidiNotes"
-              :key="fretNote"
-              class="fret-note"
-          >
-            {{ formatMidiNote(fretNote + fret) }}
-          </li>
-        </ul>
-      </section>
+      <NoteGrid :notes="practiceStore.selectedNotes"
+                :columns="5"/>
     </Panel>
   </section>
 </template>
