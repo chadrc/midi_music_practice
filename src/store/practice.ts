@@ -51,6 +51,7 @@ export const usePracticeStore = defineStore('practice', () => {
     const practiceSessionTimer = ref(null);
     const practiceSessionTime = ref(0);
     const successCount = ref(0);
+    const practicing = ref(false);
 
     const prompts = ref<Prompt[]>([])
     const numberOfActivePrompts = ref(6);
@@ -62,7 +63,7 @@ export const usePracticeStore = defineStore('practice', () => {
     const minSuccessVelocity = ref(100);
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);
-    const midiListener = ref(null);
+    const midiListenerUnsubscribe = ref(null);
     const noteRangeType = ref(NoteRangeType.Frets);
     const fretRangeOptions = ref<FretRangeOptions>({
         startFret: 0,
@@ -135,18 +136,20 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function start() {
-        setNoteRange(40, 69)
+        setNoteRange(40, 69);
         generatePrompts();
 
-        promptCursor.value = 0
+        practicing.value = true;
+        successCount.value = 0;
+        promptCursor.value = 0;
 
-        refreshActivePrompts()
+        refreshActivePrompts();
 
         practiceSessionTimer.value = window.setInterval(() => {
             practiceSessionTime.value += 1
-        }, 1000)
+        }, 1000);
 
-        midiListener.value = midiStore.$onAction(
+        midiListenerUnsubscribe.value = midiStore.$onAction(
             ({name, args}) => {
                 if (name === 'midiNoteOn') {
                     let noteArgs = args as [number, number]
@@ -177,6 +180,13 @@ export const usePracticeStore = defineStore('practice', () => {
         )
     }
 
+    function stop() {
+        window.clearInterval(practiceSessionTimer.value)
+        midiListenerUnsubscribe.value()
+        activePrompts.value = []
+        practicing.value = false;
+    }
+
     return {
         prompts,
         minNote,
@@ -184,12 +194,13 @@ export const usePracticeStore = defineStore('practice', () => {
         startTime,
         practiceSessionTimer,
         practiceSessionTime,
-        midiListener,
         start,
+        stop,
         selectedNotes,
         activePrompts,
         currentPrompt,
         requireOctave,
         successCount,
+        practicing,
     }
 })

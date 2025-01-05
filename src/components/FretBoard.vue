@@ -56,11 +56,12 @@ function formatPracticeTime() {
   <section class="practice-view">
     <section class="practice-controls">
       <Button
-        label="Start"
+        :label="practiceStore.practicing ? 'Stop' : 'Start' "
+        :severity="practiceStore.practicing ? 'danger' : 'info'"
         size="small"
-        @click="practiceStore.start()"
+        @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
       >
-        Start
+        {{ practiceStore.practicing ? 'Stop' : 'Start' }}
       </Button>
       <span class="practice-time">
         Time: {{ formatPracticeTime() }}
@@ -112,6 +113,7 @@ function formatPracticeTime() {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 1rem;
   margin-bottom: 1rem;
 }
 
