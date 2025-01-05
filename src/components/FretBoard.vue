@@ -74,7 +74,6 @@ function formatPracticeTime() {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 500px;
   margin-bottom: 1rem;
 }
 
@@ -82,14 +81,14 @@ function formatPracticeTime() {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 400px;
-  width: 400px;
+  height: 20vh;
+  aspect-ratio: 1;
   border-radius: 50%;
 }
 
 .prompt-text {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 250px;
+  font-size: 7vh;
   font-weight: bold;
 }
 
