@@ -19,7 +19,7 @@ export enum BaseNotes {
 }
 
 export class NoteScale {
-    private readonly notes: number[];
+    public readonly notes: number[];
 
     constructor(
         baseNote: BaseNotes,
@@ -48,4 +48,37 @@ export class NoteScale {
 
         return false;
     }
+}
+
+export const MAJOR_SCALE_PATTERN = [2, 2, 1, 2, 2, 2]
+export const MINOR_SCALE_PATTERN = [2, 1, 2, 2, 1, 2]
+
+export const MAJOR_SCALES = {
+    A: new NoteScale(BaseNotes.A, MAJOR_SCALE_PATTERN),
+    AFlat: new NoteScale(BaseNotes.AFlat, MAJOR_SCALE_PATTERN),
+    B: new NoteScale(BaseNotes.B, MAJOR_SCALE_PATTERN),
+    BFlat: new NoteScale(BaseNotes.BFlat, MAJOR_SCALE_PATTERN),
+    C: new NoteScale(BaseNotes.C, MAJOR_SCALE_PATTERN),
+    D: new NoteScale(BaseNotes.D, MAJOR_SCALE_PATTERN),
+    DFlat: new NoteScale(BaseNotes.DFlat, MAJOR_SCALE_PATTERN),
+    E: new NoteScale(BaseNotes.E, MAJOR_SCALE_PATTERN),
+    EFlat: new NoteScale(BaseNotes.EFlat, MAJOR_SCALE_PATTERN),
+    F: new NoteScale(BaseNotes.F, MAJOR_SCALE_PATTERN),
+    FSharp: new NoteScale(BaseNotes.FSharp, MAJOR_SCALE_PATTERN),
+    G: new NoteScale(BaseNotes.G, MAJOR_SCALE_PATTERN),
+}
+
+export const MINOR_SCALES = {
+    A: new NoteScale(BaseNotes.A, MINOR_SCALE_PATTERN),
+    B: new NoteScale(BaseNotes.B, MINOR_SCALE_PATTERN),
+    BFlat: new NoteScale(BaseNotes.BFlat, MINOR_SCALE_PATTERN),
+    C: new NoteScale(BaseNotes.C, MINOR_SCALE_PATTERN),
+    CSharp: new NoteScale(BaseNotes.CSharp, MINOR_SCALE_PATTERN),
+    D: new NoteScale(BaseNotes.D, MINOR_SCALE_PATTERN),
+    DSharp: new NoteScale(BaseNotes.DSharp, MINOR_SCALE_PATTERN),
+    E: new NoteScale(BaseNotes.E, MINOR_SCALE_PATTERN),
+    F: new NoteScale(BaseNotes.F, MINOR_SCALE_PATTERN),
+    FSharp: new NoteScale(BaseNotes.FSharp, MINOR_SCALE_PATTERN),
+    G: new NoteScale(BaseNotes.G, MINOR_SCALE_PATTERN),
+    GSharp: new NoteScale(BaseNotes.GSharp, MINOR_SCALE_PATTERN),
 }

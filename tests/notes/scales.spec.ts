@@ -1,6 +1,20 @@
 import {expect, test} from "vitest";
 import {BaseNotes, NoteScale} from "../../src/notes/scales";
 
+test('created with specified pattern', () => {
+    const scale = new NoteScale(BaseNotes.C, [2, 2, 1, 2, 2, 2])
+
+    expect(scale.notes).toStrictEqual([
+        BaseNotes.C,
+        BaseNotes.D,
+        BaseNotes.E,
+        BaseNotes.F,
+        BaseNotes.G,
+        BaseNotes.A,
+        BaseNotes.B,
+    ]);
+})
+
 test('scale contains note', () => {
     const scale = new NoteScale(BaseNotes.C, [2, 2, 1, 2, 2, 2])
 
