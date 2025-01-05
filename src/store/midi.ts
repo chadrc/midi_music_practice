@@ -91,6 +91,43 @@ export const useMidiStore = defineStore('midi', {
                 (err) => this.err = err
             );
         },
+        receiveMidiMessage(event: MIDIMessageEvent) {
+            let data = makeMidiData(event.data);
+            if (data === null) return;
+
+            switch (data.instruction) {
+                case MIDIInstruction.NoteOff:
+                    this.midiNoteOff(data.data1, data.data2);
+                    break
+                case MIDIInstruction.NoteOn:
+                    this.midiNoteOn(data.data1, data.data2);
+                    break
+                default:
+                    // currently unsupported
+                    return
+            }
+        },
+        midiNoteOn(note: number, velocity: number) {
+            this.playData[note].on = true;
+            this.playData[note].velocity = velocity;
+
+            if (this.instrumentAudioEnabled) {
+                this.playData[note].sound = startKeySound(
+                    this.audioContext,
+                    note,
+                    velocity
+                )
+            }
+        },
+        midiNoteOff(note: number, velocity: number) {
+            if (this.instrumentAudioEnabled) {
+                endKeySound(this.audioContext, this.playData[note].sound)
+            }
+
+            this.playData[note].on = false;
+            this.playData[note].velocity = velocity;
+            this.playData[note].sound = null;
+        },
         toggleReceiving(deviceId: string) {
             if (this.midi === null) return;
 
@@ -105,35 +142,7 @@ export const useMidiStore = defineStore('midi', {
 
             if (currentState === undefined || currentState.receiving === false) {
                 device.onmidimessage = (event: MIDIMessageEvent) => {
-                    let data = makeMidiData(event.data);
-                    if (data === null) return;
-
-                    switch (data.instruction) {
-                        case MIDIInstruction.NoteOff:
-                            if (this.instrumentAudioEnabled) {
-                                endKeySound(this.audioContext, this.playData[data.data1].sound)
-                            }
-
-                            this.playData[data.data1].on = false;
-                            this.playData[data.data1].velocity = data.data2;
-                            this.playData[data.data1].sound = null;
-                            break
-                        case MIDIInstruction.NoteOn:
-                            this.playData[data.data1].on = true;
-                            this.playData[data.data1].velocity = data.data2;
-
-                            if (this.instrumentAudioEnabled) {
-                                this.playData[data.data1].sound = startKeySound(
-                                    this.audioContext,
-                                    data.data1,
-                                    data.data2
-                                )
-                            }
-                            break
-                        default:
-                            // currently unsupported
-                            return
-                    }
+                    this.receiveMidiMessage(event);
                 }
 
                 this.ioStates.set(deviceId, {receiving: true, sending: false});

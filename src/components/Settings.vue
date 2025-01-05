@@ -30,7 +30,8 @@ onMounted(() => {
     <span>Instrument Audio Enabled: </span>
     <Checkbox v-model="settingsStore.audio.instrumentAudioEnabled" binary/>
   </section>
-  <Button @click="midiStore.requestAccess(settingsStore.audio.autoReceiveInstruments)" size="small">
+  <Button @click="midiStore.requestAccess(settingsStore.audio.autoReceiveInstruments)"
+          size="small">
     Reload MIDI Devices
   </Button>
 

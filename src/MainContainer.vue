@@ -8,11 +8,11 @@ import Settings from "./components/Settings.vue";
 <template>
   <Tabs value="practice">
     <TabList>
-      <Tab value="settings">
-        Settings
-      </Tab>
       <Tab value="practice">
         Practice
+      </Tab>
+      <Tab value="settings">
+        Settings
       </Tab>
     </TabList>
     <TabPanels>

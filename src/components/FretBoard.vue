@@ -1,32 +1,90 @@
 <script setup lang="ts">
 
 // reverse order so the lowest note is at bottom
-import {formatMidiNote} from "../notes";
+import {formatMidiLetter, formatMidiNote} from "../notes";
+import {Panel, Card, Button} from "primevue";
+import {usePracticeStore} from "../store/practice";
+
+const practiceStore = usePracticeStore()
 
 const fretMidiNotes = [64, 59, 55, 50, 45, 40]
 const fretCount = Array.from(Array(5).keys());
 
+function formatPromptColor(color: string) {
+  return `var(--p-${color}-400`;
+}
+
+function formatPracticeTime() {
+  let seconds = practiceStore.startTime % 60;
+  let minutes = Math.floor(seconds / 60);
+  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
 </script>
 
 <template>
-  <section class="fret-board">
-    <ul
-      v-for="fret in fretCount"
-      :key="fret"
-      class="fret"
-    >
-      <li
-        v-for="fretNote in fretMidiNotes"
-        :key="fretNote"
-        class="fret-note"
-      >
-        {{ formatMidiNote(fretNote + fret) }}
-      </li>
-    </ul>
+  <section class="practice-controls">
+    <Button label="Start"
+            size="small"
+            @click="practiceStore.start()">
+      Start
+    </Button>
+    <span class="practice-time">
+      Time: {{ formatPracticeTime() }}
+    </span>
   </section>
+  <div class="prompt-area">
+    <Card class="prompt-card"
+          v-for="prompt in practiceStore.prompts"
+          :style="{backgroundColor: formatPromptColor(prompt.color)}">
+      <template #content>
+        <span class="prompt-text">
+          {{ formatMidiLetter(prompt.note) }}
+        </span>
+      </template>
+    </Card>
+  </div>
+  <Panel header="Instrument">
+    <section class="fret-board">
+      <ul
+        v-for="fret in fretCount"
+        :key="fret"
+        class="fret"
+      >
+        <li
+          v-for="fretNote in fretMidiNotes"
+          :key="fretNote"
+          class="fret-note"
+        >
+          {{ formatMidiNote(fretNote + fret) }}
+        </li>
+      </ul>
+    </section>
+  </Panel>
 </template>
 
 <style scoped>
+.prompt-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+  margin-bottom: 1rem;
+}
+
+.prompt-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400px;
+  width: 400px;
+  background-color: var(--p-white-400);
+}
+
+.prompt-text {
+  font-size: 250px;
+  font-weight: bold;
+}
+
 .fret-board {
   display: flex;
 }
@@ -35,6 +93,7 @@ const fretCount = Array.from(Array(5).keys());
   display: flex;
   list-style: none;
   flex-direction: column;
+  padding: 0;
 }
 
 .fret-note {

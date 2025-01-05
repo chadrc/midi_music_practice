@@ -8,3 +8,8 @@ export const formatMidiNote = (midiNote: number) => {
 
     return `${LETTER_NOTES[letterNo]}${octave}`;
 }
+
+export const formatMidiLetter = (midiNote: number) => {
+    let letterNo = midiNote % 12;
+    return `${LETTER_NOTES[letterNo]}`;
+}
