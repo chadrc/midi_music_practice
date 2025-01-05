@@ -48,6 +48,13 @@ export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
 
     const prompts = ref<Prompt[]>([])
+    const numberOfActivePrompts = ref(5);
+    const activePrompts = ref<number[]>([]);
+    const promptCursor = ref(0);
+    const currentPrompt = ref(0);
+
+    const minSuccessVelocity = ref(100);
+
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);
     const startTime = ref(0);
@@ -71,7 +78,7 @@ export const usePracticeStore = defineStore('practice', () => {
 
             case NoteRangeType.Frets:
                 for (let note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                    for (let i=fretRangeOptions.value.startFret; i <= fretRangeOptions.value.endFret; i++) {
+                    for (let i = fretRangeOptions.value.startFret; i <= fretRangeOptions.value.endFret; i++) {
                         notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
                     }
                 }
@@ -84,13 +91,25 @@ export const usePracticeStore = defineStore('practice', () => {
         return notes
     })
 
-    function rollPrompt() {
-        let colorRoll = Math.floor(Math.random() * colorOptions.length);
-        let noteRoll = Math.floor(Math.random() * (maxNote.value - minNote.value + 1)) + minNote.value;
-        prompts.value.push({
-            color: colorOptions[colorRoll],
-            note: noteRoll,
-        })
+    function generatePrompts() {
+        let noteOptions = selectedNotes.value
+        for (let note of noteOptions) {
+            let colorRoll = Math.floor(Math.random() * colorOptions.length);
+            prompts.value.push({
+                color: colorOptions[colorRoll],
+                note,
+            })
+        }
+
+        // shuffle twice
+        for (let j = 0; j < 2; j++) {
+            for (let i = 0; i < prompts.value.length; i++) {
+                const roll = Math.floor(Math.random() * prompts.value.length);
+                const temp = prompts.value[i];
+                prompts.value[i] = prompts.value[roll];
+                prompts.value[roll] = temp;
+            }
+        }
     }
 
     function setNoteRange(min: number, max: number) {
@@ -98,15 +117,26 @@ export const usePracticeStore = defineStore('practice', () => {
         maxNote.value = Math.max(0, Math.min(MAX_MIDI_NOTES, max));
     }
 
-    function removePrompt(index: number) {
-        prompts.value.splice(index, 1);
+    function refreshPrompt(index: number) {
+        if (promptCursor.value < prompts.value.length) {
+            activePrompts.value[index] = promptCursor.value;
+            promptCursor.value += 1
+        } else {
+            console.log("finished prompts")
+        }
     }
 
     function start() {
         setNoteRange(40, 69)
-        rollPrompt();
+        generatePrompts();
+
+        activePrompts.value = []
+        for (let i = 0; i <= numberOfActivePrompts.value; i++) {
+            activePrompts.value.push(i)
+        }
+        promptCursor.value = numberOfActivePrompts.value
+
         practiceSessionTimer.value = window.setInterval(() => {
-            console.log("tick")
             practiceSessionTime.value += 1
         }, 1000)
 
@@ -114,12 +144,18 @@ export const usePracticeStore = defineStore('practice', () => {
             ({name, args}) => {
                 if (name === 'midiNoteOn') {
                     let noteArgs = args as [number, number]
-                    let match = prompts.value.findIndex((prompt) =>
-                        formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0]))
+                    if (noteArgs[1] < minSuccessVelocity.value) return;
 
-                    if (match !== -1) {
-                        removePrompt(match)
-                        rollPrompt()
+                    let promptIndex = activePrompts.value[currentPrompt.value]
+                    let prompt = prompts.value[promptIndex]
+
+                    if (formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0])) {
+                        refreshPrompt(currentPrompt.value)
+
+                        currentPrompt.value += 1
+                        if (currentPrompt.value >= activePrompts.value.length) {
+                            currentPrompt.value = 0
+                        }
                     }
                 } else if (name === 'midiNoteOff') {
                     // console.log('listen off')
@@ -138,6 +174,8 @@ export const usePracticeStore = defineStore('practice', () => {
         midiListener,
         start,
         selectedNotes,
+        activePrompts,
+        currentPrompt,
         setNoteRange
     }
 })

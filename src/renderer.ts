@@ -36,12 +36,12 @@ import Aura from "@primevue/themes/aura"
 const app = createApp(Main)
 const pinia = createPinia()
 
-app.use(pinia)
 app.use(PrimeVue, {
     theme: {
         preset: Aura
     }
 })
+app.use(pinia)
 app.mount('#app');
 
 watch(

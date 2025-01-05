@@ -5,11 +5,38 @@ import {formatMidiLetter} from "../notes";
 import {Panel, Button} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
+import {computed} from "vue";
+import {exists} from "../utilities";
 
 const practiceStore = usePracticeStore()
 
-function formatPromptColor(color: string) {
-  return `var(--p-${color}-900`;
+const displayPrompts = computed(() => {
+  let prompts = practiceStore.activePrompts
+      .map(prompt => (exists(prompt) ? {
+            current: false,
+            ...practiceStore.prompts[prompt],
+          } : {
+            current: false,
+            note: null,
+            color: null,
+          })
+      )
+
+  if (prompts[practiceStore.currentPrompt]) {
+    prompts[practiceStore.currentPrompt].current = true;
+  }
+
+  return prompts;
+})
+
+function formatPromptColor(prompt) {
+  if (!prompt.color) return 'var(--p-gray-800)';
+  return `var(--p-${prompt.color}-800`;
+}
+
+function formatPromptNote(prompt) {
+  if (!prompt.note) return '';
+  return formatMidiLetter(prompt.note)
 }
 
 function formatPracticeTime() {
@@ -22,29 +49,40 @@ function formatPracticeTime() {
 <template>
   <section class="practice-view">
     <section class="practice-controls">
-      <Button label="Start"
-              size="small"
-              @click="practiceStore.start()">
+      <Button
+        label="Start"
+        size="small"
+        @click="practiceStore.start()"
+      >
         Start
       </Button>
       <span class="practice-time">
-      Time: {{ formatPracticeTime() }}
-    </span>
+        Time: {{ formatPracticeTime() }}
+      </span>
     </section>
     <div class="prompt-area">
-      <div class="prompt-card"
-           v-for="prompt in practiceStore.prompts"
-           :style="{backgroundColor: formatPromptColor(prompt.color)}">
-        <span class="prompt-text">
-          {{ formatMidiLetter(prompt.note) }}
-        </span>
+      <div
+        v-for="prompt in displayPrompts"
+        :key="prompt.note"
+        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+      >
+        <div
+          class="prompt-card"
+          :style="{backgroundColor: formatPromptColor(prompt)}"
+        >
+          <span class="prompt-text">
+            {{ formatPromptNote(prompt) }}
+          </span>
+        </div>
       </div>
     </div>
     <Panel header="Instrument">
       <div class="instrument-display">
-        <NoteGrid :notes="practiceStore.selectedNotes"
-                  note-style="circle"
-                  :columns="5"/>
+        <NoteGrid
+          :notes="practiceStore.selectedNotes"
+          note-style="circle"
+          :columns="5"
+        />
       </div>
     </Panel>
   </section>
@@ -63,6 +101,18 @@ function formatPracticeTime() {
   justify-content: center;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+.prompt-column {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 1rem;
+}
+
+.prompt-column.current {
+  background-color: var(--p-zinc-500);
 }
 
 .prompt-card {
