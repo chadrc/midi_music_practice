@@ -45,9 +45,11 @@ function formatPracticeTime() {
       </div>
     </div>
     <Panel header="Instrument">
-      <NoteGrid :notes="practiceStore.selectedNotes"
-                note-style="circle"
-                :columns="5"/>
+      <div class="instrument-display">
+        <NoteGrid :notes="practiceStore.selectedNotes"
+                  note-style="circle"
+                  :columns="5"/>
+      </div>
     </Panel>
   </section>
 </template>
@@ -82,23 +84,9 @@ function formatPracticeTime() {
   font-weight: bold;
 }
 
-.fret-board {
+.instrument-display {
   display: flex;
-}
-
-.fret {
-  display: flex;
-  list-style: none;
-  flex-direction: column;
-  padding: 0;
-}
-
-.fret-note {
-  display: flex;
-  width: var(--note-test-grid-cell-size);
-  height: var(--note-test-grid-cell-size);
   justify-content: center;
   align-items: center;
-  transition: opacity 0.2s;
 }
 </style>
