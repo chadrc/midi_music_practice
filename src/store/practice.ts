@@ -184,6 +184,7 @@ export const usePracticeStore = defineStore('practice', () => {
         window.clearInterval(practiceSessionTimer.value)
         midiListenerUnsubscribe.value()
         activePrompts.value = []
+        prompts.value = []
         practicing.value = false;
     }
 
