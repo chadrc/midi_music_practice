@@ -46,6 +46,7 @@ function formatPracticeTime() {
     </div>
     <Panel header="Instrument">
       <NoteGrid :notes="practiceStore.selectedNotes"
+                note-style="circle"
                 :columns="5"/>
     </Panel>
   </section>
