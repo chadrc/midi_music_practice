@@ -11,7 +11,7 @@ const fretMidiNotes = [64, 59, 55, 50, 45, 40]
 const fretCount = Array.from(Array(5).keys());
 
 function formatPromptColor(color: string) {
-  return `var(--p-${color}-400`;
+  return `var(--p-${color}-900`;
 }
 
 function formatPracticeTime() {
@@ -33,27 +33,25 @@ function formatPracticeTime() {
     </span>
   </section>
   <div class="prompt-area">
-    <Card class="prompt-card"
-          v-for="prompt in practiceStore.prompts"
-          :style="{backgroundColor: formatPromptColor(prompt.color)}">
-      <template #content>
+    <div class="prompt-card"
+         v-for="prompt in practiceStore.prompts"
+         :style="{backgroundColor: formatPromptColor(prompt.color)}">
         <span class="prompt-text">
           {{ formatMidiLetter(prompt.note) }}
         </span>
-      </template>
-    </Card>
+    </div>
   </div>
   <Panel header="Instrument">
     <section class="fret-board">
       <ul
-        v-for="fret in fretCount"
-        :key="fret"
-        class="fret"
+          v-for="fret in fretCount"
+          :key="fret"
+          class="fret"
       >
         <li
-          v-for="fretNote in fretMidiNotes"
-          :key="fretNote"
-          class="fret-note"
+            v-for="fretNote in fretMidiNotes"
+            :key="fretNote"
+            class="fret-note"
         >
           {{ formatMidiNote(fretNote + fret) }}
         </li>
@@ -77,10 +75,11 @@ function formatPracticeTime() {
   align-items: center;
   height: 400px;
   width: 400px;
-  background-color: var(--p-white-400);
+  border-radius: 50%;
 }
 
 .prompt-text {
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 250px;
   font-weight: bold;
 }
