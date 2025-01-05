@@ -22,46 +22,55 @@ function formatPracticeTime() {
 </script>
 
 <template>
-  <section class="practice-controls">
-    <Button label="Start"
-            size="small"
-            @click="practiceStore.start()">
-      Start
-    </Button>
-    <span class="practice-time">
+  <section class="practice-view">
+    <section class="practice-controls">
+      <Button label="Start"
+              size="small"
+              @click="practiceStore.start()">
+        Start
+      </Button>
+      <span class="practice-time">
       Time: {{ formatPracticeTime() }}
     </span>
-  </section>
-  <div class="prompt-area">
-    <div class="prompt-card"
-         v-for="prompt in practiceStore.prompts"
-         :style="{backgroundColor: formatPromptColor(prompt.color)}">
+    </section>
+    <div class="prompt-area">
+      <div class="prompt-card"
+           v-for="prompt in practiceStore.prompts"
+           :style="{backgroundColor: formatPromptColor(prompt.color)}">
         <span class="prompt-text">
           {{ formatMidiLetter(prompt.note) }}
         </span>
+      </div>
     </div>
-  </div>
-  <Panel header="Instrument">
-    <section class="fret-board">
-      <ul
-          v-for="fret in fretCount"
-          :key="fret"
-          class="fret"
-      >
-        <li
-            v-for="fretNote in fretMidiNotes"
-            :key="fretNote"
-            class="fret-note"
+    <Panel header="Instrument">
+      <section class="fret-board">
+        <ul
+            v-for="fret in fretCount"
+            :key="fret"
+            class="fret"
         >
-          {{ formatMidiNote(fretNote + fret) }}
-        </li>
-      </ul>
-    </section>
-  </Panel>
+          <li
+              v-for="fretNote in fretMidiNotes"
+              :key="fretNote"
+              class="fret-note"
+          >
+            {{ formatMidiNote(fretNote + fret) }}
+          </li>
+        </ul>
+      </section>
+    </Panel>
+  </section>
 </template>
 
 <style scoped>
+.practice-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .prompt-area {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
