@@ -29,7 +29,7 @@ export class NoteScale {
         let currentNote = baseNote;
         for (let interval of intervals) {
             currentNote += interval;
-            this.notes.push(currentNote);
+            this.notes.push(currentNote % 12);
         }
     }
 
@@ -50,8 +50,12 @@ export class NoteScale {
     }
 }
 
-export const MAJOR_SCALE_PATTERN = [2, 2, 1, 2, 2, 2]
-export const MINOR_SCALE_PATTERN = [2, 1, 2, 2, 1, 2]
+const WHOLE = 2;
+const HALF = 1;
+
+export const MAJOR_SCALE_PATTERN = [WHOLE, WHOLE, HALF, WHOLE, WHOLE, WHOLE]
+export const MINOR_SCALE_PATTERN = [WHOLE, HALF, WHOLE, WHOLE, HALF, WHOLE]
+
 
 export const MAJOR_SCALES = {
     A: new NoteScale(BaseNotes.A, MAJOR_SCALE_PATTERN),

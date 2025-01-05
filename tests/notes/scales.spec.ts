@@ -15,6 +15,20 @@ test('created with specified pattern', () => {
     ]);
 })
 
+test('going beyond lowest octave normalizes to lowest', () => {
+    const scale = new NoteScale(BaseNotes.B, [2, 2, 1, 2, 2, 2])
+
+    expect(scale.notes).toStrictEqual([
+        BaseNotes.B,
+        BaseNotes.CSharp,
+        BaseNotes.DSharp,
+        BaseNotes.E,
+        BaseNotes.FSharp,
+        BaseNotes.GSharp,
+        BaseNotes.ASharp,
+    ]);
+})
+
 test('scale contains note', () => {
     const scale = new NoteScale(BaseNotes.C, [2, 2, 1, 2, 2, 2])
 
