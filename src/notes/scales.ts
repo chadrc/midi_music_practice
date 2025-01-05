@@ -15,7 +15,7 @@ export enum BaseNotes {
     A = 9,
     ASharp = 10,
     BFlat = 10,
-    B = 11
+    B = 11,
 }
 
 export class NoteScale {
@@ -54,8 +54,9 @@ const WHOLE = 2;
 const HALF = 1;
 
 export const MAJOR_SCALE_PATTERN = [WHOLE, WHOLE, HALF, WHOLE, WHOLE, WHOLE]
+export const MAJOR_PENTATONIC_SCALE_PATTERN = [WHOLE, WHOLE, WHOLE + HALF, WHOLE, WHOLE + HALF]
 export const MINOR_SCALE_PATTERN = [WHOLE, HALF, WHOLE, WHOLE, HALF, WHOLE]
-
+export const MINOR_PENTATONIC_SCALE_PATTERN = [WHOLE + HALF, WHOLE, WHOLE, WHOLE + HALF]
 
 export const MAJOR_SCALES = {
     A: new NoteScale(BaseNotes.A, MAJOR_SCALE_PATTERN),
@@ -72,6 +73,21 @@ export const MAJOR_SCALES = {
     G: new NoteScale(BaseNotes.G, MAJOR_SCALE_PATTERN),
 }
 
+export const MAJOR_PENTATONIC_SCALES = {
+    C: new NoteScale(BaseNotes.C, MAJOR_PENTATONIC_SCALE_PATTERN),
+    CSharp: new NoteScale(BaseNotes.CSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
+    D: new NoteScale(BaseNotes.D, MAJOR_PENTATONIC_SCALE_PATTERN),
+    DSharp: new NoteScale(BaseNotes.DSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
+    E: new NoteScale(BaseNotes.E, MAJOR_PENTATONIC_SCALE_PATTERN),
+    F: new NoteScale(BaseNotes.F, MAJOR_PENTATONIC_SCALE_PATTERN),
+    FSharp: new NoteScale(BaseNotes.FSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
+    G: new NoteScale(BaseNotes.G, MAJOR_PENTATONIC_SCALE_PATTERN),
+    GSharp: new NoteScale(BaseNotes.GSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
+    A: new NoteScale(BaseNotes.A, MAJOR_PENTATONIC_SCALE_PATTERN),
+    ASharp: new NoteScale(BaseNotes.ASharp, MAJOR_PENTATONIC_SCALE_PATTERN),
+    B: new NoteScale(BaseNotes.B, MAJOR_PENTATONIC_SCALE_PATTERN),
+}
+
 export const MINOR_SCALES = {
     A: new NoteScale(BaseNotes.A, MINOR_SCALE_PATTERN),
     B: new NoteScale(BaseNotes.B, MINOR_SCALE_PATTERN),
@@ -85,4 +101,19 @@ export const MINOR_SCALES = {
     FSharp: new NoteScale(BaseNotes.FSharp, MINOR_SCALE_PATTERN),
     G: new NoteScale(BaseNotes.G, MINOR_SCALE_PATTERN),
     GSharp: new NoteScale(BaseNotes.GSharp, MINOR_SCALE_PATTERN),
+}
+
+export const MINOR_PENTATONIC_SCALES = {
+    C: new NoteScale(BaseNotes.C, MINOR_PENTATONIC_SCALE_PATTERN),
+    CSharp: new NoteScale(BaseNotes.CSharp, MINOR_PENTATONIC_SCALE_PATTERN),
+    D: new NoteScale(BaseNotes.D, MINOR_PENTATONIC_SCALE_PATTERN),
+    DSharp: new NoteScale(BaseNotes.DSharp, MINOR_PENTATONIC_SCALE_PATTERN),
+    E: new NoteScale(BaseNotes.E, MINOR_PENTATONIC_SCALE_PATTERN),
+    F: new NoteScale(BaseNotes.F, MINOR_PENTATONIC_SCALE_PATTERN),
+    FSharp: new NoteScale(BaseNotes.FSharp, MINOR_PENTATONIC_SCALE_PATTERN),
+    G: new NoteScale(BaseNotes.G, MINOR_PENTATONIC_SCALE_PATTERN),
+    GSharp: new NoteScale(BaseNotes.GSharp, MINOR_PENTATONIC_SCALE_PATTERN),
+    A: new NoteScale(BaseNotes.A, MINOR_PENTATONIC_SCALE_PATTERN),
+    BFlat: new NoteScale(BaseNotes.BFlat, MINOR_PENTATONIC_SCALE_PATTERN),
+    B: new NoteScale(BaseNotes.B, MINOR_PENTATONIC_SCALE_PATTERN),
 }
