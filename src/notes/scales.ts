@@ -34,6 +34,10 @@ export class NoteScale {
     }
 
     public contains(note: number): boolean {
+        if (note < 0 || note > 127) {
+            return false;
+        }
+
         let col = note % 12;
 
         for (let scaleNote of this.notes) {

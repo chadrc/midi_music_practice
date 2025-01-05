@@ -12,3 +12,15 @@ test('scale does not contain note', () => {
 
     expect(scale.contains(25)).toBe(false);
 })
+
+test('scale does not contain negative note', () => {
+    const scale = new NoteScale(BaseNotes.C, [2, 2, 1, 2, 2, 2])
+
+    expect(scale.contains(-2)).toBe(false);
+})
+
+test('scale does not contain out of bound note', () => {
+    const scale = new NoteScale(BaseNotes.C, [2, 2, 1, 2, 2, 2])
+
+    expect(scale.contains(132)).toBe(false);
+})
