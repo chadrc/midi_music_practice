@@ -5,3 +5,15 @@ body {
   margin: 0;
 }
 
+.p-tabs {
+  height: 100vh;
+  width: 100vw;
+}
+
+.p-tabpanels {
+  flex: 1;
+}
+
+.p-tabpanel {
+  height: 100%;
+}
