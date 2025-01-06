@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {NoteScale} from "../notes/scales";
+import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
 
 // CCS color variables for PrimeVue theme
 const colorOptions = [
@@ -61,7 +61,7 @@ export const usePracticeStore = defineStore('practice', () => {
     const promptCursor = ref(0);
     const currentPrompt = ref(0);
 
-    const scale = ref<NoteScale | null>(null);
+    const scale = ref<NoteScale>(CHROMATIC_SCALE);
     const requireOctave = ref(true);
     const minSuccessVelocity = ref(100);
     const noteRangeType = ref(NoteRangeType.Frets);
@@ -93,11 +93,14 @@ export const usePracticeStore = defineStore('practice', () => {
                 break
         }
 
+
         return notes
     })
 
     function generatePrompts() {
         let noteOptions = selectedNotes.value
+            .filter((note) => scale.value.contains(note))
+
         for (let note of noteOptions) {
             let colorRoll = Math.floor(Math.random() * colorOptions.length);
             prompts.value.push({
@@ -197,13 +200,14 @@ export const usePracticeStore = defineStore('practice', () => {
         startTime,
         practiceSessionTimer,
         practiceSessionTime,
-        start,
-        stop,
         selectedNotes,
         activePrompts,
         currentPrompt,
         requireOctave,
         successCount,
         practicing,
+        scale,
+        start,
+        stop,
     }
 })

@@ -2,11 +2,18 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Panel, Button} from "primevue";
+import {Panel, Button, Toolbar, CascadeSelect} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
 import {exists} from "../utilities";
+import {
+  CHROMATIC_SCALE,
+  MAJOR_PENTATONIC_SCALES,
+  MAJOR_SCALES,
+  MINOR_PENTATONIC_SCALES,
+  MINOR_SCALES, NoteScale
+} from "../notes/scales";
 
 const practiceStore = usePracticeStore()
 
@@ -50,54 +57,109 @@ function formatPracticeTime() {
   let minutes = Math.floor(practiceStore.practiceSessionTime / 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
+
+function makeScaleOptions() {
+  function transformScaleName(name: string) {
+    return name.replace("Flat", "♭").replace("Sharp", "#")
+  }
+
+  function makeScaleOption(
+      name: string,
+      scales: { [key: string]: NoteScale },
+      nameFn: (k: string) => string
+  ) {
+    return {
+      name: name,
+      scales: Object.entries(scales).map(([k, v]) => ({"name": nameFn(transformScaleName(k)), "scale": v})),
+    }
+  }
+
+  return [
+    makeScaleOption("Major", MAJOR_SCALES, (k) => `${k} Maj.`),
+    makeScaleOption("Minor", MINOR_SCALES, (k) => `${k} Min.`),
+    makeScaleOption("Major Pentatonic", MAJOR_PENTATONIC_SCALES, (k) => `${k} Maj. Pent.`),
+    makeScaleOption("Minor Pentatonic", MINOR_PENTATONIC_SCALES, (k) => `${k} Min. Pent.`),
+  ]
+}
+
+const scaleOptions = makeScaleOptions()
+
+function updateScale(value: { name: string, scale: NoteScale }) {
+  let scale = CHROMATIC_SCALE
+  if (exists(value)) {
+    scale = value.scale;
+  }
+
+  practiceStore.scale = scale;
+}
 </script>
 
 <template>
   <section class="practice-view">
     <section class="practice-controls">
-      <Button
-        :label="practiceStore.practicing ? 'Stop' : 'Start' "
-        :severity="practiceStore.practicing ? 'danger' : 'info'"
-        size="small"
-        @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
-      >
-        {{ practiceStore.practicing ? 'Stop' : 'Start' }}
-      </Button>
-      <span class="practice-time">
-        Time: {{ formatPracticeTime() }}
-      </span>
-      <span class="practice-time">
-        Notes Played: {{ practiceStore.successCount }}
-      </span>
+      <Toolbar>
+        <template #start>
+          <CascadeSelect
+              class="scale-select"
+              :disabled="practiceStore.practicing"
+              :value="practiceStore.scale"
+              :options="scaleOptions"
+              show-clear
+              option-group-label="name"
+              option-label="name"
+              :option-group-children="['scales']"
+              placeholder="Chromatic"
+              @value-change="updateScale"
+          />
+        </template>
+        <template #center>
+          <Button
+              :label="practiceStore.practicing ? 'Stop' : 'Start' "
+              :severity="practiceStore.practicing ? 'danger' : 'info'"
+              size="small"
+              @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+          >
+            {{ practiceStore.practicing ? 'Stop' : 'Start' }}
+          </Button>
+          <span class="practice-time">
+            Time: {{ formatPracticeTime() }}
+          </span>
+          <span class="practice-time">
+            Notes Played: {{ practiceStore.successCount }}
+          </span>
+        </template>
+      </Toolbar>
     </section>
-    <div class="prompt-area">
-      <div
+  <div class="prompt-area">
+    <div
         v-for="prompt in displayPrompts"
         :key="prompt.note"
         :class="`prompt-column ${prompt.current ? 'current' : ''}`"
-      >
-        <div
+    >
+      <div
           class="prompt-card"
           :style="{backgroundColor: formatPromptColor(prompt)}"
-        >
-          <span
+      >
+        <span
             class="prompt-text"
             :style="{fontSize: `${noteSize}vh`}"
-          >
-            {{ formatPromptNote(prompt) }}
-          </span>
-        </div>
+        >
+          {{ formatPromptNote(prompt) }}
+        </span>
       </div>
     </div>
-    <Panel header="Instrument">
-      <div class="instrument-display">
-        <NoteGrid
+  </div>
+  <Panel header="Instrument">
+    <div class="instrument-display">
+      <NoteGrid
           :notes="practiceStore.selectedNotes"
+          :scale="practiceStore.scale"
           note-style="circle"
+          :headers="['0', '1', '2', '3', '4']"
           :columns="5"
-        />
-      </div>
-    </Panel>
+      />
+    </div>
+  </Panel>
   </section>
 </template>
 
@@ -133,7 +195,7 @@ function formatPracticeTime() {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 20vh;
+  height: calc(10vh + 5vw);
   aspect-ratio: 1;
   border-radius: 50%;
 }
@@ -147,5 +209,9 @@ function formatPracticeTime() {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.scale-select {
+  width: 12rem;
 }
 </style>

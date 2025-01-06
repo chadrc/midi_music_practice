@@ -2,20 +2,25 @@
 
 import {formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
-import {useSettingsStore} from "../store/settings";
 import {computed} from "vue";
+import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
+import {exists} from "../utilities";
 
 interface NoteGridProps {
   notes: Array<number>,
   columns: number,
   formatted?: boolean,
   noteStyle?: "box" | "circle",
+  scale?: NoteScale,
+  headers?: string[],
 }
 
 const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
   formatted: true,
   noteStyle: "box",
+  scale: () => CHROMATIC_SCALE,
+  headers: () => [],
 });
 
 const midiStore = useMidiStore();
@@ -57,7 +62,11 @@ function midiNoteAtRowColumn(row: number, column: number) {
 }
 
 function hasNote(row: number, column: number) {
-  return midiNoteAtRowColumn(row, column) !== null && midiNoteAtRowColumn(row, column) !== undefined;
+  let note = midiNoteAtRowColumn(row, column);
+  if (!exists(note)) {
+    return false
+  }
+  return props.scale.contains(note);
 }
 </script>
 
@@ -75,8 +84,15 @@ function hasNote(row: number, column: number) {
              :class="makeStyleClass()">
           <span>{{ props.formatted ? formatMidiNote(midiNoteAtRowColumn(r, c)) : midiNoteAtRowColumn(r, c) }}</span>
         </div>
-        <div v-if="!hasNote(r, c)"
-             class="note-grid-cell">
+        <div v-else
+             :class="`${makeStyleClass()} empty`">
+        </div>
+      </div>
+    </div>
+    <div v-if="props.headers.length > 0" class="note-grid-row header">
+      <div v-for="header in props.headers">
+        <div :class="`${makeStyleClass()} header`">
+          <span>{{ header }}</span>
         </div>
       </div>
     </div>
@@ -101,6 +117,10 @@ function hasNote(row: number, column: number) {
   justify-content: center;
   align-items: center;
   transition: opacity 0.2s;
+}
+
+.note-grid-cell.header {
+  background-color: var(--p-neutral-700);
 }
 
 .note-style-box {
