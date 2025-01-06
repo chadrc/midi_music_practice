@@ -64,24 +64,24 @@ function onScaleSelected(scale: NoteScale) {
       <Toolbar>
         <template #start>
           <ScaleSelect
-            :value="practiceStore.scale"
-            :disabled="practiceStore.practicing"
-            @scale-selected="onScaleSelected"
+              :value="practiceStore.scale"
+              :disabled="practiceStore.practicing"
+              @scale-selected="onScaleSelected"
           />
         </template>
         <template #center>
           <Button
-            :label="practiceStore.practicing ? 'Stop' : 'Start' "
-            :severity="practiceStore.practicing ? 'danger' : 'info'"
-            size="small"
-            @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+              :label="practiceStore.practicing ? 'Stop' : 'Start' "
+              :severity="practiceStore.practicing ? 'danger' : 'info'"
+              size="small"
+              @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
           >
             {{ practiceStore.practicing ? 'Stop' : 'Start' }}
           </Button>
-          <span class="practice-time">
+          <span class="feedback-text">
             Time: {{ formatPracticeTime() }}
           </span>
-          <span class="practice-time">
+          <span class="feedback-text">
             Notes Played: {{ practiceStore.successCount }}
           </span>
         </template>
@@ -89,17 +89,17 @@ function onScaleSelected(scale: NoteScale) {
     </section>
     <div class="prompt-area">
       <div
-        v-for="prompt in displayPrompts"
-        :key="prompt.note"
-        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+          v-for="prompt in displayPrompts"
+          :key="prompt.note"
+          :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-          class="prompt-card"
-          :style="{backgroundColor: formatPromptColor(prompt)}"
+            class="prompt-card"
+            :style="{backgroundColor: formatPromptColor(prompt)}"
         >
           <span
-            class="prompt-text"
-            :style="{fontSize: `${noteSize}vh`}"
+              class="prompt-text"
+              :style="{fontSize: `${noteSize}vh`}"
           >
             {{ formatPromptNote(prompt) }}
           </span>
@@ -109,11 +109,11 @@ function onScaleSelected(scale: NoteScale) {
     <Panel header="Instrument">
       <div class="instrument-display">
         <NoteGrid
-          :notes="practiceStore.selectedNotes"
-          :scale="practiceStore.scale"
-          note-style="circle"
-          :headers="['0', '1', '2', '3', '4']"
-          :columns="5"
+            :notes="practiceStore.selectedNotes"
+            :scale="practiceStore.scale"
+            note-style="circle"
+            :headers="['0', '1', '2', '3', '4']"
+            :columns="5"
         />
       </div>
     </Panel>
@@ -160,6 +160,10 @@ function onScaleSelected(scale: NoteScale) {
 .prompt-text {
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;
+}
+
+.feedback-text {
+  margin-left: 1rem;
 }
 
 .instrument-display {

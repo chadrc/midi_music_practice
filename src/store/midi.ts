@@ -97,7 +97,7 @@ export const useMidiStore = defineStore('midi', {
 
             switch (data.instruction) {
                 case MIDIInstruction.NoteOff:
-                    this.midiNoteOff(data.data1, data.data2);
+                    this.midiNoteOff(data.data1, 0);
                     break
                 case MIDIInstruction.NoteOn:
                     this.midiNoteOn(data.data1, data.data2);
