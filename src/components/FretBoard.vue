@@ -106,7 +106,7 @@ function onScaleSelected(scale: NoteScale) {
         </div>
       </div>
     </div>
-    <Panel header="Instrument">
+    <Panel header="Instrument" toggleable>
       <div class="instrument-display">
         <NoteGrid
             :notes="practiceStore.selectedNotes"

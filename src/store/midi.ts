@@ -95,6 +95,8 @@ export const useMidiStore = defineStore('midi', {
             let data = makeMidiData(event.data);
             if (data === null) return;
 
+            console.log("Received MIDI message", data);
+
             switch (data.instruction) {
                 case MIDIInstruction.NoteOff:
                     this.midiNoteOff(data.data1, 0);
