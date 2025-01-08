@@ -5,6 +5,7 @@ import {useMidiStore} from "../store/midi";
 import {computed} from "vue";
 import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
 import {exists} from "../utilities";
+import {expect} from "vitest";
 
 interface NoteGridProps {
   notes: Array<number>,
@@ -33,6 +34,10 @@ const hueIncrement = 360 / 128;
 
 function opacityForNote(row: number, column: number) {
   let note = midiNoteAtRowColumn(row, column);
+  if (!exists(note)) {
+    return 0;
+  }
+
   let playData = midiStore.playData[note];
   if (playData.on) {
     return 1;
@@ -85,6 +90,7 @@ function hasNote(row: number, column: number) {
           <span>{{ props.formatted ? formatMidiNote(midiNoteAtRowColumn(r, c)) : midiNoteAtRowColumn(r, c) }}</span>
         </div>
         <div v-else
+             :style="{opacity: opacityForNote(r, c)}"
              :class="`${makeStyleClass()} empty`">
         </div>
       </div>
@@ -121,6 +127,10 @@ function hasNote(row: number, column: number) {
 
 .note-grid-cell.header {
   background-color: var(--p-neutral-700);
+}
+
+.note-grid-cell.empty {
+  background-color: var(--p-neutral-800);
 }
 
 .note-style-box {
