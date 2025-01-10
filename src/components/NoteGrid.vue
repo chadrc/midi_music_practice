@@ -5,7 +5,6 @@ import {useMidiStore} from "../store/midi";
 import {computed} from "vue";
 import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
 import {exists} from "../utilities";
-import {expect} from "vitest";
 
 interface NoteGridProps {
   notes: Array<number>,
