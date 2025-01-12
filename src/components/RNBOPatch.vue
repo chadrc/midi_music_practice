@@ -3,7 +3,6 @@
 import BasicSynthPatcher from "../../instruments/basic_synth/basic_synth.export.json"
 import {Parameter, ParameterType as RNBOParameterType} from "@rnbo/js";
 import {Select, Knob, Fieldset} from "primevue"
-import {ref} from "vue";
 import {useInstrumentStore} from "../store/instruments";
 import {exists} from "../utilities";
 
@@ -19,6 +18,7 @@ function makeEnumOptions(parameter: Parameter) {
 }
 
 function updateDevice(parameter: Parameter, value: any) {
+  console.log("updating device", value)
   parameter.value = value;
 }
 

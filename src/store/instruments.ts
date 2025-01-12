@@ -32,19 +32,22 @@ export const useInstrumentStore = defineStore('instruments', () => {
         currentDevice.value = device;
         currentDeviceName.value = (patcher.desc.meta as any).name
 
-        let defaults = {}
-
-        for (let parameter of currentDevice.value.parameters) {
-            defaults[parameter.id] = parameter.initialValue;
-        }
-
         let existingData = settingsStore.instruments.instrumentData
             .find((value) => value.name === currentDeviceName.value);
 
         if (exists(existingData)) {
-            paramValues.value = Object.assign(defaults, existingData.parameterData);
+            paramValues.value = Object.assign({}, existingData.parameterData);
+            for (let parameter of currentDevice.value.parameters) {
+                if (exists(paramValues.value[parameter.id])) {
+                    parameter.value = paramValues.value[parameter.id]
+                } else {
+                    paramValues.value[parameter.id] = parameter.initialValue
+                }
+            }
         } else {
-            paramValues.value = defaults;
+            for (let parameter of currentDevice.value.parameters) {
+                paramValues.value[parameter.id] = parameter.initialValue;
+            }
         }
     }
 
