@@ -42,6 +42,11 @@ export interface FretRangeOptions {
     endFret: number;
 }
 
+export interface OctaveRangeOptions {
+    startOctave: number;
+    endOctave: number;
+}
+
 const MAX_MIDI_NOTES = 127
 const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
 
@@ -69,6 +74,10 @@ export const usePracticeStore = defineStore('practice', () => {
         startFret: 0,
         endFret: 4
     });
+    const octaveRangeOptions = ref<OctaveRangeOptions>({
+        startOctave: 3,
+        endOctave: 5
+    })
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);
 
@@ -90,9 +99,15 @@ export const usePracticeStore = defineStore('practice', () => {
                 break;
 
             case NoteRangeType.Octaves:
+                let startingC = octaveRangeOptions.value.startOctave * 12
+                let noteCount = (octaveRangeOptions.value.endOctave - octaveRangeOptions.value.startOctave) * 12;
+                let endNote = startingC + noteCount;
+
+                for (let i = startingC; i <= endNote; i++) {
+                    notes.push(i)
+                }
                 break
         }
-
 
         return notes
     })
@@ -207,6 +222,9 @@ export const usePracticeStore = defineStore('practice', () => {
         successCount,
         practicing,
         scale,
+        noteRangeType,
+        fretRangeOptions,
+        octaveRangeOptions,
         start,
         stop,
     }

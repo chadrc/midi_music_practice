@@ -2,8 +2,8 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Panel, Button, Toolbar, Slider} from "primevue";
-import {usePracticeStore} from "../store/practice";
+import {Panel, Button, Toolbar, Slider, Select} from "primevue";
+import {NoteRangeType, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
 import {exists} from "../utilities";
@@ -59,6 +59,61 @@ function onScaleSelected(scale: NoteScale) {
   practiceStore.scale = scale
 }
 
+function makeNoteRangeOptions() {
+  return [
+    {
+      name: "Notes",
+      value: NoteRangeType.Notes
+    },
+    {
+      name: "Frets",
+      value: NoteRangeType.Frets
+    },
+    {
+      name: "Octaves",
+      value: NoteRangeType.Octaves
+    }
+  ]
+}
+
+const gridStyle = computed(() => {
+  switch (practiceStore.noteRangeType) {
+    case NoteRangeType.Notes:
+      return "box"
+    case NoteRangeType.Frets:
+      return "circle"
+    case NoteRangeType.Octaves:
+      return "bar"
+  }
+})
+
+const gridColumns = computed(() => {
+  switch (practiceStore.noteRangeType) {
+    case NoteRangeType.Notes:
+      return 12
+    case NoteRangeType.Frets:
+      return practiceStore.fretRangeOptions.endFret - practiceStore.fretRangeOptions.startFret + 1
+    case NoteRangeType.Octaves:
+      return practiceStore.selectedNotes.length
+  }
+})
+
+const gridHeaders = computed(() => {
+  switch (practiceStore.noteRangeType) {
+    case NoteRangeType.Notes:
+      return []
+    case NoteRangeType.Frets:
+      let headers = []
+      for (let i = practiceStore.fretRangeOptions.startFret; i <= practiceStore.fretRangeOptions.endFret; ++i) {
+        headers.push(i.toString())
+      }
+
+      return headers
+    case NoteRangeType.Octaves:
+      return []
+  }
+})
+
 </script>
 
 <template>
@@ -70,6 +125,11 @@ function onScaleSelected(scale: NoteScale) {
               :value="practiceStore.scale"
               :disabled="practiceStore.practicing"
               @scale-selected="onScaleSelected"
+          />
+          <Select v-model="practiceStore.noteRangeType"
+                  :options="makeNoteRangeOptions()"
+                  option-value="value"
+                  option-label="name"
           />
         </template>
         <template #center>
@@ -122,9 +182,9 @@ function onScaleSelected(scale: NoteScale) {
         <NoteGrid
             :notes="practiceStore.selectedNotes"
             :scale="practiceStore.scale"
-            note-style="circle"
-            :headers="['0', '1', '2', '3', '4']"
-            :columns="5"
+            :note-style="gridStyle"
+            :headers="gridHeaders"
+            :columns="gridColumns"
         />
       </div>
     </Panel>

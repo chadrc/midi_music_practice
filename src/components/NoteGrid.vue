@@ -10,7 +10,7 @@ interface NoteGridProps {
   notes: Array<number>,
   columns: number,
   formatted?: boolean,
-  noteStyle?: "box" | "circle",
+  noteStyle?: "box" | "circle" | "bar",
   scale?: NoteScale,
   headers?: string[],
 }
