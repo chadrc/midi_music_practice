@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import FretBoard from "./components/FretBoard.vue";
 import {Tabs, TabList, Tab, TabPanels, TabPanel} from "primevue";
 import Settings from "./components/Settings.vue";
 import RNBOPatch from "./components/RNBOPatch.vue";
+import PracticeView from "./components/PracticeView.vue";
 
 </script>
 
@@ -24,7 +24,7 @@ import RNBOPatch from "./components/RNBOPatch.vue";
         <Settings />
       </TabPanel>
       <TabPanel value="practice">
-        <FretBoard />
+        <PracticeView />
       </TabPanel>
       <TabPanel value="instruments">
         <Suspense>

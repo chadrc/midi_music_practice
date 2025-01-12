@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
-import {formatMidiLetter, formatMidiNote} from "../notes";
+import {formatMidiLetter} from "../notes";
 import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
 
 // CCS color variables for PrimeVue theme
@@ -157,7 +157,7 @@ export const usePracticeStore = defineStore('practice', () => {
         midiListenerUnsubscribe.value = midiStore.$onAction(
             ({name, args}) => {
                 if (name === 'midiNoteOn') {
-                    let noteArgs = args as [number, number]
+                    let noteArgs = args as [number, number, number]
                     if (noteArgs[1] < minSuccessVelocity.value) return;
 
                     let promptIndex = activePrompts.value[currentPrompt.value]

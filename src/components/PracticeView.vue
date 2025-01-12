@@ -9,7 +9,6 @@ import {computed} from "vue";
 import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteScale} from "../notes/scales";
-import {useInstrumentStore} from "../store/instruments";
 import {useSettingsStore} from "../store/settings";
 
 const practiceStore = usePracticeStore()
