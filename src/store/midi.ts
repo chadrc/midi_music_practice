@@ -37,7 +37,7 @@ interface NotePlayData {
 }
 
 interface MIDIStore {
-    audioContext: AudioContext;
+    audioContext: AudioContext | null;
     midi: MIDIAccess | null;
     err: any | null;
     ioStates: Map<string, IOState>;
@@ -46,7 +46,7 @@ interface MIDIStore {
 
 export const useMidiStore = defineStore('midi', {
     state: (): MIDIStore => ({
-        audioContext: new AudioContext(),
+        audioContext: null,
         midi: null,
         err: null,
         ioStates: new Map(),
@@ -99,17 +99,17 @@ export const useMidiStore = defineStore('midi', {
 
             switch (data.instruction) {
                 case MIDIInstruction.NoteOff:
-                    this.midiNoteOff(data.data1, 0);
+                    this.midiNoteOff(data.data1, 0, data.channel);
                     break
                 case MIDIInstruction.NoteOn:
-                    this.midiNoteOn(data.data1, data.data2);
+                    this.midiNoteOn(data.data1, data.data2, data.channel);
                     break
                 default:
                     // currently unsupported
                     return
             }
         },
-        midiNoteOn(note: number, velocity: number) {
+        midiNoteOn(note: number, velocity: number, channel: number) {
             this.playData[note].on = true;
             this.playData[note].velocity = velocity;
 
@@ -121,7 +121,7 @@ export const useMidiStore = defineStore('midi', {
                 )
             }
         },
-        midiNoteOff(note: number, velocity: number) {
+        midiNoteOff(note: number, velocity: number, channel: number) {
             if (this.instrumentAudioEnabled) {
                 endKeySound(this.audioContext, this.playData[note].sound)
             }
