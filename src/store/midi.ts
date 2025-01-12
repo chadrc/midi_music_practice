@@ -73,7 +73,6 @@ export const useMidiStore = defineStore('midi', {
     },
     actions: {
         requestAccess(autoReceiveInstruments: string[]) {
-            console.log("Requesting MIDI access...")
             navigator.requestMIDIAccess({
                 sysex: true,
                 software: true,
@@ -94,8 +93,6 @@ export const useMidiStore = defineStore('midi', {
         receiveMidiMessage(event: MIDIMessageEvent) {
             let data = makeMidiData(event.data);
             if (data === null) return;
-
-            console.log("Received MIDI message", data);
 
             switch (data.instruction) {
                 case MIDIInstruction.NoteOff:
