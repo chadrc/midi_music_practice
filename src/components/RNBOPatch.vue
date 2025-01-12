@@ -11,12 +11,6 @@ const instrumentStore = useInstrumentStore()
 
 await instrumentStore.loadDevice(BasicSynthPatcher);
 
-const paramValues = ref<{ [key: string]: any }>({})
-
-for (let parameter of instrumentStore.currentDevice.parameters) {
-  paramValues.value[parameter.id] = parameter.initialValue;
-}
-
 function makeEnumOptions(parameter: Parameter) {
   return parameter.enumValues.entries().map(([index, name]) => ({
     index,
@@ -118,7 +112,7 @@ const options = {
              class="rnbo-enum-parameter"
         >
           <span>{{ parameter.displayName }}</span>
-          <Select v-model="paramValues[parameter.id]"
+          <Select v-model="instrumentStore.paramValues[parameter.id]"
                   @update:model-value="(value) => updateDevice(parameter, value)"
                   :options="makeEnumOptions(parameter)"
                   optionLabel="name"
@@ -128,7 +122,7 @@ const options = {
         <div v-else-if="parameter.type == RNBOParameterType.Number"
              class="rnbo-number-parameter"
         >
-          <Knob v-model="paramValues[parameter.id]"
+          <Knob v-model="instrumentStore.paramValues[parameter.id]"
                 @update:model-value="(value) => updateDevice(parameter, value)"
                 :min="parameter.min"
                 :max="parameter.max"

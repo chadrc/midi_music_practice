@@ -9,9 +9,19 @@ interface AudioSettings {
     autoReceiveInstruments: string[]
 }
 
+interface InstrumentData {
+    name: string,
+    parameterData: { [key: string]: any}
+}
+
+interface InstrumentSettings {
+    instrumentData: InstrumentData[]
+}
+
 interface SettingsStore {
     noteGrid: NoteGridSettings;
     audio: AudioSettings;
+    instruments: InstrumentSettings;
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -25,18 +35,26 @@ export const useSettingsStore = defineStore('settings', {
             autoReceiveInstruments: []
         }
 
+        let defaultInstrument: InstrumentSettings = {
+            instrumentData: []
+        }
+
         if (localStorage.getItem('settings')) {
             let stored = JSON.parse(localStorage.getItem('settings'))
 
             return {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
-                audio: Object.assign(defaultAudio, stored.audio)
+                audio: Object.assign(defaultAudio, stored.audio),
+                instruments: Object.assign(defaultInstrument, stored.instruments)
             }
         }
 
         return {
             noteGrid: defaultNoteGrid,
-            audio: defaultAudio
+            audio: defaultAudio,
+            instruments: {
+                instrumentData: []
+            }
         }
     },
     getters: {},
@@ -49,6 +67,16 @@ export const useSettingsStore = defineStore('settings', {
                 this.audio.autoReceiveInstruments.push(deviceId)
             } else {
                 this.audio.autoReceiveInstruments.splice(index, 1)
+            }
+        },
+        saveInstrumentData(data: InstrumentData) {
+            let existing = this.instruments.instrumentData
+                .findIndex((instrument: InstrumentData) => instrument.name === data.name)
+
+            if (existing > -1) {
+                this.instruments.instrumentData[existing] = data
+            } else {
+                this.instruments.instrumentData.push(data)
             }
         }
     },

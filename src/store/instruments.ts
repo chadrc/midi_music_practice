@@ -1,18 +1,25 @@
 import {defineStore} from "pinia";
 import {createDevice, Device, IPatcher} from "@rnbo/js";
-import {ref} from "vue";
+import {ref, watch} from "vue";
 import {useMidiStore} from "./midi";
 import {MIDIEvent} from "@rnbo/js";
+import {useSettingsStore} from "./settings";
+import {exists} from "../utilities";
 
 export const useInstrumentStore = defineStore('instruments', () => {
+    const settingsStore = useSettingsStore();
+    const midiStore = useMidiStore();
+
     const audioContext = new AudioContext();
     // Create gain node and connect it to audio output
     const outputNode = ref(audioContext.createGain());
     outputNode.value.connect(audioContext.destination);
 
-    const midiStore = useMidiStore();
+    const paramValues = ref<{ [key: string]: any }>({})
+
     const midiListenerUnsubscribe = ref<any>();
     const currentDevice = ref<Device | null>(null);
+    const currentDeviceName = ref<string | null>(null);
 
     async function loadDevice(patcher: IPatcher) {
         const device = await createDevice({
@@ -20,8 +27,23 @@ export const useInstrumentStore = defineStore('instruments', () => {
             patcher: patcher,
         });
         device.node.connect(outputNode.value);
-
         currentDevice.value = device;
+        currentDeviceName.value = (patcher.desc.meta as any).name
+
+        let defaults = {}
+
+        for (let parameter of currentDevice.value.parameters) {
+            defaults[parameter.id] = parameter.initialValue;
+        }
+
+        let existingData = settingsStore.instruments.instrumentData
+            .find((value) => value.name === currentDeviceName.value);
+
+        if (exists(existingData)) {
+            paramValues.value = Object.assign(defaults, existingData.parameterData);
+        } else {
+            paramValues.value = defaults;
+        }
     }
 
     midiListenerUnsubscribe.value = midiStore.$onAction(
@@ -46,7 +68,18 @@ export const useInstrumentStore = defineStore('instruments', () => {
             currentDevice.value.scheduleEvent(event);
         }
     )
+
+    watch(paramValues,  (newValue, oldValue) => {
+        if (currentDevice.value !== null) {
+            settingsStore.saveInstrumentData({
+                name: currentDeviceName.value,
+                parameterData: newValue,
+            })
+        }
+    }, { deep: true })
+
     return {
+        paramValues,
         currentDevice,
         loadDevice,
     }
