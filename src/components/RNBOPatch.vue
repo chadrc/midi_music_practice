@@ -23,12 +23,17 @@ function makeEnumOptions(parameter: Parameter) {
   })).toArray();
 }
 
+function updateDevice(parameter: Parameter, value: any) {
+  parameter.value = value;
+}
+
 </script>
 
 <template>
   <div v-for="parameter in instrumentStore.currentDevice.parameters">
     <div v-if="parameter.type === RNBOParameterType.Enum">
       <Select v-model="paramValues[parameter.id]"
+              @update:model-value="(value) => updateDevice(parameter, value)"
               :options="makeEnumOptions(parameter)"
               optionLabel="name"
               optionValue="index"

@@ -3,7 +3,6 @@ import {createDevice, Device, IPatcher} from "@rnbo/js";
 import {ref} from "vue";
 import {useMidiStore} from "./midi";
 import {MIDIEvent} from "@rnbo/js";
-import {formatMidiLetter} from "../notes";
 
 export const useInstrumentStore = defineStore('instruments', () => {
     const audioContext = new AudioContext();
