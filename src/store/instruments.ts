@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {createDevice, Device, IPatcher} from "@rnbo/js";
-import {ref, watch} from "vue";
+import {computed, ref, watch} from "vue";
 import {useMidiStore} from "./midi";
 import {MIDIEvent} from "@rnbo/js";
 import {useSettingsStore} from "./settings";
@@ -12,8 +12,10 @@ export const useInstrumentStore = defineStore('instruments', () => {
 
     const audioContext = new AudioContext();
     // Create gain node and connect it to audio output
-    const outputNode = ref(audioContext.createGain());
-    outputNode.value.connect(audioContext.destination);
+    const outputNode = audioContext.createGain();
+    outputNode.gain.value = settingsStore.instruments.volume
+
+    outputNode.connect(audioContext.destination);
 
     const paramValues = ref<{ [key: string]: any }>({})
 
@@ -26,7 +28,7 @@ export const useInstrumentStore = defineStore('instruments', () => {
             context: audioContext,
             patcher: patcher,
         });
-        device.node.connect(outputNode.value);
+        device.node.connect(outputNode);
         currentDevice.value = device;
         currentDeviceName.value = (patcher.desc.meta as any).name
 
@@ -68,6 +70,11 @@ export const useInstrumentStore = defineStore('instruments', () => {
             currentDevice.value.scheduleEvent(event);
         }
     )
+
+    watch(() => settingsStore.instruments.volume, (value: number, oldValue: number) => {
+        console.log("setting volume");
+        outputNode.gain.setValueAtTime(value, audioContext.currentTime);
+    })
 
     watch(paramValues,  (newValue, oldValue) => {
         if (currentDevice.value !== null) {

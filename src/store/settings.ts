@@ -11,10 +11,11 @@ interface AudioSettings {
 
 interface InstrumentData {
     name: string,
-    parameterData: { [key: string]: any}
+    parameterData: { [key: string]: any }
 }
 
 interface InstrumentSettings {
+    volume: number,
     instrumentData: InstrumentData[]
 }
 
@@ -36,6 +37,7 @@ export const useSettingsStore = defineStore('settings', {
         }
 
         let defaultInstrument: InstrumentSettings = {
+            volume: .5,
             instrumentData: []
         }
 
@@ -52,9 +54,7 @@ export const useSettingsStore = defineStore('settings', {
         return {
             noteGrid: defaultNoteGrid,
             audio: defaultAudio,
-            instruments: {
-                instrumentData: []
-            }
+            instruments: defaultInstrument,
         }
     },
     getters: {},

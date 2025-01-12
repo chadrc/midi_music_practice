@@ -2,15 +2,18 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Panel, Button, Toolbar, CascadeSelect} from "primevue";
+import {Panel, Button, Toolbar, Slider} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
 import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteScale} from "../notes/scales";
+import {useInstrumentStore} from "../store/instruments";
+import {useSettingsStore} from "../store/settings";
 
 const practiceStore = usePracticeStore()
+const settingsStore = useSettingsStore()
 
 const displayPrompts = computed(() => {
   let prompts = practiceStore.activePrompts
@@ -56,6 +59,7 @@ function formatPracticeTime() {
 function onScaleSelected(scale: NoteScale) {
   practiceStore.scale = scale
 }
+
 </script>
 
 <template>
@@ -84,6 +88,14 @@ function onScaleSelected(scale: NoteScale) {
           <span class="feedback-text">
             Notes Played: {{ practiceStore.successCount }}
           </span>
+        </template>
+        <template #end>
+          <Slider class="volume-slider"
+                  :min="0"
+                  :max="1"
+                  :step=".01"
+                  v-model="settingsStore.instruments.volume"
+          />
         </template>
       </Toolbar>
     </section>
@@ -170,5 +182,9 @@ function onScaleSelected(scale: NoteScale) {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.volume-slider {
+  width: 10rem;
 }
 </style>
