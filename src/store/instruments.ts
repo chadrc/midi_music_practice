@@ -75,7 +75,6 @@ export const useInstrumentStore = defineStore('instruments', () => {
     )
 
     watch(() => settingsStore.instruments.volume, (value: number, oldValue: number) => {
-        console.log("setting volume");
         outputNode.gain.setValueAtTime(value, audioContext.currentTime);
     })
 

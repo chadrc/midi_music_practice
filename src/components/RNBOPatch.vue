@@ -18,7 +18,6 @@ function makeEnumOptions(parameter: Parameter) {
 }
 
 function updateDevice(parameter: Parameter, value: any) {
-  console.log("updating device", value)
   parameter.value = value;
 }
 
