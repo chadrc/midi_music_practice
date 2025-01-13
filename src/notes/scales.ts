@@ -1,3 +1,5 @@
+import {exists} from "../utilities";
+
 export enum BaseNotes {
     C = 0,
     CSharp = 1,
@@ -58,64 +60,89 @@ export const MAJOR_PENTATONIC_SCALE_PATTERN = [WHOLE, WHOLE, WHOLE + HALF, WHOLE
 export const MINOR_SCALE_PATTERN = [WHOLE, HALF, WHOLE, WHOLE, HALF, WHOLE]
 export const MINOR_PENTATONIC_SCALE_PATTERN = [WHOLE + HALF, WHOLE, WHOLE, WHOLE + HALF]
 
-export const CHROMATIC_SCALE = new NoteScale(BaseNotes.C, [HALF,HALF,HALF,HALF,HALF,HALF,HALF,HALF,HALF,HALF,HALF])
+export const CHROMATIC_SCALE = new NoteScale(BaseNotes.C, [HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF])
 
-export const MAJOR_SCALES = {
-    A: new NoteScale(BaseNotes.A, MAJOR_SCALE_PATTERN),
-    AFlat: new NoteScale(BaseNotes.AFlat, MAJOR_SCALE_PATTERN),
-    B: new NoteScale(BaseNotes.B, MAJOR_SCALE_PATTERN),
-    BFlat: new NoteScale(BaseNotes.BFlat, MAJOR_SCALE_PATTERN),
-    C: new NoteScale(BaseNotes.C, MAJOR_SCALE_PATTERN),
-    D: new NoteScale(BaseNotes.D, MAJOR_SCALE_PATTERN),
-    DFlat: new NoteScale(BaseNotes.DFlat, MAJOR_SCALE_PATTERN),
-    E: new NoteScale(BaseNotes.E, MAJOR_SCALE_PATTERN),
-    EFlat: new NoteScale(BaseNotes.EFlat, MAJOR_SCALE_PATTERN),
-    F: new NoteScale(BaseNotes.F, MAJOR_SCALE_PATTERN),
-    FSharp: new NoteScale(BaseNotes.FSharp, MAJOR_SCALE_PATTERN),
-    G: new NoteScale(BaseNotes.G, MAJOR_SCALE_PATTERN),
+const SCALES_MAP: { [key: string]: { [key: string]: NoteScale } } = {}
+
+const registerScale = (baseNote: BaseNotes, pattern: number[], setName: string) => {
+    let scale = new NoteScale(baseNote, pattern);
+    if (!exists(SCALES_MAP[setName])) {
+        SCALES_MAP[setName] = {};
+    }
+
+    let set = SCALES_MAP[setName];
+    set[BaseNotes[baseNote]] = scale;
 }
 
-export const MAJOR_PENTATONIC_SCALES = {
-    C: new NoteScale(BaseNotes.C, MAJOR_PENTATONIC_SCALE_PATTERN),
-    CSharp: new NoteScale(BaseNotes.CSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
-    D: new NoteScale(BaseNotes.D, MAJOR_PENTATONIC_SCALE_PATTERN),
-    DSharp: new NoteScale(BaseNotes.DSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
-    E: new NoteScale(BaseNotes.E, MAJOR_PENTATONIC_SCALE_PATTERN),
-    F: new NoteScale(BaseNotes.F, MAJOR_PENTATONIC_SCALE_PATTERN),
-    FSharp: new NoteScale(BaseNotes.FSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
-    G: new NoteScale(BaseNotes.G, MAJOR_PENTATONIC_SCALE_PATTERN),
-    GSharp: new NoteScale(BaseNotes.GSharp, MAJOR_PENTATONIC_SCALE_PATTERN),
-    A: new NoteScale(BaseNotes.A, MAJOR_PENTATONIC_SCALE_PATTERN),
-    ASharp: new NoteScale(BaseNotes.ASharp, MAJOR_PENTATONIC_SCALE_PATTERN),
-    B: new NoteScale(BaseNotes.B, MAJOR_PENTATONIC_SCALE_PATTERN),
-}
+export const CHROMATIC_SCALE_SET_NAME = "Chromatic"
+registerScale(
+    BaseNotes.C,
+    [HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF],
+    CHROMATIC_SCALE_SET_NAME
+);
 
-export const MINOR_SCALES = {
-    A: new NoteScale(BaseNotes.A, MINOR_SCALE_PATTERN),
-    B: new NoteScale(BaseNotes.B, MINOR_SCALE_PATTERN),
-    BFlat: new NoteScale(BaseNotes.BFlat, MINOR_SCALE_PATTERN),
-    C: new NoteScale(BaseNotes.C, MINOR_SCALE_PATTERN),
-    CSharp: new NoteScale(BaseNotes.CSharp, MINOR_SCALE_PATTERN),
-    D: new NoteScale(BaseNotes.D, MINOR_SCALE_PATTERN),
-    DSharp: new NoteScale(BaseNotes.DSharp, MINOR_SCALE_PATTERN),
-    E: new NoteScale(BaseNotes.E, MINOR_SCALE_PATTERN),
-    F: new NoteScale(BaseNotes.F, MINOR_SCALE_PATTERN),
-    FSharp: new NoteScale(BaseNotes.FSharp, MINOR_SCALE_PATTERN),
-    G: new NoteScale(BaseNotes.G, MINOR_SCALE_PATTERN),
-    GSharp: new NoteScale(BaseNotes.GSharp, MINOR_SCALE_PATTERN),
-}
+export const MAJOR_SCALE_SET_NAME = "Major";
+[
+    BaseNotes.A,
+    BaseNotes.AFlat,
+    BaseNotes.B,
+    BaseNotes.BFlat,
+    BaseNotes.C,
+    BaseNotes.D,
+    BaseNotes.DFlat,
+    BaseNotes.E,
+    BaseNotes.EFlat,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+].forEach((note) => registerScale(note, MAJOR_SCALE_PATTERN, MAJOR_SCALE_SET_NAME));
 
-export const MINOR_PENTATONIC_SCALES = {
-    C: new NoteScale(BaseNotes.C, MINOR_PENTATONIC_SCALE_PATTERN),
-    CSharp: new NoteScale(BaseNotes.CSharp, MINOR_PENTATONIC_SCALE_PATTERN),
-    D: new NoteScale(BaseNotes.D, MINOR_PENTATONIC_SCALE_PATTERN),
-    DSharp: new NoteScale(BaseNotes.DSharp, MINOR_PENTATONIC_SCALE_PATTERN),
-    E: new NoteScale(BaseNotes.E, MINOR_PENTATONIC_SCALE_PATTERN),
-    F: new NoteScale(BaseNotes.F, MINOR_PENTATONIC_SCALE_PATTERN),
-    FSharp: new NoteScale(BaseNotes.FSharp, MINOR_PENTATONIC_SCALE_PATTERN),
-    G: new NoteScale(BaseNotes.G, MINOR_PENTATONIC_SCALE_PATTERN),
-    GSharp: new NoteScale(BaseNotes.GSharp, MINOR_PENTATONIC_SCALE_PATTERN),
-    A: new NoteScale(BaseNotes.A, MINOR_PENTATONIC_SCALE_PATTERN),
-    BFlat: new NoteScale(BaseNotes.BFlat, MINOR_PENTATONIC_SCALE_PATTERN),
-    B: new NoteScale(BaseNotes.B, MINOR_PENTATONIC_SCALE_PATTERN),
-}
+export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
+[
+    BaseNotes.C,
+    BaseNotes.CSharp,
+    BaseNotes.D,
+    BaseNotes.DSharp,
+    BaseNotes.E,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+    BaseNotes.GSharp,
+    BaseNotes.A,
+    BaseNotes.ASharp,
+    BaseNotes.B,
+].forEach((note) => registerScale(note, MAJOR_PENTATONIC_SCALE_PATTERN, MAJOR_PENTATONIC_SCALE_SET_NAME));
+
+export const MINOR_SCALE_SET_NAME = "Minor";
+[
+    BaseNotes.A,
+    BaseNotes.B,
+    BaseNotes.BFlat,
+    BaseNotes.C,
+    BaseNotes.CSharp,
+    BaseNotes.D,
+    BaseNotes.DSharp,
+    BaseNotes.E,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+    BaseNotes.GSharp,
+].forEach((note) => registerScale(note, MINOR_SCALE_PATTERN, MINOR_SCALE_SET_NAME));
+
+export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
+[
+    BaseNotes.C,
+    BaseNotes.CSharp,
+    BaseNotes.D,
+    BaseNotes.DSharp,
+    BaseNotes.E,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+    BaseNotes.GSharp,
+    BaseNotes.A,
+    BaseNotes.BFlat,
+    BaseNotes.B,
+].forEach((note) => registerScale(note, MINOR_PENTATONIC_SCALE_PATTERN, MINOR_PENTATONIC_SCALE_SET_NAME));
+
+export const SCALES = SCALES_MAP

@@ -2,12 +2,9 @@
 
 import {CascadeSelect} from "primevue";
 import {
-  CHROMATIC_SCALE,
-  MAJOR_PENTATONIC_SCALES,
-  MAJOR_SCALES,
-  MINOR_PENTATONIC_SCALES,
-  MINOR_SCALES,
-  NoteScale
+  CHROMATIC_SCALE, MAJOR_PENTATONIC_SCALE_SET_NAME,
+  MAJOR_SCALE_SET_NAME, MINOR_PENTATONIC_SCALE_SET_NAME, MINOR_SCALE_SET_NAME,
+  NoteScale, SCALES
 } from "../notes/scales";
 import {exists} from "../utilities";
 
@@ -19,7 +16,9 @@ const emit = defineEmits(['scaleSelected'])
 
 function makeScaleOptions() {
   function transformScaleName(name: string) {
-    return name.replace("Flat", "♭").replace("Sharp", "#")
+    return name
+        .replace("Flat", "♭")
+        .replace("Sharp", "#")
   }
 
   function makeScaleOption(
@@ -34,17 +33,16 @@ function makeScaleOptions() {
   }
 
   return [
-    makeScaleOption("Major", MAJOR_SCALES, (k) => `${k} Maj.`),
-    makeScaleOption("Minor", MINOR_SCALES, (k) => `${k} Min.`),
-    makeScaleOption("Major Pentatonic", MAJOR_PENTATONIC_SCALES, (k) => `${k} Maj. Pent.`),
-    makeScaleOption("Minor Pentatonic", MINOR_PENTATONIC_SCALES, (k) => `${k} Min. Pent.`),
+    makeScaleOption("Major", SCALES[MAJOR_SCALE_SET_NAME], (k) => `${k} Maj.`),
+    makeScaleOption("Minor", SCALES[MINOR_SCALE_SET_NAME], (k) => `${k} Min.`),
+    makeScaleOption("Major Pentatonic", SCALES[MAJOR_PENTATONIC_SCALE_SET_NAME], (k) => `${k} Maj. Pent.`),
+    makeScaleOption("Minor Pentatonic", SCALES[MINOR_PENTATONIC_SCALE_SET_NAME], (k) => `${k} Min. Pent.`),
   ]
 }
 
 const scaleOptions = makeScaleOptions()
 
 function updateScale(value: { name: string, scale: NoteScale }) {
-  console.log('scale update')
   let scale = CHROMATIC_SCALE
   if (exists(value)) {
     scale = value.scale;
@@ -56,16 +54,16 @@ function updateScale(value: { name: string, scale: NoteScale }) {
 
 <template>
   <CascadeSelect
-    class="scale-select"
-    :disabled="props.disabled"
-    :value="props.value"
-    :options="scaleOptions"
-    show-clear
-    option-group-label="name"
-    option-label="name"
-    :option-group-children="['scales']"
-    placeholder="Chromatic"
-    @value-change="updateScale"
+      class="scale-select"
+      :disabled="props.disabled"
+      :value="props.value"
+      :options="scaleOptions"
+      show-clear
+      option-group-label="name"
+      option-label="name"
+      :option-group-children="['scales']"
+      placeholder="Chromatic"
+      @value-change="updateScale"
   />
 </template>
 
