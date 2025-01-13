@@ -7,8 +7,7 @@ import {NoteRangeType, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
 import {exists} from "../utilities";
-import ScaleSelect from "./ScaleSelect.vue";
-import {NoteScale} from "../notes/scales";
+import ScaleSelect, {ScaleOption} from "./ScaleSelect.vue";
 import {useSettingsStore} from "../store/settings";
 
 const practiceStore = usePracticeStore()
@@ -55,8 +54,8 @@ function formatPracticeTime() {
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
-function onScaleSelected(scale: NoteScale) {
-  practiceStore.scale = scale
+function onScaleSelected(value: ScaleOption) {
+  practiceStore.scale = value.scale
 }
 
 function makeNoteRangeOptions() {

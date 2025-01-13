@@ -2,7 +2,7 @@
 
 import {CascadeSelect} from "primevue";
 import {
-  CHROMATIC_SCALE, MAJOR_PENTATONIC_SCALE_SET_NAME,
+  CHROMATIC_SCALE, CHROMATIC_SCALE_SET_NAME, MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME, MINOR_PENTATONIC_SCALE_SET_NAME, MINOR_SCALE_SET_NAME,
   NoteScale, SCALES
 } from "../notes/scales";
@@ -14,6 +14,12 @@ const props = defineProps({
 })
 const emit = defineEmits(['scaleSelected'])
 
+export interface ScaleOption {
+  name: string,
+  scale: NoteScale,
+  scaleSet: string
+}
+
 function makeScaleOptions() {
   function transformScaleName(name: string) {
     return name
@@ -23,32 +29,40 @@ function makeScaleOptions() {
 
   function makeScaleOption(
       name: string,
-      scales: { [key: string]: NoteScale },
+      scaleSetName: string,
       nameFn: (k: string) => string
   ) {
+    let scales = SCALES[scaleSetName];
     return {
       name: name,
-      scales: Object.entries(scales).map(([k, v]) => ({"name": nameFn(transformScaleName(k)), "scale": v})),
+      scales: Object.entries(scales).map(([k, v]) => ({
+        name: nameFn(transformScaleName(k)),
+        scale: v,
+        scaleSet: scaleSetName,
+      })),
     }
   }
 
   return [
-    makeScaleOption("Major", SCALES[MAJOR_SCALE_SET_NAME], (k) => `${k} Maj.`),
-    makeScaleOption("Minor", SCALES[MINOR_SCALE_SET_NAME], (k) => `${k} Min.`),
-    makeScaleOption("Major Pentatonic", SCALES[MAJOR_PENTATONIC_SCALE_SET_NAME], (k) => `${k} Maj. Pent.`),
-    makeScaleOption("Minor Pentatonic", SCALES[MINOR_PENTATONIC_SCALE_SET_NAME], (k) => `${k} Min. Pent.`),
+    makeScaleOption("Major", MAJOR_SCALE_SET_NAME, (k) => `${k} Maj.`),
+    makeScaleOption("Minor", MINOR_SCALE_SET_NAME, (k) => `${k} Min.`),
+    makeScaleOption("Major Pentatonic", MAJOR_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Maj. Pent.`),
+    makeScaleOption("Minor Pentatonic", MINOR_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Min. Pent.`),
   ]
 }
 
 const scaleOptions = makeScaleOptions()
 
-function updateScale(value: { name: string, scale: NoteScale }) {
-  let scale = CHROMATIC_SCALE
+function updateScale(value: ScaleOption) {
   if (exists(value)) {
-    scale = value.scale;
+    emit("scaleSelected", value);
+  } else {
+    emit("scaleSelected", {
+      name: "Chromatic",
+      scale: CHROMATIC_SCALE,
+      scaleSet: CHROMATIC_SCALE_SET_NAME,
+    });
   }
-
-  emit("scaleSelected", scale);
 }
 </script>
 

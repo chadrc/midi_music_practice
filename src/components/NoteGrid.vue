@@ -3,7 +3,7 @@
 import {formatMidiLetter, formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
 import {computed} from "vue";
-import {NoteScale, CHROMATIC_SCALE, MINOR_PENTATONIC_SCALES} from "../notes/scales";
+import {NoteScale, CHROMATIC_SCALE, SCALES, MINOR_PENTATONIC_SCALE_SET_NAME, BaseNotes} from "../notes/scales";
 import {exists} from "../utilities";
 
 interface NoteGridProps {
@@ -48,11 +48,13 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
+const BLACK_KEYS_ONLY_SCALE = SCALES[MINOR_PENTATONIC_SCALE_SET_NAME][BaseNotes[BaseNotes.DSharp]]
+
 function colorForNote(row: number, column: number) {
   let note = midiNoteAtRowColumn(row, column);
   let playData = midiStore.playData[note];
   let hue = note * hueIncrement;
-  if (MINOR_PENTATONIC_SCALES.DSharp.contains(note)) {
+  if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
     let n = note + 30
     if (n > 127) {
       n = 127 - n
@@ -74,7 +76,7 @@ function makeStyleClass(
   ]
   if (exists(row) && exists(column)) {
     let note = midiNoteAtRowColumn(row, column);
-    if (MINOR_PENTATONIC_SCALES.DSharp.contains(note)) {
+    if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
       classes.push("black-key");
     }
   }
