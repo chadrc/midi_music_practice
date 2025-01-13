@@ -2,8 +2,6 @@ import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {formatMidiLetter} from "../notes";
-import {NoteScale, CHROMATIC_SCALE, BaseNotes, SCALES} from "../notes/scales";
-import {ScaleOption} from "../components/ScaleSelect.vue";
 import {NoteRangeType, useSettingsStore} from "./settings";
 
 // CCS color variables for PrimeVue theme
