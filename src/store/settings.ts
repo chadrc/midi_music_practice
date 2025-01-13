@@ -20,11 +20,38 @@ interface InstrumentSettings {
     instrumentData: InstrumentData[]
 }
 
+export enum NoteRangeType {
+    Notes,
+    Frets,
+    Octaves,
+}
+
+export interface FretRangeOptions {
+    startFret: number;
+    endFret: number;
+}
+
+export interface OctaveRangeOptions {
+    startOctave: number;
+    endOctave: number;
+}
+
+export interface NoteRangeOptions {
+    startNote: number;
+    endNote: number;
+}
+
 interface PracticeSettings {
     scale: {
         setName: string,
         baseNote: string
-    }
+    },
+    requireOctave: boolean,
+    minSuccessVelocity: number,
+    noteRangeType: NoteRangeType,
+    fretRangeOptions: FretRangeOptions,
+    octaveRangeOptions: OctaveRangeOptions,
+    noteRangeOptions: NoteRangeOptions,
 }
 
 interface SettingsStore {
@@ -54,6 +81,21 @@ export const useSettingsStore = defineStore('settings', {
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
                 baseNote: BaseNotes[BaseNotes.C],
+            },
+            requireOctave: true,
+            minSuccessVelocity: 100,
+            noteRangeType: NoteRangeType.Notes,
+            fretRangeOptions: {
+                startFret: 0,
+                endFret: 4,
+            },
+            octaveRangeOptions: {
+                startOctave: 4,
+                endOctave: 6,
+            },
+            noteRangeOptions: {
+                startNote: 0,
+                endNote: 127,
             }
         }
 
@@ -75,7 +117,9 @@ export const useSettingsStore = defineStore('settings', {
             practiceSettings: defaultPractice,
         }
     },
-    getters: {},
+    getters: {
+        noteScale: (state) => SCALES[state.practiceSettings.scale.setName][state.practiceSettings.scale.baseNote],
+    },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {
             let index = this.audio.autoReceiveInstruments

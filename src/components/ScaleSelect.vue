@@ -66,14 +66,9 @@ function makeScaleOptions() {
 const scaleOptions = makeScaleOptions()
 
 const internalValue = computed(() => {
-  console.log(model.value.setName, model.value.baseNote)
   let set = scaleOptions.find((v) => v.setName === model.value.setName);
   if (!exists(set)) {
-    return {
-      name: "Chromatic",
-      setName: CHROMATIC_SCALE_SET_NAME,
-      baseNote: BaseNotes[BaseNotes.C],
-    };
+    return null;
   }
   return set.scales.find((v) => v.baseNote === model.value.baseNote);
 })

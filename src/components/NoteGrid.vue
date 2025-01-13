@@ -55,9 +55,9 @@ function colorForNote(row: number, column: number) {
   let playData = midiStore.playData[note];
   let hue = note * hueIncrement;
   if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
-    let n = note + 30
+    let n = note + 64
     if (n > 127) {
-      n = 127 - n
+      n -= 127
     }
     hue = n * hueIncrement;
   }

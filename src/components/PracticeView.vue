@@ -3,12 +3,12 @@
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
 import {Panel, Button, Toolbar, Slider, Select} from "primevue";
-import {NoteRangeType, usePracticeStore} from "../store/practice";
+import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
 import {exists} from "../utilities";
-import ScaleSelect, {ScaleOption} from "./ScaleSelect.vue";
-import {useSettingsStore} from "../store/settings";
+import ScaleSelect from "./ScaleSelect.vue";
+import {NoteRangeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
 
 const practiceStore = usePracticeStore()
@@ -33,7 +33,7 @@ const displayPrompts = computed(() => {
   return prompts;
 })
 
-const noteSize = computed(() => practiceStore.requireOctave ? 8 : 10)
+const noteSize = computed(() => settingsStore.practiceSettings.requireOctave ? 8 : 10)
 
 function formatPromptColor(prompt) {
   if (!prompt.color) return 'var(--p-gray-800)';
@@ -43,7 +43,7 @@ function formatPromptColor(prompt) {
 function formatPromptNote(prompt) {
   if (!prompt.note) return '';
 
-  if (practiceStore.requireOctave) {
+  if (settingsStore.practiceSettings.requireOctave) {
     return formatMidiNote(prompt.note)
   }
   return formatMidiLetter(prompt.note)
@@ -73,7 +73,7 @@ function makeNoteRangeOptions() {
 }
 
 const gridStyle = computed(() => {
-  switch (practiceStore.noteRangeType) {
+  switch (settingsStore.practiceSettings.noteRangeType) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -84,23 +84,25 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (practiceStore.noteRangeType) {
+  switch (settingsStore.practiceSettings.noteRangeType) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets:
-      return practiceStore.fretRangeOptions.endFret - practiceStore.fretRangeOptions.startFret + 1
+      let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
+      return endFret - startFret + 1
     case NoteRangeType.Octaves:
       return practiceStore.selectedNotes.length
   }
 })
 
 const gridHeaders = computed(() => {
-  switch (practiceStore.noteRangeType) {
+  switch (settingsStore.practiceSettings.noteRangeType) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets:
+      let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
       let headers = []
-      for (let i = practiceStore.fretRangeOptions.startFret; i <= practiceStore.fretRangeOptions.endFret; ++i) {
+      for (let i = startFret; i <= endFret; ++i) {
         headers.push(i.toString())
       }
 
@@ -111,7 +113,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (practiceStore.noteRangeType) {
+  switch (settingsStore.practiceSettings.noteRangeType) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -138,7 +140,7 @@ const selectedScale = computed(() => {
             :disabled="practiceStore.practicing"
           />
           <Select
-            v-model="practiceStore.noteRangeType"
+            v-model="settingsStore.practiceSettings.noteRangeType"
             :options="makeNoteRangeOptions()"
             option-value="value"
             option-label="name"

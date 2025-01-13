@@ -4,7 +4,7 @@ import {computed, ref} from "vue";
 import {formatMidiLetter} from "../notes";
 import {NoteScale, CHROMATIC_SCALE, BaseNotes, SCALES} from "../notes/scales";
 import {ScaleOption} from "../components/ScaleSelect.vue";
-import {useSettingsStore} from "./settings";
+import {NoteRangeType, useSettingsStore} from "./settings";
 
 // CCS color variables for PrimeVue theme
 const colorOptions = [
@@ -33,22 +33,6 @@ export interface Prompt {
     note: number;
 }
 
-export enum NoteRangeType {
-    Notes,
-    Frets,
-    Octaves,
-}
-
-export interface FretRangeOptions {
-    startFret: number;
-    endFret: number;
-}
-
-export interface OctaveRangeOptions {
-    startOctave: number;
-    endOctave: number;
-}
-
 const MAX_MIDI_NOTES = 127
 const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
 
@@ -69,47 +53,32 @@ export const usePracticeStore = defineStore('practice', () => {
     const promptCursor = ref(0);
     const currentPrompt = ref(0);
 
-    let {setName, baseNote} = settingsStore.practiceSettings.scale;
-    let settingsScale = SCALES[setName][baseNote];
-
-    const scale = ref<NoteScale>(settingsScale);
-    const requireOctave = ref(true);
-    const minSuccessVelocity = ref(100);
-    const noteRangeType = ref(NoteRangeType.Frets);
-    const fretRangeOptions = ref<FretRangeOptions>({
-        startFret: 0,
-        endFret: 4
-    });
-    const octaveRangeOptions = ref<OctaveRangeOptions>({
-        startOctave: 4,
-        endOctave: 6
-    })
-    const minNote = ref(0);
-    const maxNote = ref(MAX_MIDI_NOTES);
-
     const selectedNotes = computed(() => {
         let notes = []
-        switch (noteRangeType.value) {
+        switch (settingsStore.practiceSettings.noteRangeType) {
             case NoteRangeType.Notes:
-                for (let i = minNote.value; i <= maxNote.value; i++) {
+                let {startNote, endNote} = settingsStore.practiceSettings.noteRangeOptions;
+                for (let i = startNote; i <= endNote; i++) {
                     notes.push(i)
                 }
                 break;
 
             case NoteRangeType.Frets:
+                let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
                 for (let note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                    for (let i = fretRangeOptions.value.startFret; i <= fretRangeOptions.value.endFret; i++) {
+                    for (let i = startFret; i <= endFret; i++) {
                         notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
                     }
                 }
                 break;
 
             case NoteRangeType.Octaves:
-                let startingC = octaveRangeOptions.value.startOctave * 12
-                let noteCount = (octaveRangeOptions.value.endOctave - octaveRangeOptions.value.startOctave) * 12;
-                let endNote = startingC + noteCount;
+                let {startOctave, endOctave} = settingsStore.practiceSettings.octaveRangeOptions;
+                let startingC = startOctave * 12
+                let noteCount = (endOctave - startOctave) * 12;
+                let lastNote = startingC + noteCount;
 
-                for (let i = startingC; i <= endNote; i++) {
+                for (let i = startingC; i <= lastNote; i++) {
                     notes.push(i)
                 }
                 break
@@ -120,7 +89,7 @@ export const usePracticeStore = defineStore('practice', () => {
 
     function generatePrompts() {
         let noteOptions = selectedNotes.value
-            .filter((note) => scale.value.contains(note))
+            .filter((note) => settingsStore.noteScale.contains(note))
 
         for (let note of noteOptions) {
             let colorRoll = Math.floor(Math.random() * colorOptions.length);
@@ -141,11 +110,6 @@ export const usePracticeStore = defineStore('practice', () => {
         }
     }
 
-    function setNoteRange(min: number, max: number) {
-        minNote.value = Math.max(0, Math.min(MAX_MIDI_NOTES, min));
-        maxNote.value = Math.max(0, Math.min(MAX_MIDI_NOTES, max));
-    }
-
     function refreshActivePrompts() {
         activePrompts.value = []
         const start = promptCursor.value;
@@ -162,7 +126,6 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function start() {
-        setNoteRange(40, 69);
         generatePrompts();
 
         practicing.value = true;
@@ -179,13 +142,13 @@ export const usePracticeStore = defineStore('practice', () => {
             ({name, args}) => {
                 if (name === 'midiNoteOn') {
                     let noteArgs = args as [number, number, number]
-                    if (noteArgs[1] < minSuccessVelocity.value) return;
+                    if (noteArgs[1] < settingsStore.practiceSettings.minSuccessVelocity) return;
 
                     let promptIndex = activePrompts.value[currentPrompt.value]
                     let prompt = prompts.value[promptIndex]
 
                     let success = formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0]);
-                    if (requireOctave.value) {
+                    if (settingsStore.practiceSettings.requireOctave) {
                         success = prompt.note === noteArgs[0]
                     }
 
@@ -216,21 +179,14 @@ export const usePracticeStore = defineStore('practice', () => {
 
     return {
         prompts,
-        minNote,
-        maxNote,
         startTime,
         practiceSessionTimer,
         practiceSessionTime,
         selectedNotes,
         activePrompts,
         currentPrompt,
-        requireOctave,
         successCount,
         practicing,
-        scale,
-        noteRangeType,
-        fretRangeOptions,
-        octaveRangeOptions,
         start,
         stop,
     }
