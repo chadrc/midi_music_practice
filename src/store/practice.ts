@@ -75,8 +75,8 @@ export const usePracticeStore = defineStore('practice', () => {
         endFret: 4
     });
     const octaveRangeOptions = ref<OctaveRangeOptions>({
-        startOctave: 3,
-        endOctave: 5
+        startOctave: 4,
+        endOctave: 6
     })
     const minNote = ref(0);
     const maxNote = ref(MAX_MIDI_NOTES);

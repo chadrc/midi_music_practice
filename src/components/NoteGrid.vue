@@ -1,26 +1,26 @@
 <script setup lang="ts">
 
-import {formatMidiNote} from "../notes";
+import {formatMidiLetter, formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
 import {computed} from "vue";
-import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
+import {NoteScale, CHROMATIC_SCALE, MINOR_PENTATONIC_SCALES} from "../notes/scales";
 import {exists} from "../utilities";
 
 interface NoteGridProps {
   notes: Array<number>,
   columns: number,
-  formatted?: boolean,
   noteStyle?: "box" | "circle" | "bar",
   scale?: NoteScale,
   headers?: string[],
+  noteFormat?: "number" | "letter" | "letter-octave"
 }
 
 const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
-  formatted: true,
   noteStyle: "box",
   scale: () => CHROMATIC_SCALE,
   headers: () => [],
+  noteFormat: "number",
 });
 
 const midiStore = useMidiStore();
@@ -52,13 +52,33 @@ function colorForNote(row: number, column: number) {
   let note = midiNoteAtRowColumn(row, column);
   let playData = midiStore.playData[note];
   let hue = note * hueIncrement;
+  if (MINOR_PENTATONIC_SCALES.DSharp.contains(note)) {
+    let n = note + 30
+    if (n > 127) {
+      n = 127 - n
+    }
+    hue = n * hueIncrement;
+  }
   let saturation = lerp(25, 100, playData.velocity / 127);
 
   return `hsl(${hue}, ${saturation}%, 50%)`;
 }
 
-function makeStyleClass() {
-  return `note-grid-cell note-style-${props.noteStyle}`
+function makeStyleClass(
+    row: number | null = null,
+    column: number | null = null
+) {
+  let classes = [
+    "note-grid-cell",
+    `note-style-${props.noteStyle}`
+  ]
+  if (exists(row) && exists(column)) {
+    let note = midiNoteAtRowColumn(row, column);
+    if (MINOR_PENTATONIC_SCALES.DSharp.contains(note)) {
+      classes.push("black-key");
+    }
+  }
+  return classes.join(' ')
 }
 
 function midiNoteAtRowColumn(row: number, column: number) {
@@ -72,6 +92,19 @@ function hasNote(row: number, column: number) {
   }
   return props.scale.contains(note);
 }
+
+function makeNoteText(row: number, column: number) {
+  let note = midiNoteAtRowColumn(row, column);
+
+  switch (props.noteFormat) {
+    case "number":
+      return note.toString();
+    case "letter":
+      return formatMidiLetter(note);
+    case "letter-octave":
+      return formatMidiNote(note);
+  }
+}
 </script>
 
 <template>
@@ -84,13 +117,16 @@ function hasNote(row: number, column: number) {
           :key="`cell-${r}-${c}`"
       >
         <div v-if="hasNote(r, c)"
-             :style="{opacity: opacityForNote(r, c), 'background-color': colorForNote(r, c)}"
-             :class="makeStyleClass()">
-          <span>{{ props.formatted ? formatMidiNote(midiNoteAtRowColumn(r, c)) : midiNoteAtRowColumn(r, c) }}</span>
+             :style="{
+                opacity: opacityForNote(r, c),
+                'background-color': colorForNote(r, c)
+              }"
+             :class="makeStyleClass(r, c)">
+          <span>{{ makeNoteText(r, c) }}</span>
         </div>
         <div v-else
              :style="{opacity: opacityForNote(r, c)}"
-             :class="`${makeStyleClass()} empty`">
+             :class="`${makeStyleClass(r, c)} empty`">
         </div>
       </div>
     </div>
@@ -139,5 +175,14 @@ function hasNote(row: number, column: number) {
 .note-style-circle {
   margin: 0.1rem;
   border-radius: 50%;
+}
+
+.note-style-bar {
+  width: calc(var(--note-test-grid-cell-size) * .75);
+  height: calc(var(--note-test-grid-cell-size) * 5)
+}
+
+.note-style-bar.black-key {
+  width: calc(var(--note-test-grid-cell-size) * .5);
 }
 </style>

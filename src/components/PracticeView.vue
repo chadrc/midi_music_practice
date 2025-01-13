@@ -114,6 +114,17 @@ const gridHeaders = computed(() => {
   }
 })
 
+const gridNoteFormat = computed(() => {
+  switch (practiceStore.noteRangeType) {
+    case NoteRangeType.Notes:
+      return "letter-octave"
+    case NoteRangeType.Frets:
+      return "letter-octave"
+    case NoteRangeType.Octaves:
+      return "letter"
+  }
+})
+
 </script>
 
 <template>
@@ -185,6 +196,7 @@ const gridHeaders = computed(() => {
             :note-style="gridStyle"
             :headers="gridHeaders"
             :columns="gridColumns"
+            :note-format="gridNoteFormat"
         />
       </div>
     </Panel>
