@@ -2,23 +2,34 @@
 
 import {CascadeSelect} from "primevue";
 import {
+  BaseNotes,
   CHROMATIC_SCALE, CHROMATIC_SCALE_SET_NAME, MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME, MINOR_PENTATONIC_SCALE_SET_NAME, MINOR_SCALE_SET_NAME,
-  NoteScale, SCALES
+  SCALES
 } from "../notes/scales";
 import {exists} from "../utilities";
-
-const props = defineProps({
-  value: NoteScale,
-  disabled: Boolean,
-})
-const emit = defineEmits(['scaleSelected'])
+import {computed} from "vue";
 
 export interface ScaleOption {
   name: string,
-  scale: NoteScale,
-  scaleSet: string
+  setName: string,
+  baseNote: string,
 }
+
+export interface ScaleSelectModel {
+  setName: string,
+  baseNote: string,
+}
+
+const model = defineModel<ScaleSelectModel>()
+
+const props = withDefaults(defineProps<{
+  disabled?: boolean,
+}>(), {
+  disabled: false,
+})
+const emit = defineEmits(['scaleSelected'])
+
 
 function makeScaleOptions() {
   function transformScaleName(name: string) {
@@ -35,10 +46,11 @@ function makeScaleOptions() {
     let scales = SCALES[scaleSetName];
     return {
       name: name,
+      setName: scaleSetName,
       scales: Object.entries(scales).map(([k, v]) => ({
         name: nameFn(transformScaleName(k)),
-        scale: v,
-        scaleSet: scaleSetName,
+        setName: scaleSetName,
+        baseNote: BaseNotes[v.baseNote],
       })),
     }
   }
@@ -53,14 +65,37 @@ function makeScaleOptions() {
 
 const scaleOptions = makeScaleOptions()
 
+const internalValue = computed(() => {
+  console.log(model.value.setName, model.value.baseNote)
+  let set = scaleOptions.find((v) => v.setName === model.value.setName);
+  if (!exists(set)) {
+    return {
+      name: "Chromatic",
+      setName: CHROMATIC_SCALE_SET_NAME,
+      baseNote: BaseNotes[BaseNotes.C],
+    };
+  }
+  return set.scales.find((v) => v.baseNote === model.value.baseNote);
+})
+
 function updateScale(value: ScaleOption) {
   if (exists(value)) {
-    emit("scaleSelected", value);
-  } else {
+    model.value = {
+      setName: value.setName,
+      baseNote: value.baseNote,
+    }
     emit("scaleSelected", {
-      name: "Chromatic",
-      scale: CHROMATIC_SCALE,
-      scaleSet: CHROMATIC_SCALE_SET_NAME,
+      setName: value.setName,
+      baseNote: value.baseNote,
+    });
+  } else {
+    model.value = {
+      setName: CHROMATIC_SCALE_SET_NAME,
+      baseNote: BaseNotes[CHROMATIC_SCALE.baseNote],
+    }
+    emit("scaleSelected", {
+      setName: CHROMATIC_SCALE_SET_NAME,
+      baseNote: BaseNotes[CHROMATIC_SCALE.baseNote],
     });
   }
 }
@@ -70,7 +105,7 @@ function updateScale(value: ScaleOption) {
   <CascadeSelect
       class="scale-select"
       :disabled="props.disabled"
-      :value="props.value"
+      :model-value="internalValue"
       :options="scaleOptions"
       show-clear
       option-group-label="name"

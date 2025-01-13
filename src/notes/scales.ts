@@ -35,6 +35,10 @@ export class NoteScale {
         }
     }
 
+    public get baseNote(): BaseNotes {
+        return this.notes[0]
+    }
+
     public contains(note: number): boolean {
         if (note < 0 || note > 127) {
             return false;

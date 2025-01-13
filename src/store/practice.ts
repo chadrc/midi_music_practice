@@ -2,7 +2,9 @@ import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {formatMidiLetter} from "../notes";
-import {NoteScale, CHROMATIC_SCALE} from "../notes/scales";
+import {NoteScale, CHROMATIC_SCALE, BaseNotes, SCALES} from "../notes/scales";
+import {ScaleOption} from "../components/ScaleSelect.vue";
+import {useSettingsStore} from "./settings";
 
 // CCS color variables for PrimeVue theme
 const colorOptions = [
@@ -52,6 +54,7 @@ const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
 
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
+    const settingsStore = useSettingsStore();
 
     const startTime = ref(0);
     const practiceSessionTimer = ref(null);
@@ -66,7 +69,10 @@ export const usePracticeStore = defineStore('practice', () => {
     const promptCursor = ref(0);
     const currentPrompt = ref(0);
 
-    const scale = ref<NoteScale>(CHROMATIC_SCALE);
+    let {setName, baseNote} = settingsStore.practiceSettings.scale;
+    let settingsScale = SCALES[setName][baseNote];
+
+    const scale = ref<NoteScale>(settingsScale);
     const requireOctave = ref(true);
     const minSuccessVelocity = ref(100);
     const noteRangeType = ref(NoteRangeType.Frets);

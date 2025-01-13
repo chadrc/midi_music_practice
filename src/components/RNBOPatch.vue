@@ -82,8 +82,8 @@ const options = {
     "template": passThrough
   },
   "filterCutoff": {
-    "step": .1,
-    "template": clampToTwoDecimals
+    "step": 1,
+    "template": passThrough
   },
   "filterQ": {
     "step": .01,
@@ -127,6 +127,7 @@ const options = {
                 :max="parameter.max"
                 :step="options[parameter.id].step"
                 :value-template="options[parameter.id].template"
+                :size="75"
           />
           <span>{{ parameter.displayName }}</span>
         </div>

@@ -9,6 +9,7 @@ import {computed} from "vue";
 import {exists} from "../utilities";
 import ScaleSelect, {ScaleOption} from "./ScaleSelect.vue";
 import {useSettingsStore} from "../store/settings";
+import {SCALES} from "../notes/scales";
 
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
@@ -52,10 +53,6 @@ function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;
   let minutes = Math.floor(practiceStore.practiceSessionTime / 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-}
-
-function onScaleSelected(value: ScaleOption) {
-  practiceStore.scale = value.scale
 }
 
 function makeNoteRangeOptions() {
@@ -124,6 +121,11 @@ const gridNoteFormat = computed(() => {
   }
 })
 
+const selectedScale = computed(() => {
+  let {setName, baseNote} = settingsStore.practiceSettings.scale
+  return SCALES[setName][baseNote];
+})
+
 </script>
 
 <template>
@@ -132,22 +134,22 @@ const gridNoteFormat = computed(() => {
       <Toolbar>
         <template #start>
           <ScaleSelect
-              :value="practiceStore.scale"
-              :disabled="practiceStore.practicing"
-              @scale-selected="onScaleSelected"
+            v-model="settingsStore.practiceSettings.scale"
+            :disabled="practiceStore.practicing"
           />
-          <Select v-model="practiceStore.noteRangeType"
-                  :options="makeNoteRangeOptions()"
-                  option-value="value"
-                  option-label="name"
+          <Select
+            v-model="practiceStore.noteRangeType"
+            :options="makeNoteRangeOptions()"
+            option-value="value"
+            option-label="name"
           />
         </template>
         <template #center>
           <Button
-              :label="practiceStore.practicing ? 'Stop' : 'Start' "
-              :severity="practiceStore.practicing ? 'danger' : 'info'"
-              size="small"
-              @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+            :label="practiceStore.practicing ? 'Stop' : 'Start' "
+            :severity="practiceStore.practicing ? 'danger' : 'info'"
+            size="small"
+            @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
           >
             {{ practiceStore.practicing ? 'Stop' : 'Start' }}
           </Button>
@@ -159,43 +161,47 @@ const gridNoteFormat = computed(() => {
           </span>
         </template>
         <template #end>
-          <Slider class="volume-slider"
-                  :min="0"
-                  :max="1"
-                  :step=".01"
-                  v-model="settingsStore.instruments.volume"
+          <Slider
+            v-model="settingsStore.instruments.volume"
+            class="volume-slider"
+            :min="0"
+            :max="1"
+            :step=".01"
           />
         </template>
       </Toolbar>
     </section>
     <div class="prompt-area">
       <div
-          v-for="prompt in displayPrompts"
-          :key="prompt.note"
-          :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+        v-for="prompt in displayPrompts"
+        :key="prompt.note"
+        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-            class="prompt-card"
-            :style="{backgroundColor: formatPromptColor(prompt)}"
+          class="prompt-card"
+          :style="{backgroundColor: formatPromptColor(prompt)}"
         >
           <span
-              class="prompt-text"
-              :style="{fontSize: `${noteSize}vh`}"
+            class="prompt-text"
+            :style="{fontSize: `${noteSize}vh`}"
           >
             {{ formatPromptNote(prompt) }}
           </span>
         </div>
       </div>
     </div>
-    <Panel header="Instrument" toggleable>
+    <Panel
+      header="Instrument"
+      toggleable
+    >
       <div class="instrument-display">
         <NoteGrid
-            :notes="practiceStore.selectedNotes"
-            :scale="practiceStore.scale"
-            :note-style="gridStyle"
-            :headers="gridHeaders"
-            :columns="gridColumns"
-            :note-format="gridNoteFormat"
+          :notes="practiceStore.selectedNotes"
+          :scale="selectedScale"
+          :note-style="gridStyle"
+          :headers="gridHeaders"
+          :columns="gridColumns"
+          :note-format="gridNoteFormat"
         />
       </div>
     </Panel>
