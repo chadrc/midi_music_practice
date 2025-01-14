@@ -2,7 +2,7 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Panel, Button, Toolbar, Slider, Select} from "primevue";
+import {Panel, Button, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed} from "vue";
@@ -10,6 +10,8 @@ import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteRangeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
+import Settings from "./Settings.vue";
+import RNBOPatch from "./RNBOPatch.vue";
 
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
@@ -134,18 +136,6 @@ const selectedScale = computed(() => {
   <section class="practice-view">
     <section class="practice-controls">
       <Toolbar>
-        <template #start>
-          <ScaleSelect
-            v-model="settingsStore.practiceSettings.scale"
-            :disabled="practiceStore.practicing"
-          />
-          <Select
-            v-model="settingsStore.practiceSettings.noteRangeType"
-            :options="makeNoteRangeOptions()"
-            option-value="value"
-            option-label="name"
-          />
-        </template>
         <template #center>
           <Button
             :label="practiceStore.practicing ? 'Stop' : 'Start' "
@@ -163,13 +153,16 @@ const selectedScale = computed(() => {
           </span>
         </template>
         <template #end>
-          <Slider
-            v-model="settingsStore.instruments.volume"
-            class="volume-slider"
-            :min="0"
-            :max="1"
-            :step=".01"
-          />
+          <div class="volume-control">
+            <span>Volume</span>
+            <Slider
+              v-model="settingsStore.instruments.volume"
+              class="volume-slider"
+              :min="0"
+              :max="1"
+              :step=".01"
+            />
+          </div>
         </template>
       </Toolbar>
     </section>
@@ -192,29 +185,90 @@ const selectedScale = computed(() => {
         </div>
       </div>
     </div>
-    <Panel
-      header="Instrument"
-      toggleable
-    >
-      <div class="instrument-display">
-        <NoteGrid
-          :notes="practiceStore.selectedNotes"
-          :scale="selectedScale"
-          :note-style="gridStyle"
-          :headers="gridHeaders"
-          :columns="gridColumns"
-          :note-format="gridNoteFormat"
-        />
-      </div>
-    </Panel>
+    <Tabs value="instrument">
+      <TabList>
+        <Tab value="instrument">
+          Instrument
+        </Tab>
+        <Tab value="patch">
+          Patch
+        </Tab>
+        <Tab value="options">
+          Options
+        </Tab>
+      </TabList>
+      <TabPanels>
+        <TabPanel value="instrument">
+          <div class="instrument-options">
+            <div class="instrument-option">
+              <ScaleSelect
+                v-model="settingsStore.practiceSettings.scale"
+                :disabled="practiceStore.practicing"
+              />
+            </div>
+            <div class="instrument-option">
+              <Select
+                v-model="settingsStore.practiceSettings.noteRangeType"
+                :options="makeNoteRangeOptions()"
+                option-value="value"
+                option-label="name"
+              />
+            </div>
+          </div>
+          <div class="instrument-display">
+            <NoteGrid
+              :notes="practiceStore.selectedNotes"
+              :scale="selectedScale"
+              :note-style="gridStyle"
+              :headers="gridHeaders"
+              :columns="gridColumns"
+              :note-format="gridNoteFormat"
+            />
+          </div>
+        </TabPanel>
+        <TabPanel value="patch">
+          <Suspense>
+            <RNBOPatch />
+            <template #fallback>
+              Loading Instrument...
+            </template>
+          </Suspense>
+        </TabPanel>
+        <TabPanel value="options" />
+      </TabPanels>
+    </Tabs>
   </section>
 </template>
 
 <style scoped>
+.p-tabs {
+  height: unset;
+}
+
 .practice-view {
-  height: 100%;
+  height: 100vh;
+  width: 100vw;
   display: flex;
   flex-direction: column;
+}
+
+.practice-controls {
+  margin: 1rem
+}
+
+.volume-control {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.volume-control > span {
+  padding: 0.5rem;
+}
+
+.volume-slider {
+  margin: 0.5rem;
 }
 
 .prompt-area {
@@ -260,6 +314,18 @@ const selectedScale = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.instrument-options {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.instrument-option {
+  margin-right: 0.5rem;
 }
 
 .volume-slider {
