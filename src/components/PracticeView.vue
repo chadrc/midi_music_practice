@@ -253,7 +253,6 @@ const selectedScale = computed(() => {
   height: unset;
 }
 
-
 .practice-view {
   height: 100vh;
   width: 100vw;
