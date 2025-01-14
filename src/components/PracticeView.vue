@@ -319,7 +319,16 @@ function updateNoteRange(range: number[]) {
             </template>
           </Suspense>
         </TabPanel>
-        <TabPanel value="options"/>
+        <TabPanel value="options">
+          <div class="option-control">
+            <span>Min Velocity for Success</span>
+            <Slider v-model="settingsStore.practiceSettings.minSuccessVelocity"
+                    class="min-success-slider"
+                    :max="127"
+            />
+            <span>{{ settingsStore.practiceSettings.minSuccessVelocity }}</span>
+          </div>
+        </TabPanel>
       </TabPanels>
     </Tabs>
   </section>
@@ -423,6 +432,11 @@ function updateNoteRange(range: number[]) {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: scroll;
+}
+
+.instrument-display::-webkit-scrollbar {
+  display: none;
 }
 
 .instrument-options {
@@ -447,6 +461,18 @@ function updateNoteRange(range: number[]) {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.option-control {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.min-success-slider {
+  width: 10rem;
   margin-left: 1rem;
   margin-right: 1rem;
 }
