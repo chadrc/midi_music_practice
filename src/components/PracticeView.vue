@@ -186,7 +186,7 @@ const selectedScale = computed(() => {
       </div>
     </div>
     <Tabs value="instrument">
-      <TabList>
+      <TabList class="centered">
         <Tab value="instrument">
           Instrument
         </Tab>
@@ -240,10 +240,19 @@ const selectedScale = computed(() => {
   </section>
 </template>
 
+<style>
+.p-tablist.centered .p-tablist-tab-list {
+  justify-content: center;
+  align-items: center;
+}
+
+</style>
+
 <style scoped>
 .p-tabs {
   height: unset;
 }
+
 
 .practice-view {
   height: 100vh;
