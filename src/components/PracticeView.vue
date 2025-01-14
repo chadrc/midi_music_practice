@@ -245,7 +245,6 @@ const selectedScale = computed(() => {
   justify-content: center;
   align-items: center;
 }
-
 </style>
 
 <style scoped>
