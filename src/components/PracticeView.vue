@@ -76,6 +76,37 @@ function makeNoteRangeOptions() {
   ]
 }
 
+const noteRangeValues = computed(() => {
+  switch (settingsStore.practiceSettings.noteRangeType) {
+    case NoteRangeType.Notes:
+      return [
+        settingsStore.practiceSettings.noteRangeOptions.startNote,
+        settingsStore.practiceSettings.noteRangeOptions.endNote
+      ];
+    case NoteRangeType.Frets:
+      return [
+        settingsStore.practiceSettings.fretRangeOptions.startFret,
+        settingsStore.practiceSettings.fretRangeOptions.endFret
+      ];
+    case NoteRangeType.Octaves:
+      return [
+        settingsStore.practiceSettings.octaveRangeOptions.startOctave,
+        settingsStore.practiceSettings.octaveRangeOptions.endOctave
+      ];
+  }
+})
+
+const noteRangeMax = computed(() => {
+  switch (settingsStore.practiceSettings.noteRangeType) {
+    case NoteRangeType.Notes:
+      return 127;
+    case NoteRangeType.Frets:
+      return 22;
+    case NoteRangeType.Octaves:
+      return 12;
+  }
+})
+
 const gridStyle = computed(() => {
   switch (settingsStore.practiceSettings.noteRangeType) {
     case NoteRangeType.Notes:
@@ -132,6 +163,24 @@ const selectedScale = computed(() => {
   return SCALES[setName][baseNote];
 })
 
+function updateNoteRange(range: number[]) {
+  let s = settingsStore.practiceSettings
+  switch (s.noteRangeType) {
+    case NoteRangeType.Notes:
+      s.noteRangeOptions.startNote = range[0]
+      s.noteRangeOptions.endNote = range[1]
+      break;
+    case NoteRangeType.Frets:
+      s.fretRangeOptions.startFret = range[0]
+      s.fretRangeOptions.endFret = range[1]
+      break;
+    case NoteRangeType.Octaves:
+      s.octaveRangeOptions.startOctave = range[0]
+      s.octaveRangeOptions.endOctave = range[1]
+      break;
+  }
+}
+
 </script>
 
 <template>
@@ -140,17 +189,17 @@ const selectedScale = computed(() => {
       <Toolbar>
         <template #start>
           <Button
-            icon="pi pi-cog"
-            aria-label="Settings"
-            @click="settingsOpen = true"
+              icon="pi pi-cog"
+              aria-label="Settings"
+              @click="settingsOpen = true"
           />
         </template>
         <template #center>
           <Button
-            :label="practiceStore.practicing ? 'Stop' : 'Start' "
-            :severity="practiceStore.practicing ? 'danger' : 'info'"
-            size="small"
-            @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+              :label="practiceStore.practicing ? 'Stop' : 'Start' "
+              :severity="practiceStore.practicing ? 'danger' : 'info'"
+              size="small"
+              @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
           >
             {{ practiceStore.practicing ? 'Stop' : 'Start' }}
           </Button>
@@ -165,37 +214,37 @@ const selectedScale = computed(() => {
           <div class="volume-control">
             <span>Volume</span>
             <Slider
-              v-model="settingsStore.instruments.volume"
-              class="volume-slider"
-              :min="0"
-              :max="1"
-              :step=".01"
+                v-model="settingsStore.instruments.volume"
+                class="volume-slider"
+                :min="0"
+                :max="1"
+                :step=".01"
             />
           </div>
         </template>
       </Toolbar>
       <Dialog
-        v-model:visible="settingsOpen"
-        modal
-        header="Settings"
-        :style="{ width: '90%', height: '90%' }"
+          v-model:visible="settingsOpen"
+          modal
+          header="Settings"
+          :style="{ width: '90%', height: '90%' }"
       >
-        <Settings />
+        <Settings/>
       </Dialog>
     </section>
     <div class="prompt-area">
       <div
-        v-for="prompt in displayPrompts"
-        :key="prompt.note"
-        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+          v-for="prompt in displayPrompts"
+          :key="prompt.note"
+          :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-          class="prompt-card"
-          :style="{backgroundColor: formatPromptColor(prompt)}"
+            class="prompt-card"
+            :style="{backgroundColor: formatPromptColor(prompt)}"
         >
           <span
-            class="prompt-text"
-            :style="{fontSize: `${noteSize}vh`}"
+              class="prompt-text"
+              :style="{fontSize: `${noteSize}vh`}"
           >
             {{ formatPromptNote(prompt) }}
           </span>
@@ -219,42 +268,52 @@ const selectedScale = computed(() => {
           <div class="instrument-options">
             <div class="instrument-option">
               <ScaleSelect
-                v-model="settingsStore.practiceSettings.scale"
-                :disabled="practiceStore.practicing"
+                  v-model="settingsStore.practiceSettings.scale"
+                  :disabled="practiceStore.practicing"
               />
             </div>
             <div class="instrument-option">
               <Select
-                v-model="settingsStore.practiceSettings.noteRangeType"
-                :options="makeNoteRangeOptions()"
-                option-value="value"
-                option-label="name"
+                  v-model="settingsStore.practiceSettings.noteRangeType"
+                  :options="makeNoteRangeOptions()"
+                  option-value="value"
+                  option-label="name"
               />
             </div>
             <div class="instrument-option">
-              <Slider range />
+              <div class="note-range-slider-wrapper">
+                <span>{{ noteRangeValues[0] }}</span>
+                <Slider
+                    :model-value="noteRangeValues"
+                    @value-change="updateNoteRange"
+                    :max="noteRangeMax"
+                    range
+                    class="note-range-slider"
+                />
+                <span>{{ noteRangeValues[1] }}</span>
+              </div>
             </div>
           </div>
           <div class="instrument-display">
             <NoteGrid
-              :notes="practiceStore.selectedNotes"
-              :scale="selectedScale"
-              :note-style="gridStyle"
-              :headers="gridHeaders"
-              :columns="gridColumns"
-              :note-format="gridNoteFormat"
+                :notes="practiceStore.selectedNotes"
+                :scale="selectedScale"
+                :note-style="gridStyle"
+                :headers="gridHeaders"
+                :columns="gridColumns"
+                :note-format="gridNoteFormat"
             />
           </div>
         </TabPanel>
         <TabPanel value="patch">
           <Suspense>
-            <RNBOPatch />
+            <RNBOPatch/>
             <template #fallback>
               Loading Instrument...
             </template>
           </Suspense>
         </TabPanel>
-        <TabPanel value="options" />
+        <TabPanel value="options"/>
       </TabPanels>
     </Tabs>
   </section>
@@ -300,6 +359,7 @@ const selectedScale = computed(() => {
 
 .volume-slider {
   margin: 0.5rem;
+  width: 10rem;
 }
 
 .settings-dialog {
@@ -357,6 +417,7 @@ const selectedScale = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: scroll;
 }
 
 .instrument-options {
@@ -371,7 +432,17 @@ const selectedScale = computed(() => {
   margin-right: 0.5rem;
 }
 
-.volume-slider {
+.note-range-slider {
   width: 10rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.note-range-slider-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
 }
 </style>
