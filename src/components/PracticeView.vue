@@ -2,7 +2,7 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Button, Dialog, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
+import {Button, ToggleButton, Dialog, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
@@ -267,6 +267,12 @@ function updateNoteRange(range: number[]) {
         <TabPanel value="instrument">
           <div class="instrument-options">
             <div class="instrument-option">
+              <ToggleButton v-model="settingsStore.practiceSettings.requireOctave"
+                            on-label="Octave On"
+                            off-label="Octave Off"
+              />
+            </div>
+            <div class="instrument-option">
               <ScaleSelect
                   v-model="settingsStore.practiceSettings.scale"
                   :disabled="practiceStore.practicing"
@@ -417,7 +423,6 @@ function updateNoteRange(range: number[]) {
   display: flex;
   justify-content: center;
   align-items: center;
-  overflow: scroll;
 }
 
 .instrument-options {
