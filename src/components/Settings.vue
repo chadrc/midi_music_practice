@@ -57,9 +57,6 @@ onMounted(() => {
       </template>
     </Column>
   </DataTable>
-  <Panel header="Note Grid">
-    <NoteTestGrid/>
-  </Panel>
 </template>
 
 <style scoped>

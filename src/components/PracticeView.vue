@@ -2,10 +2,10 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Panel, Button, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
+import {Button, Dialog, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteRangeType, useSettingsStore} from "../store/settings";
@@ -15,6 +15,8 @@ import RNBOPatch from "./RNBOPatch.vue";
 
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
+
+const settingsOpen = ref(false)
 
 const displayPrompts = computed(() => {
   let prompts = practiceStore.activePrompts
@@ -136,6 +138,13 @@ const selectedScale = computed(() => {
   <section class="practice-view">
     <section class="practice-controls">
       <Toolbar>
+        <template #start>
+          <Button
+            icon="pi pi-cog"
+            aria-label="Settings"
+            @click="settingsOpen = true"
+          />
+        </template>
         <template #center>
           <Button
             :label="practiceStore.practicing ? 'Stop' : 'Start' "
@@ -165,6 +174,14 @@ const selectedScale = computed(() => {
           </div>
         </template>
       </Toolbar>
+      <Dialog
+        v-model:visible="settingsOpen"
+        modal
+        header="Settings"
+        :style="{ width: '90%', height: '90%' }"
+      >
+        <Settings />
+      </Dialog>
     </section>
     <div class="prompt-area">
       <div
@@ -214,6 +231,9 @@ const selectedScale = computed(() => {
                 option-label="name"
               />
             </div>
+            <div class="instrument-option">
+              <Slider range />
+            </div>
           </div>
           <div class="instrument-display">
             <NoteGrid
@@ -244,6 +264,10 @@ const selectedScale = computed(() => {
 .p-tablist.centered .p-tablist-tab-list {
   justify-content: center;
   align-items: center;
+}
+
+.settings-dialog-content {
+  height: 100%;
 }
 </style>
 
@@ -276,6 +300,18 @@ const selectedScale = computed(() => {
 
 .volume-slider {
   margin: 0.5rem;
+}
+
+.settings-dialog {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-wrapper {
+  flex: 1;
 }
 
 .prompt-area {

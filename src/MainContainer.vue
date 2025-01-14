@@ -9,4 +9,5 @@ import PracticeView from "./components/PracticeView.vue";
 
 <style>
 @import "./variables.css";
+@import "primeicons/primeicons.css";
 </style>
