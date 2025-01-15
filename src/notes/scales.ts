@@ -43,7 +43,7 @@ export class NoteScale {
     }
 
     public get chords(): Chord[] {
-        let c = []
+        let c: Chord[] = []
 
         for (let i = 0; i < this._chords.length; i++) {
             let note = this.notes[i];
