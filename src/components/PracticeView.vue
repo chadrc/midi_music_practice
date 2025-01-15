@@ -77,23 +77,7 @@ function makeNoteRangeOptions() {
 }
 
 const noteRangeValues = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
-    case NoteRangeType.Notes:
-      return [
-        settingsStore.practiceSettings.noteRangeOptions.startNote,
-        settingsStore.practiceSettings.noteRangeOptions.endNote
-      ];
-    case NoteRangeType.Frets:
-      return [
-        settingsStore.practiceSettings.fretRangeOptions.startFret,
-        settingsStore.practiceSettings.fretRangeOptions.endFret
-      ];
-    case NoteRangeType.Octaves:
-      return [
-        settingsStore.practiceSettings.octaveRangeOptions.startOctave,
-        settingsStore.practiceSettings.octaveRangeOptions.endOctave
-      ];
-  }
+  return [settingsStore.currentRange.start, settingsStore.currentRange.end];
 })
 
 const noteRangeMax = computed(() => {
@@ -123,8 +107,8 @@ const gridColumns = computed(() => {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets:
-      let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
-      return endFret - startFret + 1
+      let {start, end} = settingsStore.practiceSettings.fretRangeOptions.range;
+      return end - start + 1
     case NoteRangeType.Octaves:
       return practiceStore.selectedNotes.length
   }
@@ -135,9 +119,9 @@ const gridHeaders = computed(() => {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets:
-      let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
+      let {start, end} = settingsStore.practiceSettings.fretRangeOptions.range;
       let headers = []
-      for (let i = startFret; i <= endFret; ++i) {
+      for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
       }
 
@@ -167,16 +151,16 @@ function updateNoteRange(range: number[]) {
   let s = settingsStore.practiceSettings
   switch (s.noteRangeType) {
     case NoteRangeType.Notes:
-      s.noteRangeOptions.startNote = range[0]
-      s.noteRangeOptions.endNote = range[1]
+      s.noteRangeOptions.range.start = range[0]
+      s.noteRangeOptions.range.end = range[1]
       break;
     case NoteRangeType.Frets:
-      s.fretRangeOptions.startFret = range[0]
-      s.fretRangeOptions.endFret = range[1]
+      s.fretRangeOptions.range.start = range[0]
+      s.fretRangeOptions.range.end = range[1]
       break;
     case NoteRangeType.Octaves:
-      s.octaveRangeOptions.startOctave = range[0]
-      s.octaveRangeOptions.endOctave = range[1]
+      s.octaveRangeOptions.range.start = range[0]
+      s.octaveRangeOptions.range.end = range[1]
       break;
   }
 }

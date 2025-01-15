@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
+import {NumberRangeLike} from "../common/NumberRange";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -27,18 +28,15 @@ export enum NoteRangeType {
 }
 
 export interface FretRangeOptions {
-    startFret: number;
-    endFret: number;
+    range: NumberRangeLike;
 }
 
 export interface OctaveRangeOptions {
-    startOctave: number;
-    endOctave: number;
+    range: NumberRangeLike;
 }
 
 export interface NoteRangeOptions {
-    startNote: number;
-    endNote: number;
+    range: NumberRangeLike;
 }
 
 export enum PracticeType {
@@ -119,16 +117,22 @@ export const useSettingsStore = defineStore('settings', {
             minSuccessVelocity: 100,
             noteRangeType: NoteRangeType.Notes,
             fretRangeOptions: {
-                startFret: 0,
-                endFret: 4,
+                range: {
+                    start: 0,
+                    end: 4,
+                }
             },
             octaveRangeOptions: {
-                startOctave: 4,
-                endOctave: 6,
+                range: {
+                    start: 4,
+                    end: 6,
+                }
             },
             noteRangeOptions: {
-                startNote: 0,
-                endNote: 127,
+                range: {
+                    start: 0,
+                    end: 127,
+                }
             },
             noteCount: 0,
             fixed: null,
@@ -154,6 +158,16 @@ export const useSettingsStore = defineStore('settings', {
     },
     getters: {
         noteScale: (state) => SCALES[state.practiceSettings.scale.setName][state.practiceSettings.scale.baseNote],
+        currentRange: (state) => {
+            switch (state.practiceSettings.noteRangeType) {
+                case NoteRangeType.Notes:
+                    return state.practiceSettings.noteRangeOptions.range;
+                case NoteRangeType.Frets:
+                    return state.practiceSettings.fretRangeOptions.range;
+                case NoteRangeType.Octaves:
+                    return state.practiceSettings.octaveRangeOptions.range;
+            }
+        }
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {

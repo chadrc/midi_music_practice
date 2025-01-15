@@ -53,33 +53,30 @@ export const usePracticeStore = defineStore('practice', () => {
 
     const selectedNotes = computed(() => {
         let notes = []
+        let {start, end} = settingsStore.currentRange;
+
         switch (settingsStore.practiceSettings.noteRangeType) {
             case NoteRangeType.Notes:
-                let {startNote, endNote} = settingsStore.practiceSettings.noteRangeOptions;
-                for (let i = startNote; i <= endNote; i++) {
+                for (let i = start; i <= end; i++) {
                     notes.push(i)
                 }
                 break;
-
             case NoteRangeType.Frets:
-                let {startFret, endFret} = settingsStore.practiceSettings.fretRangeOptions;
                 for (let note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                    for (let i = startFret; i <= endFret; i++) {
+                    for (let i = start; i <= end; i++) {
                         notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
                     }
                 }
                 break;
-
             case NoteRangeType.Octaves:
-                let {startOctave, endOctave} = settingsStore.practiceSettings.octaveRangeOptions;
-                let startingC = startOctave * 12
-                let noteCount = (endOctave - startOctave) * 12;
+                let startingC = start * 12
+                let noteCount = (end - start) * 12;
                 let lastNote = startingC + noteCount;
 
                 for (let i = startingC; i <= lastNote; i++) {
                     notes.push(i)
                 }
-                break
+                break;
         }
 
         return notes

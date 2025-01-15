@@ -27,7 +27,7 @@ export class NoteScale {
     constructor(
         baseNote: BaseNotes,
         intervals: number[],
-        chords: string[],
+        chords: string[] = [],
     ) {
         this.notes = [baseNote];
         this._chords = chords;
