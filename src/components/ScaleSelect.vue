@@ -3,7 +3,7 @@
 import {CascadeSelect} from "primevue";
 import {
   BaseNotes,
-  CHROMATIC_SCALE, CHROMATIC_SCALE_SET_NAME, MAJOR_PENTATONIC_SCALE_SET_NAME,
+  CHROMATIC_SCALE_SET_NAME, MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME, MINOR_PENTATONIC_SCALE_SET_NAME, MINOR_SCALE_SET_NAME,
   SCALES
 } from "../notes/scales";
@@ -50,7 +50,7 @@ function makeScaleOptions() {
       scales: Object.entries(scales).map(([k, v]) => ({
         name: nameFn(transformScaleName(k)),
         setName: scaleSetName,
-        baseNote: BaseNotes[v.baseNote],
+        baseNote: BaseNotes[v.fundamental],
       })),
     }
   }
@@ -84,13 +84,14 @@ function updateScale(value: ScaleOption) {
       baseNote: value.baseNote,
     });
   } else {
+    let chromaticScale = SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes[BaseNotes.C]]
     model.value = {
       setName: CHROMATIC_SCALE_SET_NAME,
-      baseNote: BaseNotes[CHROMATIC_SCALE.baseNote],
+      baseNote: BaseNotes[chromaticScale.fundamental],
     }
     emit("scaleSelected", {
       setName: CHROMATIC_SCALE_SET_NAME,
-      baseNote: BaseNotes[CHROMATIC_SCALE.baseNote],
+      baseNote: BaseNotes[chromaticScale.fundamental],
     });
   }
 }

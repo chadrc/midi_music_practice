@@ -3,7 +3,7 @@
 import {formatMidiLetter, formatMidiNote} from "../notes";
 import {useMidiStore} from "../store/midi";
 import {computed} from "vue";
-import {NoteScale, CHROMATIC_SCALE, SCALES, MINOR_PENTATONIC_SCALE_SET_NAME, BaseNotes} from "../notes/scales";
+import {NoteScale, SCALES, MINOR_PENTATONIC_SCALE_SET_NAME, BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 import {exists} from "../utilities";
 
 interface NoteGridProps {
@@ -18,7 +18,7 @@ interface NoteGridProps {
 const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
   noteStyle: "box",
-  scale: () => CHROMATIC_SCALE,
+  scale: () => SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes[BaseNotes.C]],
   headers: () => [],
   noteFormat: "number",
 });
