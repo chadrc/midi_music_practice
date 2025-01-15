@@ -56,7 +56,7 @@ class Beat {
 }
 
 interface PracticeSettings {
-    setType: PracticeType;
+    practiceType: PracticeType;
     scale: {
         setName: string,
         baseNote: string
@@ -110,7 +110,7 @@ export const useSettingsStore = defineStore('settings', {
         }
 
         let defaultPractice: PracticeSettings = {
-            setType: PracticeType.Scales,
+            practiceType: PracticeType.Scales,
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
                 baseNote: BaseNotes[BaseNotes.C],

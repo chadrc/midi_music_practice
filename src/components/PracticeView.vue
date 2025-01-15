@@ -2,13 +2,13 @@
 
 // reverse order so the lowest note is at bottom
 import {formatMidiLetter, formatMidiNote} from "../notes";
-import {Button, ToggleButton, Dialog, Toolbar, Slider, Select, Tabs, Tab, TabList, TabPanel, TabPanels} from "primevue";
+import {Button, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
 import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
-import {NoteRangeType, useSettingsStore} from "../store/settings";
+import {NoteRangeType, PracticeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
 import Settings from "./Settings.vue";
 import RNBOPatch from "./RNBOPatch.vue";
@@ -181,6 +181,19 @@ function updateNoteRange(range: number[]) {
   }
 }
 
+function makePracticeTypeOptions() {
+  return [
+    {
+      name: "Chords",
+      value: PracticeType.Chords
+    },
+    {
+      name: "Scales",
+      value: PracticeType.Scales
+    }
+  ]
+}
+
 </script>
 
 <template>
@@ -266,6 +279,14 @@ function updateNoteRange(range: number[]) {
       <TabPanels>
         <TabPanel value="instrument">
           <div class="instrument-options">
+            <div class="instrument-option">
+              <Select
+                v-model="settingsStore.practiceSettings.practiceType"
+                :options="makePracticeTypeOptions()"
+                option-label="name"
+                option-value="value"
+              />
+            </div>
             <div class="instrument-option">
               <ToggleButton v-model="settingsStore.practiceSettings.requireOctave"
                             on-label="Octave On"
