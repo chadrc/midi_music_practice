@@ -37,7 +37,7 @@ const displayPrompts = computed(() => {
   return prompts;
 })
 
-const noteSize = computed(() => settingsStore.practiceSettings.requireOctave ? 8 : 10)
+const noteSize = computed(() => settingsStore.practice.requireOctave ? 8 : 10)
 
 function formatPromptColor(prompt) {
   if (!prompt.color) return 'var(--p-gray-800)';
@@ -47,7 +47,7 @@ function formatPromptColor(prompt) {
 function formatPromptNote(prompt) {
   if (!prompt.note) return '';
 
-  if (settingsStore.practiceSettings.requireOctave) {
+  if (settingsStore.practice.requireOctave) {
     return formatMidiNote(prompt.note)
   }
   return formatMidiLetter(prompt.note)
@@ -81,7 +81,7 @@ const noteRangeValues = computed(() => {
 })
 
 const noteRangeMax = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
+  switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return 127;
     case NoteRangeType.Frets:
@@ -92,7 +92,7 @@ const noteRangeMax = computed(() => {
 })
 
 const gridStyle = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
+  switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -103,11 +103,11 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
+  switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets:
-      let {start, end} = settingsStore.practiceSettings.fretRangeOptions.range;
+      let {start, end} = settingsStore.practice.fretRangeOptions.range;
       return end - start + 1
     case NoteRangeType.Octaves:
       return practiceStore.selectedNotes.length
@@ -115,11 +115,11 @@ const gridColumns = computed(() => {
 })
 
 const gridHeaders = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
+  switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets:
-      let {start, end} = settingsStore.practiceSettings.fretRangeOptions.range;
+      let {start, end} = settingsStore.practice.fretRangeOptions.range;
       let headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -132,7 +132,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (settingsStore.practiceSettings.noteRangeType) {
+  switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -143,12 +143,12 @@ const gridNoteFormat = computed(() => {
 })
 
 const selectedScale = computed(() => {
-  let {setName, baseNote} = settingsStore.practiceSettings.scale
+  let {setName, baseNote} = settingsStore.practice.scale
   return SCALES[setName][baseNote];
 })
 
 function updateNoteRange(range: number[]) {
-  let s = settingsStore.practiceSettings
+  let s = settingsStore.practice
   switch (s.noteRangeType) {
     case NoteRangeType.Notes:
       s.noteRangeOptions.range.start = range[0]
@@ -265,27 +265,27 @@ function makePracticeTypeOptions() {
           <div class="instrument-options">
             <div class="instrument-option">
               <Select
-                v-model="settingsStore.practiceSettings.practiceType"
+                v-model="settingsStore.practice.practiceType"
                 :options="makePracticeTypeOptions()"
                 option-label="name"
                 option-value="value"
               />
             </div>
             <div class="instrument-option">
-              <ToggleButton v-model="settingsStore.practiceSettings.requireOctave"
+              <ToggleButton v-model="settingsStore.practice.requireOctave"
                             on-label="Octave On"
                             off-label="Octave Off"
               />
             </div>
             <div class="instrument-option">
               <ScaleSelect
-                  v-model="settingsStore.practiceSettings.scale"
+                  v-model="settingsStore.practice.scale"
                   :disabled="practiceStore.practicing"
               />
             </div>
             <div class="instrument-option">
               <Select
-                  v-model="settingsStore.practiceSettings.noteRangeType"
+                  v-model="settingsStore.practice.noteRangeType"
                   :options="makeNoteRangeOptions()"
                   option-value="value"
                   option-label="name"
@@ -327,11 +327,11 @@ function makePracticeTypeOptions() {
         <TabPanel value="options">
           <div class="option-control">
             <span>Min Velocity for Success</span>
-            <Slider v-model="settingsStore.practiceSettings.minSuccessVelocity"
+            <Slider v-model="settingsStore.practice.minSuccessVelocity"
                     class="min-success-slider"
                     :max="127"
             />
-            <span>{{ settingsStore.practiceSettings.minSuccessVelocity }}</span>
+            <span>{{ settingsStore.practice.minSuccessVelocity }}</span>
           </div>
         </TabPanel>
       </TabPanels>

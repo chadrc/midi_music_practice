@@ -55,7 +55,7 @@ export const usePracticeStore = defineStore('practice', () => {
         let notes = []
         let {start, end} = settingsStore.currentRange;
 
-        switch (settingsStore.practiceSettings.noteRangeType) {
+        switch (settingsStore.practice.noteRangeType) {
             case NoteRangeType.Notes:
                 for (let i = start; i <= end; i++) {
                     notes.push(i)
@@ -137,13 +137,13 @@ export const usePracticeStore = defineStore('practice', () => {
             ({name, args}) => {
                 if (name === 'midiNoteOn') {
                     let noteArgs = args as [number, number, number]
-                    if (noteArgs[1] < settingsStore.practiceSettings.minSuccessVelocity) return;
+                    if (noteArgs[1] < settingsStore.practice.minSuccessVelocity) return;
 
                     let promptIndex = activePrompts.value[currentPrompt.value]
                     let prompt = prompts.value[promptIndex]
 
                     let success = formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0]);
-                    if (settingsStore.practiceSettings.requireOctave) {
+                    if (settingsStore.practice.requireOctave) {
                         success = prompt.note === noteArgs[0]
                     }
 

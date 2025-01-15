@@ -88,7 +88,7 @@ interface SettingsStore {
     noteGrid: NoteGridSettings;
     audio: AudioSettings;
     instruments: InstrumentSettings;
-    practiceSettings: PracticeSettings;
+    practice: PracticeSettings;
 }
 
 export const useSettingsStore = defineStore('settings', {
@@ -145,7 +145,7 @@ export const useSettingsStore = defineStore('settings', {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
-                practiceSettings: Object.assign(defaultPractice, stored.practiceSettings)
+                practice: Object.assign(defaultPractice, stored.practiceSettings)
             }
         }
 
@@ -153,19 +153,19 @@ export const useSettingsStore = defineStore('settings', {
             noteGrid: defaultNoteGrid,
             audio: defaultAudio,
             instruments: defaultInstrument,
-            practiceSettings: defaultPractice,
+            practice: defaultPractice,
         }
     },
     getters: {
-        noteScale: (state) => SCALES[state.practiceSettings.scale.setName][state.practiceSettings.scale.baseNote],
+        noteScale: (state) => SCALES[state.practice.scale.setName][state.practice.scale.baseNote],
         currentRange: (state) => {
-            switch (state.practiceSettings.noteRangeType) {
+            switch (state.practice.noteRangeType) {
                 case NoteRangeType.Notes:
-                    return state.practiceSettings.noteRangeOptions.range;
+                    return state.practice.noteRangeOptions.range;
                 case NoteRangeType.Frets:
-                    return state.practiceSettings.fretRangeOptions.range;
+                    return state.practice.fretRangeOptions.range;
                 case NoteRangeType.Octaves:
-                    return state.practiceSettings.octaveRangeOptions.range;
+                    return state.practice.octaveRangeOptions.range;
             }
         }
     },
