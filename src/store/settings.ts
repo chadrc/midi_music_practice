@@ -41,7 +41,22 @@ export interface NoteRangeOptions {
     endNote: number;
 }
 
+export enum PracticeType {
+    Chords,
+    Scales,
+    Fixed,
+}
+
+class FixedPractice {
+    readonly beats: Beat[];
+}
+
+class Beat {
+    readonly notes: number[];
+}
+
 interface PracticeSettings {
+    setType: PracticeType;
     scale: {
         setName: string,
         baseNote: string
@@ -52,6 +67,23 @@ interface PracticeSettings {
     fretRangeOptions: FretRangeOptions,
     octaveRangeOptions: OctaveRangeOptions,
     noteRangeOptions: NoteRangeOptions,
+    noteCount: number,
+    fixed: FixedPractice | null
+}
+
+export enum ParentType {
+    Settings,
+    Previous,
+    First,
+}
+
+type NullablePracticeSettings = {
+    [K in keyof PracticeSettings]: PracticeSettings[K] | null;
+}
+
+export interface RoutinePartSettings extends NullablePracticeSettings {
+    repeatCount: number;
+    parentSettings: ParentType;
 }
 
 interface SettingsStore {
@@ -77,7 +109,8 @@ export const useSettingsStore = defineStore('settings', {
             instrumentData: []
         }
 
-        let defaultPractice = {
+        let defaultPractice: PracticeSettings = {
+            setType: PracticeType.Scales,
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
                 baseNote: BaseNotes[BaseNotes.C],
@@ -96,7 +129,9 @@ export const useSettingsStore = defineStore('settings', {
             noteRangeOptions: {
                 startNote: 0,
                 endNote: 127,
-            }
+            },
+            noteCount: 0,
+            fixed: null,
         }
 
         if (localStorage.getItem('settings')) {
