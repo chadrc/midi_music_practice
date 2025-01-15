@@ -73,11 +73,15 @@ export class NoteScale {
 }
 
 export class Chord extends NoteScale {
+    public readonly type: string;
+
     constructor(
         baseNote: BaseNotes,
-        intervals: number[]
+        intervals: number[],
+        type: string,
     ) {
         super(baseNote, intervals, []);
+        this.type = type;
     }
 
     public contains(note: number): boolean {
@@ -185,7 +189,7 @@ export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
     BaseNotes.B,
 ].forEach((note) => registerScale(note, MINOR_PENTATONIC_SCALE_PATTERN, [], MINOR_PENTATONIC_SCALE_SET_NAME));
 
-function makeChordsForPattern(pattern: number[]) {
+function makeChordsForPattern(pattern: number[], type: string) {
     let chords: {[key: string]: Chord} = {};
 
     [BaseNotes.C,
@@ -206,14 +210,14 @@ function makeChordsForPattern(pattern: number[]) {
         BaseNotes.BFlat,
         BaseNotes.B
     ].forEach((note) => {
-        chords[BaseNotes[note]] = new Chord(note, pattern)
+        chords[BaseNotes[note]] = new Chord(note, pattern, type)
     });
 
     return chords;
 }
 
-CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern([3, 7]);
-CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern([4, 7]);
-CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern([3, 6]);
+CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern([3, 7], MINOR_CHORDS_SET_NAME);
+CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern([4, 7], MAJOR_CHORDS_SET_NAME);
+CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern([3, 6], DIMINISHED_CHORDS_SET_NAME);
 
 export const SCALES = SCALES_MAP
