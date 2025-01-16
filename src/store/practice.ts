@@ -2,7 +2,10 @@ import {defineStore} from "pinia";
 import {useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {formatMidiLetter} from "../notes";
-import {NoteRangeType, useSettingsStore} from "./settings";
+import {NoteRangeType, ParentType, useSettingsStore} from "./settings";
+import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {exists} from "../utilities";
+import {ac} from "vitest/dist/chunks/reporters.D7Jzd9GS";
 
 // CCS color variables for PrimeVue theme
 const colorOptions = [
@@ -26,13 +29,11 @@ const colorOptions = [
     "slate"
 ]
 
-export interface Prompt {
-    color: string;
-    note: number;
+export interface PromptData {
+    success: boolean;
+    current: boolean;
+    prompt: Prompt;
 }
-
-const MAX_MIDI_NOTES = 127
-const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
 
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
@@ -45,10 +46,8 @@ export const usePracticeStore = defineStore('practice', () => {
     const practicing = ref(false);
     const midiListenerUnsubscribe = ref(null);
 
-    const prompts = ref<Prompt[]>([])
-    const numberOfActivePrompts = ref(6);
-    const activePrompts = ref<(number | null)[]>([]);
-    const promptCursor = ref(0);
+    const routine = ref<RoutinePart | null>(null);
+    const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
 
     const selectedNotes = computed(() => {
@@ -83,41 +82,28 @@ export const usePracticeStore = defineStore('practice', () => {
     })
 
     function generatePrompts() {
-        let noteOptions = selectedNotes.value
-            .filter((note) => settingsStore.noteScale.contains(note))
-
-        for (let note of noteOptions) {
-            let colorRoll = Math.floor(Math.random() * colorOptions.length);
-            prompts.value.push({
-                color: colorOptions[colorRoll],
-                note,
-            })
-        }
-
-        // shuffle twice
-        for (let j = 0; j < 2; j++) {
-            for (let i = 0; i < prompts.value.length; i++) {
-                const roll = Math.floor(Math.random() * prompts.value.length);
-                const temp = prompts.value[i];
-                prompts.value[i] = prompts.value[roll];
-                prompts.value[roll] = temp;
-            }
-        }
+        routine.value = generateRoutineSet({
+            repeatCount: 1,
+            parentSettings: ParentType.Settings,
+            ...settingsStore.practice
+        })
     }
 
     function refreshActivePrompts() {
-        activePrompts.value = []
-        const start = promptCursor.value;
-        const end = promptCursor.value + numberOfActivePrompts.value;
+        activePrompts.value = [];
+        currentPrompt.value = 0;
 
-        if (end >= prompts.value.length) {
-            generatePrompts()
+        for (let prompt of routine.value.prompts) {
+            activePrompts.value.push({
+                success: false,
+                current: false,
+                prompt: prompt,
+            })
         }
 
-        for (let i = start; i < end; i++) {
-            activePrompts.value.push(i)
+        if (activePrompts.value.length > 0) {
+            activePrompts.value[0].current = true;
         }
-        promptCursor.value += numberOfActivePrompts.value
     }
 
     function start() {
@@ -125,7 +111,6 @@ export const usePracticeStore = defineStore('practice', () => {
 
         practicing.value = true;
         successCount.value = 0;
-        promptCursor.value = 0;
 
         refreshActivePrompts();
 
@@ -139,23 +124,22 @@ export const usePracticeStore = defineStore('practice', () => {
                     let noteArgs = args as [number, number, number]
                     if (noteArgs[1] < settingsStore.practice.minSuccessVelocity) return;
 
-                    let promptIndex = activePrompts.value[currentPrompt.value]
-                    let prompt = prompts.value[promptIndex]
+                    let activePrompt = activePrompts.value[currentPrompt.value]
 
-                    let success = formatMidiLetter(prompt.note) === formatMidiLetter(noteArgs[0]);
-                    if (settingsStore.practice.requireOctave) {
-                        success = prompt.note === noteArgs[0]
-                    }
+                    let success = exists(activePrompt.prompt.notes.find((n) => n === noteArgs[0]))
 
                     if (success) {
                         successCount.value += 1
-                        activePrompts.value[currentPrompt.value] = null;
+                        activePrompt.success = true;
+                        activePrompt.current = false;
 
                         currentPrompt.value += 1
                         if (currentPrompt.value >= activePrompts.value.length) {
                             currentPrompt.value = 0
                             refreshActivePrompts()
                         }
+
+                        activePrompts.value[currentPrompt.value].current = true;
                     }
                 } else if (name === 'midiNoteOff') {
                     // console.log('listen off')
@@ -168,12 +152,12 @@ export const usePracticeStore = defineStore('practice', () => {
         window.clearInterval(practiceSessionTimer.value)
         midiListenerUnsubscribe.value()
         activePrompts.value = []
-        prompts.value = []
+        routine.value = null;
         practicing.value = false;
     }
 
     return {
-        prompts,
+        routine,
         startTime,
         practiceSessionTimer,
         practiceSessionTime,

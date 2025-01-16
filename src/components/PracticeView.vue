@@ -6,7 +6,6 @@ import {Button, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs,
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
-import {exists} from "../utilities";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteRangeType, PracticeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
@@ -18,39 +17,11 @@ const settingsStore = useSettingsStore()
 
 const settingsOpen = ref(false)
 
-const displayPrompts = computed(() => {
-  let prompts = practiceStore.activePrompts
-      .map(prompt => (exists(prompt) ? {
-            current: false,
-            ...practiceStore.prompts[prompt],
-          } : {
-            current: false,
-            note: null,
-            color: null,
-          })
-      )
-
-  if (prompts[practiceStore.currentPrompt]) {
-    prompts[practiceStore.currentPrompt].current = true;
-  }
-
-  return prompts;
-})
-
 const noteSize = computed(() => settingsStore.practice.requireOctave ? 8 : 10)
 
 function formatPromptColor(prompt) {
-  if (!prompt.color) return 'var(--p-gray-800)';
-  return `var(--p-${prompt.color}-800`;
-}
-
-function formatPromptNote(prompt) {
-  if (!prompt.note) return '';
-
-  if (settingsStore.practice.requireOctave) {
-    return formatMidiNote(prompt.note)
-  }
-  return formatMidiLetter(prompt.note)
+  if (prompt.success) return 'var(--p-gray-800)';
+  return `var(--p-${prompt.prompt.color}-800`;
 }
 
 function formatPracticeTime() {
@@ -231,8 +202,7 @@ function makePracticeTypeOptions() {
     </section>
     <div class="prompt-area">
       <div
-          v-for="prompt in displayPrompts"
-          :key="prompt.note"
+          v-for="prompt in practiceStore.activePrompts"
           :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
@@ -241,9 +211,10 @@ function makePracticeTypeOptions() {
         >
           <span
               class="prompt-text"
+              v-for="note in prompt.prompt.displays"
               :style="{fontSize: `${noteSize}vh`}"
           >
-            {{ formatPromptNote(prompt) }}
+            {{ note }}
           </span>
         </div>
       </div>
@@ -265,10 +236,10 @@ function makePracticeTypeOptions() {
           <div class="instrument-options">
             <div class="instrument-option">
               <Select
-                v-model="settingsStore.practice.practiceType"
-                :options="makePracticeTypeOptions()"
-                option-label="name"
-                option-value="value"
+                  v-model="settingsStore.practice.practiceType"
+                  :options="makePracticeTypeOptions()"
+                  option-label="name"
+                  option-value="value"
               />
             </div>
             <div class="instrument-option">

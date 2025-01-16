@@ -66,7 +66,8 @@ interface PracticeSettings {
     octaveRangeOptions: OctaveRangeOptions,
     noteRangeOptions: NoteRangeOptions,
     noteCount: number,
-    fixed: FixedPractice | null
+    fixed: FixedPractice | null,
+    promptCount: number,
 }
 
 export enum ParentType {
@@ -136,6 +137,7 @@ export const useSettingsStore = defineStore('settings', {
             },
             noteCount: 0,
             fixed: null,
+            promptCount: 8,
         }
 
         if (localStorage.getItem('settings')) {
@@ -145,7 +147,7 @@ export const useSettingsStore = defineStore('settings', {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
-                practice: Object.assign(defaultPractice, stored.practiceSettings)
+                practice: Object.assign(defaultPractice, stored.practice)
             }
         }
 
