@@ -1,12 +1,13 @@
 import {defineStore} from 'pinia'
 import {endKeySound, KeySound, startKeySound} from "../notes/sound";
+import {Subject} from "rxjs";
 
 interface IOState {
     receiving: boolean;
     sending: boolean;
 }
 
-enum MIDIInstruction {
+export enum MIDIInstruction {
     NoteOn,
     NoteOff,
     PolyphonicAftertouch,
@@ -39,9 +40,10 @@ interface NotePlayData {
 interface MIDIStore {
     audioContext: AudioContext | null;
     midi: MIDIAccess | null;
-    err: any | null;
+    err: Error | null;
     ioStates: Map<string, IOState>;
     playData: NotePlayData[];
+    midiEventSubject: Subject<MIDIData>
 }
 
 export const useMidiStore = defineStore('midi', {
@@ -55,10 +57,11 @@ export const useMidiStore = defineStore('midi', {
             velocity: 0,
             sound: null as KeySound | null
         })),
+        midiEventSubject: new Subject<MIDIData>(),
     }),
     getters: {
         inputs: (state): MIDIInputOption[] => {
-            let items: MIDIInputOption[] = []
+            const items: MIDIInputOption[] = []
             if (state.midi == null) return items;
 
             state.midi.inputs.forEach((entry) => items.push({
@@ -91,22 +94,21 @@ export const useMidiStore = defineStore('midi', {
             );
         },
         receiveMidiMessage(event: MIDIMessageEvent) {
-            let data = makeMidiData(event.data);
+            const data = makeMidiData(event.data);
             if (data === null) return;
 
             switch (data.instruction) {
                 case MIDIInstruction.NoteOff:
-                    this.midiNoteOff(data.data1, 0, data.channel);
+                    this.midiNoteOff(data.data1, 0);
                     break
                 case MIDIInstruction.NoteOn:
-                    this.midiNoteOn(data.data1, data.data2, data.channel);
+                    this.midiNoteOn(data.data1, data.data2);
                     break
-                default:
-                    // currently unsupported
-                    return
             }
+
+            this.midiEventSubject.next(data);
         },
-        midiNoteOn(note: number, velocity: number, channel: number) {
+        midiNoteOn(note: number, velocity: number) {
             this.playData[note].on = true;
             this.playData[note].velocity = velocity;
 
@@ -118,7 +120,7 @@ export const useMidiStore = defineStore('midi', {
                 )
             }
         },
-        midiNoteOff(note: number, velocity: number, channel: number) {
+        midiNoteOff(note: number, velocity: number) {
             if (this.instrumentAudioEnabled) {
                 endKeySound(this.audioContext, this.playData[note].sound)
             }
@@ -137,7 +139,7 @@ export const useMidiStore = defineStore('midi', {
 
             if (device === null) return;
 
-            let currentState = this.ioStates.get(deviceId);
+            const currentState = this.ioStates.get(deviceId);
 
             if (currentState === undefined || currentState.receiving === false) {
                 device.onmidimessage = (event: MIDIMessageEvent) => {
@@ -155,11 +157,11 @@ export const useMidiStore = defineStore('midi', {
 })
 
 function makeMidiData(bytes: Uint8Array): MIDIData | null {
-    let status = bytes[0];
+    const status = bytes[0];
     let channel = 0;
     let instruction: MIDIInstruction | null = null
-    let data1 = bytes[1];
-    let data2 = bytes[2];
+    const data1 = bytes[1];
+    const data2 = bytes[2];
 
     if (status > 239) {
         // console.log("Unsupported MIDI instruction. Check back later for implementation.")

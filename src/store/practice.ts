@@ -1,33 +1,10 @@
 import {defineStore} from "pinia";
-import {useMidiStore} from "./midi";
+import {MIDIInstruction, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
-import {formatMidiLetter} from "../notes";
 import {NoteRangeType, ParentType, useSettingsStore} from "./settings";
 import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {exists} from "../utilities";
-import {ac} from "vitest/dist/chunks/reporters.D7Jzd9GS";
-
-// CCS color variables for PrimeVue theme
-const colorOptions = [
-    "emerald",
-    "green",
-    "lime",
-    "red",
-    "orange",
-    "amber",
-    "yellow",
-    "teal",
-    "cyan",
-    "sky",
-    "blue",
-    "indigo",
-    "violet",
-    "purple",
-    "fuchsia",
-    "pink",
-    "rose",
-    "slate"
-]
+import {filter, Subscription} from "rxjs";
 
 export interface PromptData {
     success: boolean;
@@ -44,15 +21,15 @@ export const usePracticeStore = defineStore('practice', () => {
     const practiceSessionTime = ref(0);
     const successCount = ref(0);
     const practicing = ref(false);
-    const midiListenerUnsubscribe = ref(null);
+    const midiSubscription = ref<Subscription>(null);
 
     const routine = ref<RoutinePart | null>(null);
     const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
 
     const selectedNotes = computed(() => {
-        let notes = []
-        let {start, end} = settingsStore.currentRange;
+        const notes = []
+        const {start, end} = settingsStore.currentRange;
 
         switch (settingsStore.practice.noteRangeType) {
             case NoteRangeType.Notes:
@@ -61,21 +38,22 @@ export const usePracticeStore = defineStore('practice', () => {
                 }
                 break;
             case NoteRangeType.Frets:
-                for (let note in STANDARD_TUNING_OPEN_FRET_NOTES) {
+                for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
                     for (let i = start; i <= end; i++) {
                         notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
                     }
                 }
                 break;
-            case NoteRangeType.Octaves:
-                let startingC = start * 12
-                let noteCount = (end - start) * 12;
-                let lastNote = startingC + noteCount;
+            case NoteRangeType.Octaves: {
+                const startingC = start * 12
+                const noteCount = (end - start) * 12;
+                const lastNote = startingC + noteCount;
 
                 for (let i = startingC; i <= lastNote; i++) {
                     notes.push(i)
                 }
                 break;
+            }
         }
 
         return notes
@@ -93,7 +71,7 @@ export const usePracticeStore = defineStore('practice', () => {
         activePrompts.value = [];
         currentPrompt.value = 0;
 
-        for (let prompt of routine.value.prompts) {
+        for (const prompt of routine.value.prompts) {
             activePrompts.value.push({
                 success: false,
                 current: false,
@@ -118,15 +96,14 @@ export const usePracticeStore = defineStore('practice', () => {
             practiceSessionTime.value += 1
         }, 1000);
 
-        midiListenerUnsubscribe.value = midiStore.$onAction(
-            ({name, args}) => {
-                if (name === 'midiNoteOn') {
-                    let noteArgs = args as [number, number, number]
-                    if (noteArgs[1] < settingsStore.practice.minSuccessVelocity) return;
+        midiSubscription.value = midiStore.midiEventSubject
+            .pipe(filter((v) => v.instruction === MIDIInstruction.NoteOn))
+            .subscribe({
+                next: ({data1, data2}) => {
+                    const activePrompt = activePrompts.value[currentPrompt.value];
 
-                    let activePrompt = activePrompts.value[currentPrompt.value]
-
-                    let success = exists(activePrompt.prompt.notes.find((n) => n === noteArgs[0]))
+                    if (data2 < settingsStore.practice.minSuccessVelocity) return;
+                    const success = exists(activePrompt.prompt.notes.find((n) => n === data1))
 
                     if (success) {
                         successCount.value += 1
@@ -141,16 +118,13 @@ export const usePracticeStore = defineStore('practice', () => {
 
                         activePrompts.value[currentPrompt.value].current = true;
                     }
-                } else if (name === 'midiNoteOff') {
-                    // console.log('listen off')
-                }
-            }
-        )
+                },
+            });
     }
 
     function stop() {
         window.clearInterval(practiceSessionTimer.value)
-        midiListenerUnsubscribe.value()
+        midiSubscription.value.unsubscribe()
         activePrompts.value = []
         routine.value = null;
         practicing.value = false;

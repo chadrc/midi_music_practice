@@ -27,8 +27,9 @@ const colorOptions = [
 ]
 
 export interface Prompt {
+    index: number;
     notes: number[];
-    color: string,
+    color: string;
     displays: string[];
 }
 
@@ -41,17 +42,18 @@ export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart =
 
     switch (settings.practiceType) {
         case PracticeType.Scales: {
-            let notes = generateNotesForRange(settings);
-            let noteOptions = notes.filter((note) => scale.contains(note));
+            const notes = generateNotesForRange(settings);
+            const noteOptions = notes.filter((note) => scale.contains(note));
 
-            let prompts = []
+            const prompts = []
             for (let i = 0; i < settings.promptCount; i++) {
-                let noteRoll = Math.floor(Math.random() * noteOptions.length);
-                let colorRoll = Math.floor(Math.random() * colorOptions.length)
+                const noteRoll = Math.floor(Math.random() * noteOptions.length);
+                const colorRoll = Math.floor(Math.random() * colorOptions.length)
 
-                let note = noteOptions[noteRoll]
+                const note = noteOptions[noteRoll]
 
                 prompts.push({
+                    index: i,
                     notes: [note],
                     color: colorOptions[colorRoll],
                     displays: [settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note)],
@@ -74,7 +76,7 @@ export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart =
 }
 
 export const shuffle = <T>(input: T[], count: number = 2) => {
-    for (let j = 0; j < 2; j++) {
+    for (let j = 0; j < count; j++) {
         for (let i = 0; i < input.length; i++) {
             const roll = Math.floor(Math.random() * input.length);
             const temp = input[i];
@@ -87,19 +89,19 @@ export const shuffle = <T>(input: T[], count: number = 2) => {
 export const generateNotesForRange = (
     settings: RoutinePartSettings,
 ) => {
-    let {noteRangeType} = settings;
-    let notes = []
+    const {noteRangeType} = settings;
+    const notes = []
     switch (noteRangeType) {
         case NoteRangeType.Notes: {
-            let {start, end} = settings.noteRangeOptions.range;
+            const {start, end} = settings.noteRangeOptions.range;
             for (let i = start; i <= end; i++) {
                 notes.push(i)
             }
             break;
         }
         case NoteRangeType.Frets: {
-            let {start, end} = settings.fretRangeOptions.range;
-            for (let note in STANDARD_TUNING_OPEN_FRET_NOTES) {
+            const {start, end} = settings.fretRangeOptions.range;
+            for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
                 for (let i = start; i <= end; i++) {
                     notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
                 }
@@ -107,10 +109,10 @@ export const generateNotesForRange = (
             break;
         }
         case NoteRangeType.Octaves: {
-            let {start, end} = settings.octaveRangeOptions.range;
-            let startingC = start * 12
-            let noteCount = (end - start) * 12;
-            let lastNote = startingC + noteCount;
+            const {start, end} = settings.octaveRangeOptions.range;
+            const startingC = start * 12
+            const noteCount = (end - start) * 12;
+            const lastNote = startingC + noteCount;
 
             for (let i = startingC; i <= lastNote; i++) {
                 notes.push(i)

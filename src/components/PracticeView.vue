@@ -2,13 +2,13 @@
 
 // reverse order so the lowest note is at bottom
 import {Button, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
-import {usePracticeStore} from "../store/practice";
+import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
 import ScaleSelect from "./ScaleSelect.vue";
 import {NoteRangeType, PracticeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
-import Settings from "./Settings.vue";
+import Settings from "./SettingsView.vue";
 import RNBOPatch from "./RNBOPatch.vue";
 
 const practiceStore = usePracticeStore()
@@ -18,7 +18,7 @@ const settingsOpen = ref(false)
 
 const noteSize = computed(() => settingsStore.practice.requireOctave ? 8 : 10)
 
-function formatPromptColor(prompt) {
+function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
   return `var(--p-${prompt.prompt.color}-800`;
 }
@@ -58,6 +58,8 @@ const noteRangeMax = computed(() => {
       return 22;
     case NoteRangeType.Octaves:
       return 12;
+    default:
+      return 0;
   }
 })
 
@@ -69,6 +71,8 @@ const gridStyle = computed(() => {
       return "circle"
     case NoteRangeType.Octaves:
       return "bar"
+    default:
+      return "box";
   }
 })
 
@@ -76,11 +80,14 @@ const gridColumns = computed(() => {
   switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return 12
-    case NoteRangeType.Frets:
-      let {start, end} = settingsStore.practice.fretRangeOptions.range;
+    case NoteRangeType.Frets: {
+      const {start, end} = settingsStore.practice.fretRangeOptions.range;
       return end - start + 1
+    }
     case NoteRangeType.Octaves:
       return practiceStore.selectedNotes.length
+    default:
+      return 0;
   }
 })
 
@@ -88,16 +95,19 @@ const gridHeaders = computed(() => {
   switch (settingsStore.practice.noteRangeType) {
     case NoteRangeType.Notes:
       return []
-    case NoteRangeType.Frets:
-      let {start, end} = settingsStore.practice.fretRangeOptions.range;
-      let headers = []
+    case NoteRangeType.Frets: {
+      const {start, end} = settingsStore.practice.fretRangeOptions.range;
+      const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
       }
 
       return headers
+    }
     case NoteRangeType.Octaves:
       return []
+    default:
+      return [];
   }
 })
 
@@ -109,6 +119,8 @@ const gridNoteFormat = computed(() => {
       return "letter-octave"
     case NoteRangeType.Octaves:
       return "letter"
+    default:
+      return "letter";
   }
 })
 
@@ -156,17 +168,17 @@ function makePracticeTypeOptions() {
       <Toolbar>
         <template #start>
           <Button
-              icon="pi pi-cog"
-              aria-label="Settings"
-              @click="settingsOpen = true"
+            icon="pi pi-cog"
+            aria-label="Settings"
+            @click="settingsOpen = true"
           />
         </template>
         <template #center>
           <Button
-              :label="practiceStore.practicing ? 'Stop' : 'Start' "
-              :severity="practiceStore.practicing ? 'danger' : 'info'"
-              size="small"
-              @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+            :label="practiceStore.practicing ? 'Stop' : 'Start' "
+            :severity="practiceStore.practicing ? 'danger' : 'info'"
+            size="small"
+            @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
           >
             {{ practiceStore.practicing ? 'Stop' : 'Start' }}
           </Button>
@@ -181,37 +193,39 @@ function makePracticeTypeOptions() {
           <div class="volume-control">
             <span>Volume</span>
             <Slider
-                v-model="settingsStore.instruments.volume"
-                class="volume-slider"
-                :min="0"
-                :max="1"
-                :step=".01"
+              v-model="settingsStore.instruments.volume"
+              class="volume-slider"
+              :min="0"
+              :max="1"
+              :step=".01"
             />
           </div>
         </template>
       </Toolbar>
       <Dialog
-          v-model:visible="settingsOpen"
-          modal
-          header="Settings"
-          :style="{ width: '90%', height: '90%' }"
+        v-model:visible="settingsOpen"
+        modal
+        header="Settings"
+        :style="{ width: '90%', height: '90%' }"
       >
-        <Settings/>
+        <Settings />
       </Dialog>
     </section>
     <div class="prompt-area">
       <div
-          v-for="prompt in practiceStore.activePrompts"
-          :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+        v-for="prompt in practiceStore.activePrompts"
+        :key="prompt.prompt.index"
+        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-            class="prompt-card"
-            :style="{backgroundColor: formatPromptColor(prompt)}"
+          class="prompt-card"
+          :style="{backgroundColor: formatPromptColor(prompt)}"
         >
           <span
-              class="prompt-text"
-              v-for="note in prompt.prompt.displays"
-              :style="{fontSize: `${noteSize}vh`}"
+            v-for="note in prompt.prompt.displays"
+            :key="note"
+            class="prompt-text"
+            :style="{fontSize: `${noteSize}vh`}"
           >
             {{ note }}
           </span>
@@ -235,41 +249,42 @@ function makePracticeTypeOptions() {
           <div class="instrument-options">
             <div class="instrument-option">
               <Select
-                  v-model="settingsStore.practice.practiceType"
-                  :options="makePracticeTypeOptions()"
-                  option-label="name"
-                  option-value="value"
+                v-model="settingsStore.practice.practiceType"
+                :options="makePracticeTypeOptions()"
+                option-label="name"
+                option-value="value"
               />
             </div>
             <div class="instrument-option">
-              <ToggleButton v-model="settingsStore.practice.requireOctave"
-                            on-label="Octave On"
-                            off-label="Octave Off"
+              <ToggleButton
+                v-model="settingsStore.practice.requireOctave"
+                on-label="Octave On"
+                off-label="Octave Off"
               />
             </div>
             <div class="instrument-option">
               <ScaleSelect
-                  v-model="settingsStore.practice.scale"
-                  :disabled="practiceStore.practicing"
+                v-model="settingsStore.practice.scale"
+                :disabled="practiceStore.practicing"
               />
             </div>
             <div class="instrument-option">
               <Select
-                  v-model="settingsStore.practice.noteRangeType"
-                  :options="makeNoteRangeOptions()"
-                  option-value="value"
-                  option-label="name"
+                v-model="settingsStore.practice.noteRangeType"
+                :options="makeNoteRangeOptions()"
+                option-value="value"
+                option-label="name"
               />
             </div>
             <div class="instrument-option">
               <div class="note-range-slider-wrapper">
                 <span>{{ noteRangeValues[0] }}</span>
                 <Slider
-                    :model-value="noteRangeValues"
-                    @value-change="updateNoteRange"
-                    :max="noteRangeMax"
-                    range
-                    class="note-range-slider"
+                  :model-value="noteRangeValues"
+                  :max="noteRangeMax"
+                  range
+                  class="note-range-slider"
+                  @value-change="updateNoteRange"
                 />
                 <span>{{ noteRangeValues[1] }}</span>
               </div>
@@ -277,18 +292,18 @@ function makePracticeTypeOptions() {
           </div>
           <div class="instrument-display">
             <NoteGrid
-                :notes="practiceStore.selectedNotes"
-                :scale="selectedScale"
-                :note-style="gridStyle"
-                :headers="gridHeaders"
-                :columns="gridColumns"
-                :note-format="gridNoteFormat"
+              :notes="practiceStore.selectedNotes"
+              :scale="selectedScale"
+              :note-style="gridStyle"
+              :headers="gridHeaders"
+              :columns="gridColumns"
+              :note-format="gridNoteFormat"
             />
           </div>
         </TabPanel>
         <TabPanel value="patch">
           <Suspense>
-            <RNBOPatch/>
+            <RNBOPatch />
             <template #fallback>
               Loading Instrument...
             </template>
@@ -297,9 +312,10 @@ function makePracticeTypeOptions() {
         <TabPanel value="options">
           <div class="option-control">
             <span>Min Velocity for Success</span>
-            <Slider v-model="settingsStore.practice.minSuccessVelocity"
-                    class="min-success-slider"
-                    :max="127"
+            <Slider
+              v-model="settingsStore.practice.minSuccessVelocity"
+              class="min-success-slider"
+              :max="127"
             />
             <span>{{ settingsStore.practice.minSuccessVelocity }}</span>
           </div>
