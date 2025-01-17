@@ -26,11 +26,16 @@ const colorOptions = [
     "slate"
 ]
 
+export interface PromptDisplay {
+    note: string;
+    chordType: string;
+}
+
 export interface Prompt {
     index: number;
     notes: number[];
     color: string;
-    displays: string[];
+    displays: PromptDisplay[];
 }
 
 export interface RoutinePart {
@@ -42,7 +47,7 @@ export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart =
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
 
-    let count = settings.promptCount;
+    let count = 0;
     const prompts = []
 
     if (scale.chords.length > 0) {
@@ -106,7 +111,12 @@ export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart =
             index: i,
             notes: [note],
             color: colorOptions[colorRoll],
-            displays: [settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note)],
+            displays: [
+                {
+                    note: settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note),
+                    chordType: ""
+                }
+            ],
         })
     }
 

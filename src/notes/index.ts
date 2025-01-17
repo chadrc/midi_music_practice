@@ -4,7 +4,7 @@ export const LETTER_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A
 const CHORD_TYPE_TO_NAME: {[key: string]: string} = {
     [MAJOR_CHORDS_SET_NAME]: "maj",
     [MINOR_CHORDS_SET_NAME]: "min",
-    [DIMINISHED_CHORDS_SET_NAME]: "dmin"
+    [DIMINISHED_CHORDS_SET_NAME]: "dim"
 }
 
 export const formatMidiNote = (midiNote: number) => {
@@ -21,6 +21,8 @@ export const formatMidiLetter = (midiNote: number) => {
 }
 
 export const formatChord = (type: string, note: number) => {
-    const chord = CHORD_TYPE_TO_NAME[type];
-    return `${formatMidiNote(note)}${chord}`;
+    return {
+        note: formatMidiNote(note),
+        chordType: CHORD_TYPE_TO_NAME[type]
+    };
 }

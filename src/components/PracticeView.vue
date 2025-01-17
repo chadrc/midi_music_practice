@@ -210,11 +210,11 @@ function updateNoteRange(range: number[]) {
         >
           <span
             v-for="note in prompt.prompt.displays"
-            :key="note"
+            :key="note.note"
             class="prompt-text"
-            :style="{fontSize: `${noteSize}vh`}"
           >
-            {{ note }}
+            <span>{{ note.note }}</span>
+            <span class="chord-text">{{ note.chordType }}</span>
           </span>
         </div>
       </div>
@@ -394,14 +394,23 @@ function updateNoteRange(range: number[]) {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(10vh + 5vw);
+  height: 100px;
   aspect-ratio: 1;
   border-radius: 50%;
+  font-size: 2rem;
 }
 
 .prompt-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   font-family: Arial, Helvetica, sans-serif;
   font-weight: bold;
+}
+
+.prompt-text > .chord-text {
+  font-size: 1rem;
 }
 
 .feedback-text {
