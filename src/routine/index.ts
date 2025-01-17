@@ -39,39 +39,28 @@ export interface RoutinePart {
 
 export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart => {
     const scale = SCALES[settings.scale.setName][settings.scale.baseNote]
+    const notes = generateNotesForRange(settings);
+    const noteOptions = notes.filter((note) => scale.contains(note));
 
-    switch (settings.practiceType) {
-        case PracticeType.Scales: {
-            const notes = generateNotesForRange(settings);
-            const noteOptions = notes.filter((note) => scale.contains(note));
+    const prompts = []
+    for (let i = 0; i < settings.promptCount; i++) {
+        const noteRoll = Math.floor(Math.random() * noteOptions.length);
+        const colorRoll = Math.floor(Math.random() * colorOptions.length)
 
-            const prompts = []
-            for (let i = 0; i < settings.promptCount; i++) {
-                const noteRoll = Math.floor(Math.random() * noteOptions.length);
-                const colorRoll = Math.floor(Math.random() * colorOptions.length)
+        const note = noteOptions[noteRoll]
 
-                const note = noteOptions[noteRoll]
+        prompts.push({
+            index: i,
+            notes: [note],
+            color: colorOptions[colorRoll],
+            displays: [settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note)],
+        })
+    }
 
-                prompts.push({
-                    index: i,
-                    notes: [note],
-                    color: colorOptions[colorRoll],
-                    displays: [settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note)],
-                })
-            }
+    shuffle(prompts);
 
-            shuffle(prompts);
-
-            return {
-                prompts,
-            }
-        }
-        case PracticeType.Chords: {
-            break;
-        }
-        case PracticeType.Fixed: {
-            break;
-        }
+    return {
+        prompts,
     }
 }
 
