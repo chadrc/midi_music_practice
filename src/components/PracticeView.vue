@@ -1,6 +1,4 @@
 <script setup lang="ts">
-
-// reverse order so the lowest note is at bottom
 import {Button, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
