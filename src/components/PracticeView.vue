@@ -6,7 +6,7 @@ import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
 import ScaleSelect from "./ScaleSelect.vue";
-import {NoteRangeType, PracticeType, useSettingsStore} from "../store/settings";
+import {NoteRangeType, useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
 import Settings from "./SettingsView.vue";
 import RNBOPatch from "./RNBOPatch.vue";
@@ -15,8 +15,6 @@ const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
 const settingsOpen = ref(false)
-
-const noteSize = computed(() => settingsStore.practice.requireOctave ? 8 : 10)
 
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
