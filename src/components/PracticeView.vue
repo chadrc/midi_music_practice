@@ -147,19 +147,6 @@ function updateNoteRange(range: number[]) {
   }
 }
 
-function makePracticeTypeOptions() {
-  return [
-    {
-      name: "Chords",
-      value: PracticeType.Chords
-    },
-    {
-      name: "Scales",
-      value: PracticeType.Scales
-    }
-  ]
-}
-
 </script>
 
 <template>
@@ -248,12 +235,14 @@ function makePracticeTypeOptions() {
         <TabPanel value="instrument">
           <div class="instrument-options">
             <div class="instrument-option">
-              <Select
-                v-model="settingsStore.practice.practiceType"
-                :options="makePracticeTypeOptions()"
-                option-label="name"
-                option-value="value"
-              />
+              <div class="chord-ratio-slider-wrapper">
+                <span>Chords Per Set: {{ settingsStore.practice.chordRatio }}</span>
+                <Slider
+                  v-model="settingsStore.practice.chordRatio"
+                  :max="settingsStore.chordRatioMax"
+                  class="note-range-slider"
+                />
+              </div>
             </div>
             <div class="instrument-option">
               <ToggleButton
@@ -454,6 +443,17 @@ function makePracticeTypeOptions() {
   align-items: center;
   margin-left: 1rem;
   margin-right: 1rem;
+}
+
+.chord-ratio-slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chord-ratio-slider-wrapper > span {
+  margin-bottom: 0.5rem;
 }
 
 .option-control {

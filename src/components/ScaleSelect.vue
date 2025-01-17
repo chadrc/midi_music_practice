@@ -99,16 +99,16 @@ function updateScale(value: ScaleOption) {
 
 <template>
   <CascadeSelect
-      class="scale-select"
-      :disabled="props.disabled"
-      :model-value="internalValue"
-      :options="scaleOptions"
-      show-clear
-      option-group-label="name"
-      option-label="name"
-      :option-group-children="['scales']"
-      placeholder="Chromatic"
-      @value-change="updateScale"
+    class="scale-select"
+    :disabled="props.disabled"
+    :model-value="internalValue"
+    :options="scaleOptions"
+    show-clear
+    option-group-label="name"
+    option-label="name"
+    :option-group-children="['scales']"
+    placeholder="Chromatic"
+    @value-change="updateScale"
   />
 </template>
 

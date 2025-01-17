@@ -60,6 +60,7 @@ interface PracticeSettings {
         setName: string,
         baseNote: string
     },
+    chordRatio: number,
     requireOctave: boolean,
     minSuccessVelocity: number,
     noteRangeType: NoteRangeType,
@@ -115,6 +116,7 @@ export const useSettingsStore = defineStore('settings', {
                 setName: CHROMATIC_SCALE_SET_NAME,
                 baseNote: BaseNotes[BaseNotes.C],
             },
+            chordRatio: 0,
             requireOctave: true,
             minSuccessVelocity: 100,
             noteRangeType: NoteRangeType.Notes,
@@ -170,7 +172,8 @@ export const useSettingsStore = defineStore('settings', {
                 case NoteRangeType.Octaves:
                     return state.practice.octaveRangeOptions.range;
             }
-        }
+        },
+        chordRatioMax: (state) => state.practice.promptCount
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {
