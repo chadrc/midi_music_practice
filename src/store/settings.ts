@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {NumberRangeLike} from "../common/NumberRange";
 import {RNBOParameter} from "./types";
+import {MAX_MIDI_NOTES} from "../routine";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -135,7 +136,7 @@ export const useSettingsStore = defineStore('settings', {
             noteRangeOptions: {
                 range: {
                     start: 0,
-                    end: 127,
+                    end: MAX_MIDI_NOTES,
                 }
             },
             noteCount: 0,

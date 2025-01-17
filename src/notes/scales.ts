@@ -1,21 +1,26 @@
-import {arrayOf, exists} from "../utilities";
+import {exists} from "../utilities";
 
 export enum BaseNotes {
     C = 0,
     CSharp = 1,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     DFlat = 1,
     D = 2,
     DSharp = 3,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     EFlat = 3,
     E = 4,
     F = 5,
     FSharp = 6,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     GFlat = 6,
     G = 7,
     GSharp = 8,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     AFlat = 8,
     A = 9,
     ASharp = 10,
+    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
     BFlat = 10,
     B = 11,
 }
@@ -32,7 +37,7 @@ export class NoteScale {
         this.notes = [baseNote];
         this._chords = chords;
         let currentNote = baseNote;
-        for (let interval of intervals) {
+        for (const interval of intervals) {
             currentNote += interval;
             this.notes.push(currentNote % 12);
         }
@@ -43,11 +48,11 @@ export class NoteScale {
     }
 
     public get chords(): Chord[] {
-        let c: Chord[] = []
+        const c: Chord[] = []
 
         for (let i = 0; i < this._chords.length; i++) {
-            let note = this.notes[i];
-            let chord = this._chords[i];
+            const note = this.notes[i];
+            const chord = this._chords[i];
 
             c.push(CHORDS_MAP[chord][BaseNotes[note]]);
         }
@@ -60,9 +65,9 @@ export class NoteScale {
             return false;
         }
 
-        let col = note % 12;
+        const col = note % 12;
 
-        for (let scaleNote of this.notes) {
+        for (const scaleNote of this.notes) {
             if (col === scaleNote) {
                 return true;
             }
@@ -108,12 +113,12 @@ const SCALES_MAP: { [key: string]: { [key: string]: NoteScale } } = {}
 const CHORDS_MAP: { [key: string]: { [key: string]: Chord } } = {}
 
 const registerScale = (baseNote: BaseNotes, pattern: number[], chords: string[], setName: string) => {
-    let scale = new NoteScale(baseNote, pattern, chords);
+    const scale = new NoteScale(baseNote, pattern, chords);
     if (!exists(SCALES_MAP[setName])) {
         SCALES_MAP[setName] = {};
     }
 
-    let set = SCALES_MAP[setName];
+    const set = SCALES_MAP[setName];
     set[BaseNotes[baseNote]] = scale;
 }
 
@@ -190,7 +195,7 @@ export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
 ].forEach((note) => registerScale(note, MINOR_PENTATONIC_SCALE_PATTERN, [], MINOR_PENTATONIC_SCALE_SET_NAME));
 
 function makeChordsForPattern(pattern: number[], type: string) {
-    let chords: {[key: string]: Chord} = {};
+    const chords: {[key: string]: Chord} = {};
 
     [BaseNotes.C,
         BaseNotes.CSharp,
@@ -216,8 +221,8 @@ function makeChordsForPattern(pattern: number[], type: string) {
     return chords;
 }
 
-CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern([3, 7], MINOR_CHORDS_SET_NAME);
-CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern([4, 7], MAJOR_CHORDS_SET_NAME);
-CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern([3, 6], DIMINISHED_CHORDS_SET_NAME);
+CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern([3, 4], MINOR_CHORDS_SET_NAME);
+CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern([4, 3], MAJOR_CHORDS_SET_NAME);
+CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern([3, 3], DIMINISHED_CHORDS_SET_NAME);
 
 export const SCALES = SCALES_MAP
