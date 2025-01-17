@@ -8,13 +8,13 @@ interface IOState {
 }
 
 export enum MIDIInstruction {
-    NoteOn,
-    NoteOff,
-    PolyphonicAftertouch,
-    Aftertouch,
-    ControlChange,
-    ProgramChange,
-    PitchBend,
+    NoteOff= 128,
+    NoteOn= 144,
+    PolyphonicAftertouch = 160,
+    ControlChange= 176,
+    ProgramChange= 192,
+    Aftertouch = 208,
+    PitchBend= 224,
 }
 
 export interface PracticeMIDIData {
@@ -166,25 +166,25 @@ function makeMidiData(bytes: Uint8Array): PracticeMIDIData | null {
     if (status > 239) {
         // console.log("Unsupported MIDI instruction. Check back later for implementation.")
         return null
-    } else if (status >= 224) {
+    } else if (status >= MIDIInstruction.PitchBend) {
         instruction = MIDIInstruction.PitchBend;
         channel = status - 224
-    } else if (status >= 208) {
+    } else if (status >= MIDIInstruction.Aftertouch) {
         instruction = MIDIInstruction.Aftertouch;
         channel = status - 208
-    } else if (status >= 192) {
+    } else if (status >= MIDIInstruction.ProgramChange) {
         instruction = MIDIInstruction.ProgramChange;
         channel = status - 192
-    } else if (status >= 176) {
+    } else if (status >= MIDIInstruction.ControlChange) {
         instruction = MIDIInstruction.ControlChange;
         channel = status - 176
-    } else if (status >= 160) {
+    } else if (status >= MIDIInstruction.PolyphonicAftertouch) {
         instruction = MIDIInstruction.PolyphonicAftertouch;
         channel = status - 160
-    } else if (status >= 144) {
+    } else if (status >= MIDIInstruction.NoteOn) {
         instruction = MIDIInstruction.NoteOn;
         channel = status - 144
-    } else if (status >= 128) {
+    } else if (status >= MIDIInstruction.NoteOff) {
         instruction = MIDIInstruction.NoteOff;
         channel = status - 128
     }

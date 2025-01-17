@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {NumberRangeLike} from "../common/NumberRange";
+import {RNBOParameter} from "./types";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -13,7 +14,7 @@ interface AudioSettings {
 
 interface InstrumentData {
     name: string,
-    parameterData: { [key: string]: any }
+    parameterData: { [key: string]: RNBOParameter }
 }
 
 interface InstrumentSettings {
@@ -94,21 +95,21 @@ interface SettingsStore {
 
 export const useSettingsStore = defineStore('settings', {
     state: (): SettingsStore => {
-        let defaultNoteGrid: NoteGridSettings = {
+        const defaultNoteGrid: NoteGridSettings = {
             formatted: false
         }
 
-        let defaultAudio: AudioSettings = {
+        const defaultAudio: AudioSettings = {
             instrumentAudioEnabled: false,
             autoReceiveInstruments: []
         }
 
-        let defaultInstrument: InstrumentSettings = {
+        const defaultInstrument: InstrumentSettings = {
             volume: .5,
             instrumentData: []
         }
 
-        let defaultPractice: PracticeSettings = {
+        const defaultPractice: PracticeSettings = {
             practiceType: PracticeType.Scales,
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
@@ -141,7 +142,7 @@ export const useSettingsStore = defineStore('settings', {
         }
 
         if (localStorage.getItem('settings')) {
-            let stored = JSON.parse(localStorage.getItem('settings'))
+            const stored = JSON.parse(localStorage.getItem('settings'))
 
             return {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
@@ -173,7 +174,7 @@ export const useSettingsStore = defineStore('settings', {
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {
-            let index = this.audio.autoReceiveInstruments
+            const index = this.audio.autoReceiveInstruments
                 .findIndex((id: string) => id === deviceId)
 
             if (index === -1) {
@@ -183,7 +184,7 @@ export const useSettingsStore = defineStore('settings', {
             }
         },
         saveInstrumentData(data: InstrumentData) {
-            let existing = this.instruments.instrumentData
+            const existing = this.instruments.instrumentData
                 .findIndex((instrument: InstrumentData) => instrument.name === data.name)
 
             if (existing > -1) {

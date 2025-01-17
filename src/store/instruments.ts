@@ -1,10 +1,11 @@
 import {defineStore} from "pinia";
 import {createDevice, Device, IPatcher} from "@rnbo/js";
-import {computed, ref, watch} from "vue";
+import {ref, watch} from "vue";
 import {useMidiStore} from "./midi";
 import {MIDIEvent} from "@rnbo/js";
 import {useSettingsStore} from "./settings";
 import {exists} from "../utilities";
+import {RNBOParameter} from "./types";
 
 export const useInstrumentStore = defineStore('instruments', () => {
     const settingsStore = useSettingsStore();
@@ -17,7 +18,7 @@ export const useInstrumentStore = defineStore('instruments', () => {
 
     outputNode.connect(audioContext.destination);
 
-    const paramValues = ref<{ [key: string]: any }>({})
+    const paramValues = ref<{ [key: string]: RNBOParameter }>({})
 
     const midiListenerUnsubscribe = ref<any>();
     const currentDevice = ref<Device | null>(null);
@@ -30,14 +31,16 @@ export const useInstrumentStore = defineStore('instruments', () => {
         });
         device.node.connect(outputNode);
         currentDevice.value = device;
+        // typing is incorrect according to RNBO output file found in instruments
+        // eslint-disable-next-line
         currentDeviceName.value = (patcher.desc.meta as any).name
 
-        let existingData = settingsStore.instruments.instrumentData
+        const existingData = settingsStore.instruments.instrumentData
             .find((value) => value.name === currentDeviceName.value);
 
         if (exists(existingData)) {
             paramValues.value = Object.assign({}, existingData.parameterData);
-            for (let parameter of currentDevice.value.parameters) {
+            for (const parameter of currentDevice.value.parameters) {
                 if (exists(paramValues.value[parameter.id])) {
                     parameter.value = paramValues.value[parameter.id]
                 } else {
@@ -45,40 +48,28 @@ export const useInstrumentStore = defineStore('instruments', () => {
                 }
             }
         } else {
-            for (let parameter of currentDevice.value.parameters) {
+            for (const parameter of currentDevice.value.parameters) {
                 paramValues.value[parameter.id] = parameter.initialValue;
             }
         }
     }
 
-    midiListenerUnsubscribe.value = midiStore.$onAction(
-        ({name, args}) => {
-            let message: [number, number, number] = [0, 0, 0]
-            if (name === 'midiNoteOn') {
-                let [note, velocity, channel] = args as [number, number, number]
-                message = [144 + channel, note, velocity]
-            } else if (name === 'midiNoteOff') {
-                let [note, velocity, channel] = args as [number, number, number]
-                message = [128 + channel, note, 0]
-            } else {
-                return
-            }
-
-            let event = new MIDIEvent(
+    midiStore.midiEventSubject
+        .subscribe(({instruction, channel, data1, data2}) => {
+            const event = new MIDIEvent(
                 currentDevice.value.context.currentTime * 1000,
                 0,
-                message
+                [instruction + channel, data1, data2]
             );
 
             currentDevice.value.scheduleEvent(event);
-        }
-    )
+        })
 
-    watch(() => settingsStore.instruments.volume, (value: number, oldValue: number) => {
+    watch(() => settingsStore.instruments.volume, (value: number) => {
         outputNode.gain.setValueAtTime(value, audioContext.currentTime);
     })
 
-    watch(paramValues,  (newValue, oldValue) => {
+    watch(paramValues,  (newValue) => {
         if (currentDevice.value !== null) {
             settingsStore.saveInstrumentData({
                 name: currentDeviceName.value,
