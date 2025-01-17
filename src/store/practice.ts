@@ -1,15 +1,24 @@
 import {defineStore} from "pinia";
-import {MIDIInstruction, useMidiStore} from "./midi";
+import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {NoteRangeType, ParentType, useSettingsStore} from "./settings";
 import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
+import {ac} from "vitest/dist/chunks/reporters.D7Jzd9GS";
+import {formatMidiNote} from "../notes";
+
+const SECONDS_IN_MINUTE = 60;
 
 export interface PromptData {
     success: boolean;
     current: boolean;
     prompt: Prompt;
+}
+
+export interface PracticeAttempt {
+    time: number;
+    data: PracticeMIDIData;
 }
 
 export const usePracticeStore = defineStore('practice', () => {
@@ -26,6 +35,9 @@ export const usePracticeStore = defineStore('practice', () => {
     const routine = ref<RoutinePart | null>(null);
     const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
+    const bpm = ref(120);
+
+    const attempts = ref<PracticeAttempt[]>([]);
 
     const selectedNotes = computed(() => {
         const notes = []
@@ -99,11 +111,32 @@ export const usePracticeStore = defineStore('practice', () => {
         midiSubscription.value = midiStore.midiEventSubject
             .pipe(filter((v) => v.instruction === MIDIInstruction.NoteOn))
             .subscribe({
-                next: ({data1, data2}) => {
+                next: (data) => {
+                    const now = Date.now();
+                    const frameTime = now - 50;
+
+                    attempts.value.push({
+                        time: now,
+                        data
+                    });
+
                     const activePrompt = activePrompts.value[currentPrompt.value];
 
-                    if (data2 < settingsStore.practice.minSuccessVelocity) return;
-                    const success = exists(activePrompt.prompt.notes.find((n) => n === data1))
+                    let success = true;
+                    for (const note of activePrompt.prompt.notes) {
+                        const notesInFrame = attempts.value
+                            .toReversed()
+                            .filter((a) => a.time > frameTime);
+
+                        if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
+                            data1 === note && data2 >= settingsStore.practice.minSuccessVelocity
+                        ))) {
+                            success = false;
+                        }
+                    }
+
+                    // if (data2 < settingsStore.practice.minSuccessVelocity) return;
+                    // const success = exists(activePrompt.prompt.notes.find((n) => n === data1))
 
                     if (success) {
                         successCount.value += 1
@@ -140,6 +173,7 @@ export const usePracticeStore = defineStore('practice', () => {
         currentPrompt,
         successCount,
         practicing,
+        bpm,
         start,
         stop,
     }

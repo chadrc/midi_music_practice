@@ -17,7 +17,7 @@ export enum MIDIInstruction {
     PitchBend,
 }
 
-interface MIDIData {
+export interface PracticeMIDIData {
     instruction: MIDIInstruction;
     channel: number;
     data1: number;
@@ -43,7 +43,7 @@ interface MIDIStore {
     err: Error | null;
     ioStates: Map<string, IOState>;
     playData: NotePlayData[];
-    midiEventSubject: Subject<MIDIData>
+    midiEventSubject: Subject<PracticeMIDIData>
 }
 
 export const useMidiStore = defineStore('midi', {
@@ -57,7 +57,7 @@ export const useMidiStore = defineStore('midi', {
             velocity: 0,
             sound: null as KeySound | null
         })),
-        midiEventSubject: new Subject<MIDIData>(),
+        midiEventSubject: new Subject<PracticeMIDIData>(),
     }),
     getters: {
         inputs: (state): MIDIInputOption[] => {
@@ -156,7 +156,7 @@ export const useMidiStore = defineStore('midi', {
     }
 })
 
-function makeMidiData(bytes: Uint8Array): MIDIData | null {
+function makeMidiData(bytes: Uint8Array): PracticeMIDIData | null {
     const status = bytes[0];
     let channel = 0;
     let instruction: MIDIInstruction | null = null
