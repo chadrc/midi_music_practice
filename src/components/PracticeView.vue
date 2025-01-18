@@ -377,18 +377,6 @@ function makeTargetBPMOptions() {
   width: 10rem;
 }
 
-.settings-dialog {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.settings-wrapper {
-  flex: 1;
-}
-
 .active-view {
   flex: 1;
 }
