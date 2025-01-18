@@ -7,38 +7,38 @@ import {MAX_MIDI_NOTES} from "../routine";
 function makeDefaultRoutinePartSettings(): RoutinePartSettings {
     return {
         parentSettings: ParentType.Settings,
-            repeatCount: 1,
+        repeatCount: 1,
         cloneRepeat: false,
         practiceType: PracticeType.Scales,
         targetBPM: 120,
         scale: {
-        setName: CHROMATIC_SCALE_SET_NAME,
+            setName: CHROMATIC_SCALE_SET_NAME,
             baseNote: BaseNotes[BaseNotes.C],
-    },
+        },
         chordRatio: 0,
-            requireOctave: true,
+        requireOctave: true,
         minSuccessVelocity: 100,
         noteRangeType: NoteRangeType.Notes,
         fretRangeOptions: {
-        range: {
-            start: 0,
+            range: {
+                start: 0,
                 end: 4,
-        }
-    },
+            }
+        },
         octaveRangeOptions: {
             range: {
                 start: 4,
-                    end: 6,
+                end: 6,
             }
         },
         noteRangeOptions: {
             range: {
                 start: 0,
-                    end: MAX_MIDI_NOTES,
+                end: MAX_MIDI_NOTES,
             }
         },
         noteCount: 0,
-            fixed: null,
+        fixed: null,
         promptCount: 8,
     }
 }
