@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Button, SelectButton, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
-import {PromptData, usePracticeStore} from "../store/practice";
+import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, markRaw, ref} from "vue";
 import ScaleSelect from "./ScaleSelect.vue";
@@ -34,7 +34,6 @@ const views = [
 ];
 
 const currentView = ref<ViewOption>(views[0]);
-
 
 function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;

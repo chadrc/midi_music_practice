@@ -2,10 +2,10 @@ import {defineStore} from "pinia";
 import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {useSettingsStore} from "./settings";
-import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {generateRoutineSet, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
-import {NoteRangeType, ParentType} from "../routine/types";
+import {NoteRangeType, ParentType, Prompt, RoutinePart} from "../routine/types";
 
 const MILISECONDS_IN_MINUTE = 60000;
 

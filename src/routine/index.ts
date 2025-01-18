@@ -1,4 +1,4 @@
-import {NoteRangeType, RoutinePartSettings} from "./types";
+import {NoteRangeType, RoutinePart, RoutinePartSettings} from "./types";
 import {formatChord, formatMidiNote} from "../notes";
 import {SCALES} from "../notes/scales";
 
@@ -25,22 +25,6 @@ const colorOptions = [
     "rose",
     "slate"
 ]
-
-export interface PromptDisplay {
-    note: string;
-    chordType: string;
-}
-
-export interface Prompt {
-    index: number;
-    notes: number[];
-    color: string;
-    displays: PromptDisplay[];
-}
-
-export interface RoutinePart {
-    prompts: Prompt[];
-}
 
 export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart => {
     const scale = SCALES[settings.scale.setName][settings.scale.baseNote]

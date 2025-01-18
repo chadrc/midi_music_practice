@@ -51,6 +51,22 @@ export interface PracticeSettings {
     promptCount: number,
 }
 
+export interface PromptDisplay {
+    note: string;
+    chordType: string;
+}
+
+export interface Prompt {
+    index: number;
+    notes: number[];
+    color: string;
+    displays: PromptDisplay[];
+}
+
+export interface RoutinePart {
+    prompts: Prompt[];
+}
+
 export enum ParentType {
     Settings,
     Previous,
