@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {Stepper, StepList, Step, StepPanels, StepPanel} from "primevue";
 import {useRoutineEditStore} from "../store/routineEdit";
+import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -30,12 +31,27 @@ function onStepUpdate(value: number) {
         :key="index"
         :value="index + 1"
       >
-        {{ index + 1 }}
+        <section class="settings-edit">
+          <div class="settings-edit-field">
+            <span>Parent:</span>
+            <ParentTypeSelect v-model="item.parentSettings" />
+          </div>
+        </section>
       </StepPanel>
     </StepPanels>
   </Stepper>
 </template>
 
 <style scoped>
+.settings-edit {
+  padding: 1rem;
+}
 
+.settings-edit-field {
+
+}
+
+.settings-edit-field > span {
+  margin-right: 1rem;
+}
 </style>
