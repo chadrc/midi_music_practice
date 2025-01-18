@@ -35,10 +35,6 @@ const views = [
 
 const currentView = ref<ViewOption>(views[0]);
 
-function formatPromptColor(prompt: PromptData) {
-  if (prompt.success) return 'var(--p-gray-800)';
-  return `var(--p-${prompt.prompt.color}-800`;
-}
 
 function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;
@@ -240,27 +236,8 @@ function makeTargetBPMOptions() {
         <Settings />
       </Dialog>
     </section>
-    <div class="prompt-area">
+    <div class="active-view">
       <component :is="currentView.component" />
-      <div
-        v-for="prompt in practiceStore.activePrompts"
-        :key="prompt.prompt.index"
-        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
-      >
-        <div
-          class="prompt-card"
-          :style="{backgroundColor: formatPromptColor(prompt)}"
-        >
-          <span
-            v-for="note in prompt.prompt.displays"
-            :key="note.note"
-            class="prompt-text"
-          >
-            <span>{{ note.note }}</span>
-            <span class="chord-text">{{ note.chordType }}</span>
-          </span>
-        </div>
-      </div>
     </div>
     <Tabs value="instrument">
       <TabList class="centered">
@@ -412,48 +389,8 @@ function makeTargetBPMOptions() {
   flex: 1;
 }
 
-.prompt-area {
+.active-view {
   flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
-}
-
-.prompt-column {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  padding: 1rem;
-}
-
-.prompt-column.current {
-  background-color: var(--p-zinc-500);
-}
-
-.prompt-card {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  font-size: 2rem;
-}
-
-.prompt-text {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: bold;
-}
-
-.prompt-text > .chord-text {
-  font-size: 1rem;
 }
 
 .feedback-text {
