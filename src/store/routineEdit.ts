@@ -21,7 +21,6 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         fixed: null,
         promptCount: null,
 
-        // cloneRepeat: false,
         // practiceType: PracticeType.Generated,
         // targetBPM: 120,
         // scale: {
