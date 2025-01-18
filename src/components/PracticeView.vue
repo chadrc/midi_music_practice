@@ -353,7 +353,7 @@ function makeTargetBPMOptions() {
 }
 
 .practice-controls {
-  margin: 1rem
+  margin: 1rem;
 }
 
 .volume-control {
@@ -374,6 +374,7 @@ function makeTargetBPMOptions() {
 
 .active-view {
   flex: 1;
+  margin: 0 1rem 1rem 1rem;
 }
 
 .feedback-text {
