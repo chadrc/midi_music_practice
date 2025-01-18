@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Button, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
+import {Button, SelectButton, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
@@ -9,11 +9,41 @@ import {SCALES} from "../notes/scales";
 import Settings from "./SettingsView.vue";
 import RNBOPatch from "./RNBOPatch.vue";
 import {NoteRangeType} from "../routine/types";
+import PromptsView from "./PromptsView.vue";
+import RoutineEditView from "./RoutineEditView.vue";
+
+interface ViewOption {
+  name: string;
+  current: boolean;
+  component: object;
+}
 
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
 const settingsOpen = ref(false)
+const views = ref<ViewOption[]>([
+  {
+    name: "Practice",
+    current: true,
+    component: PromptsView,
+  },
+  {
+    name: "Routines",
+    current: false,
+    component: RoutineEditView,
+  }
+]);
+
+const currentView = ref<ViewOption>(views.value[0]);
+
+function onViewChanged(view: ViewOption) {
+  const index = views.value.indexOf(view);
+
+  for (let i = 0; i < views.value.length; i++) {
+    views.value[i].current = i === index;
+  }
+}
 
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
@@ -146,7 +176,7 @@ function updateNoteRange(range: number[]) {
 
 function makeTargetBPMOptions() {
   const options = [];
-  for (let i=5; i <= 200; i+=5) {
+  for (let i = 5; i <= 200; i += 5) {
     options.push(i);
   }
   return options;
@@ -159,10 +189,11 @@ function makeTargetBPMOptions() {
     <section class="practice-controls">
       <Toolbar>
         <template #start>
-          <Button
-            icon="pi pi-cog"
-            aria-label="Settings"
-            @click="settingsOpen = true"
+          <SelectButton
+            v-model="currentView"
+            :options="views"
+            option-label="name"
+            :option-disabled="(data) => data.name === currentView.name"
           />
         </template>
         <template #center>
@@ -203,6 +234,11 @@ function makeTargetBPMOptions() {
               :step=".01"
             />
           </div>
+          <Button
+            icon="pi pi-cog"
+            aria-label="Settings"
+            @click="settingsOpen = true"
+          />
         </template>
       </Toolbar>
       <Dialog
@@ -215,6 +251,7 @@ function makeTargetBPMOptions() {
       </Dialog>
     </section>
     <div class="prompt-area">
+      <component :is="currentView.component" />
       <div
         v-for="prompt in practiceStore.activePrompts"
         :key="prompt.prompt.index"
