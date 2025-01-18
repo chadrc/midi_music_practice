@@ -35,7 +35,6 @@ export const usePracticeStore = defineStore('practice', () => {
     const routine = ref<RoutinePart | null>(null);
     const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
-    const bpm = ref(60);
 
     const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
@@ -67,7 +66,7 @@ export const usePracticeStore = defineStore('practice', () => {
         }
     });
 
-    const playRate = computed(() => notesPerMinute.value / bpm.value);
+    const playRate = computed(() => notesPerMinute.value / settingsStore.practice.targetBPM);
 
     const playRateDisplay = computed(() => {
         const p = playRate.value;
@@ -239,7 +238,6 @@ export const usePracticeStore = defineStore('practice', () => {
         currentPrompt,
         successCount,
         practicing,
-        bpm,
         playRateDisplay,
         start,
         stop,

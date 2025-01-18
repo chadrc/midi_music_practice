@@ -48,6 +48,7 @@ export const useSettingsStore = defineStore('settings', {
 
         const defaultPractice: PracticeSettings = {
             practiceType: PracticeType.Scales,
+            targetBPM: 120,
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
                 baseNote: BaseNotes[BaseNotes.C],

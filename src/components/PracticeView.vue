@@ -144,6 +144,14 @@ function updateNoteRange(range: number[]) {
   }
 }
 
+function makeTargetBPMOptions() {
+  const options = [];
+  for (let i=5; i <= 200; i+=5) {
+    options.push(i);
+  }
+  return options;
+}
+
 </script>
 
 <template>
@@ -158,6 +166,14 @@ function updateNoteRange(range: number[]) {
           />
         </template>
         <template #center>
+          <div class="instrument-option">
+            <span>Target BPM: </span>
+            <Select
+              v-model="settingsStore.practice.targetBPM"
+              class="target-bpm-control"
+              :options="makeTargetBPMOptions()"
+            />
+          </div>
           <span class="feedback-text">
             Play Rate: {{ practiceStore.playRateDisplay }}
           </span>

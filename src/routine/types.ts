@@ -34,6 +34,7 @@ export class Beat {
 
 export interface PracticeSettings {
     practiceType: PracticeType;
+    targetBPM: number;
     scale: {
         setName: string,
         baseNote: string
