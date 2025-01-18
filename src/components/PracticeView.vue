@@ -339,10 +339,6 @@ function makeTargetBPMOptions() {
   justify-content: center;
   align-items: center;
 }
-
-.settings-dialog-content {
-  height: 100%;
-}
 </style>
 
 <style scoped>
