@@ -3,7 +3,7 @@ import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {NoteRangeType, ParentType, useSettingsStore} from "./settings";
 import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
-import {exists} from "../utilities";
+import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
 import {ac} from "vitest/dist/chunks/reporters.D7Jzd9GS";
 import {formatMidiNote} from "../notes";
@@ -14,6 +14,7 @@ export interface PromptData {
     success: boolean;
     current: boolean;
     prompt: Prompt;
+    successTime: number | null;
 }
 
 export interface PracticeAttempt {
@@ -35,9 +36,67 @@ export const usePracticeStore = defineStore('practice', () => {
     const routine = ref<RoutinePart | null>(null);
     const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
-    const bpm = ref(120);
+    const bpm = ref(60);
 
+    const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
+
+    const firstNoteTime = computed(() => {
+        if (successes.value.length > 0) {
+            return successes.value[0].successTime;
+        }
+
+        return Date.now();
+    });
+
+    const notesPerMinute = computed(() => {
+        const dif = Date.now() - firstNoteTime.value;
+        if (dif <= 0) {
+            return 0;
+        }
+
+        const frame = Date.now() - 60000;
+        const successesWithinFrame = successes.value
+            .toReversed()
+            .filter((d) => d.successTime > frame && d.success);
+
+        if (dif < 60000) {
+            const ratio = 60000 / dif;
+            return successesWithinFrame.length * ratio;
+        } else {
+            return successesWithinFrame.length;
+        }
+    });
+
+    const playRate = computed(() => notesPerMinute.value / bpm.value);
+
+    const playRateDisplay = computed(() => {
+        const p = playRate.value;
+
+        if (p >= 48) {
+            return "1/256"; // 64
+        } else if (p >= 24) {
+            return "1/128"; // 32
+        } else if (p >= 12) {
+            return "1/64"; // 16
+        } else if (p >= 6) {
+            return "1/32"; // 8
+        } else if (p >= 3) {
+            return "1/16"; // 4
+        } else if (p >= 1.5) {
+            return "1/8" // 2
+        } else if (p >= .75) {
+            return "1/4" // 1
+        } else if (p >= .375) {
+            return "1/2" // .5
+        } else if (p >= .1875) {
+            return "1" // .25
+        } else if (p >= .09375) {
+            return "2" // .125
+        }
+    })
+
+    // const notesPerMinute = computed(() => notesPerSeconds.value * 15);
 
     const selectedNotes = computed(() => {
         const notes = []
@@ -88,6 +147,7 @@ export const usePracticeStore = defineStore('practice', () => {
                 success: false,
                 current: false,
                 prompt: prompt,
+                successTime: null,
             })
         }
 
@@ -141,7 +201,10 @@ export const usePracticeStore = defineStore('practice', () => {
                     if (success) {
                         successCount.value += 1
                         activePrompt.success = true;
+                        activePrompt.successTime = now;
                         activePrompt.current = false;
+
+                        successes.value.push(clone(activePrompt));
 
                         currentPrompt.value += 1
                         if (currentPrompt.value >= activePrompts.value.length) {
@@ -159,6 +222,7 @@ export const usePracticeStore = defineStore('practice', () => {
         window.clearInterval(practiceSessionTimer.value)
         midiSubscription.value.unsubscribe()
         activePrompts.value = []
+        attempts.value = [];
         routine.value = null;
         practicing.value = false;
     }
@@ -174,6 +238,7 @@ export const usePracticeStore = defineStore('practice', () => {
         successCount,
         practicing,
         bpm,
+        playRateDisplay,
         start,
         stop,
     }

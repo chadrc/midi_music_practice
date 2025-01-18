@@ -157,6 +157,9 @@ function updateNoteRange(range: number[]) {
           />
         </template>
         <template #center>
+          <span class="feedback-text">
+            Play Rate: {{ practiceStore.playRateDisplay }}
+          </span>
           <Button
             :label="practiceStore.practicing ? 'Stop' : 'Start' "
             :severity="practiceStore.practicing ? 'danger' : 'info'"
@@ -411,6 +414,7 @@ function updateNoteRange(range: number[]) {
 
 .feedback-text {
   margin-left: 1rem;
+  margin-right: 1rem;
 }
 
 .instrument-display {

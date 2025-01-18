@@ -6,3 +6,7 @@ export function exists(x: any) {
 export function arrayOf(count: number, value: any) {
     return Array.from({length: count}, (_1, _2) => value);
 }
+
+export function clone<T>(obj: T) {
+    return JSON.parse(JSON.stringify(obj));
+}
