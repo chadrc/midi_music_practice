@@ -7,6 +7,8 @@ import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
 import MinZeroInput from "../routine/components/MinZeroInput.vue";
 import {PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
+import ScaleSelect from "./ScaleSelect.vue";
+import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -66,6 +68,12 @@ function onStepUpdate(value: number) {
             label="BPM"
             :set-value="120"
             :component="BPMSelect"
+          />
+          <SettingsEditField
+            v-model="item.scale"
+            label="Scale"
+            :set-value="{setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes[BaseNotes.C]}"
+            :component="ScaleSelect"
           />
         </section>
       </StepPanel>
