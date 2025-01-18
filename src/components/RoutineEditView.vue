@@ -5,7 +5,6 @@ import {useRoutineEditStore} from "../store/routineEdit";
 const routineEditStore = useRoutineEditStore();
 
 function onStepUpdate(value: number) {
-  console.log('step', value)
   if (value >= routineEditStore.currentEdit.parts.length + 1) {
     routineEditStore.addNewPart();
   }
