@@ -2,7 +2,7 @@
 import {Button, SelectButton, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
-import {computed, ref} from "vue";
+import {computed, markRaw, ref} from "vue";
 import ScaleSelect from "./ScaleSelect.vue";
 import {useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
@@ -14,7 +14,6 @@ import RoutineEditView from "./RoutineEditView.vue";
 
 interface ViewOption {
   name: string;
-  current: boolean;
   component: object;
 }
 
@@ -22,28 +21,19 @@ const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
 const settingsOpen = ref(false)
-const views = ref<ViewOption[]>([
+const views = [
   {
     name: "Practice",
-    current: true,
-    component: PromptsView,
+    component: markRaw(PromptsView),
   },
   {
     name: "Routines",
     current: false,
-    component: RoutineEditView,
+    component: markRaw(RoutineEditView),
   }
-]);
+];
 
-const currentView = ref<ViewOption>(views.value[0]);
-
-function onViewChanged(view: ViewOption) {
-  const index = views.value.indexOf(view);
-
-  for (let i = 0; i < views.value.length; i++) {
-    views.value[i].current = i === index;
-  }
-}
+const currentView = ref<ViewOption>(views[0]);
 
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
