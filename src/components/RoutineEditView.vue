@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Stepper, StepList, Step, StepPanels, StepPanel, InputNumber, ToggleSwitch} from "primevue";
+import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch} from "primevue";
 import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
@@ -7,7 +7,7 @@ import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
 import MinZeroInput from "../routine/components/MinZeroInput.vue";
 import {PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
-import ScaleSelect from "./ScaleSelect.vue";
+import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 
 const routineEditStore = useRoutineEditStore();

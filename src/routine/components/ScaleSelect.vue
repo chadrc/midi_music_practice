@@ -6,8 +6,8 @@ import {
   CHROMATIC_SCALE_SET_NAME, MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME, MINOR_PENTATONIC_SCALE_SET_NAME, MINOR_SCALE_SET_NAME,
   SCALES
-} from "../notes/scales";
-import {exists} from "../utilities";
+} from "../../notes/scales";
+import {exists} from "../../utilities";
 import {computed} from "vue";
 
 export interface ScaleOption {

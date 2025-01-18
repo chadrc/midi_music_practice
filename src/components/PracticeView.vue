@@ -3,7 +3,7 @@ import {Button, SelectButton, Dialog, Select, Slider, Tab, TabList, TabPanel, Ta
 import {usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, markRaw, ref} from "vue";
-import ScaleSelect from "./ScaleSelect.vue";
+import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import {useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
 import Settings from "./SettingsView.vue";
