@@ -85,7 +85,12 @@ type NullablePracticeSettings = {
 
 export interface RoutinePartSettings extends NullablePracticeSettings {
     repeatCount: number;
+    cloneRepeat: boolean;
     parentSettings: ParentType;
+}
+
+export interface RoutineSettings {
+    parts: RoutinePartSettings[];
 }
 
 interface SettingsStore {
