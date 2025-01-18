@@ -6,6 +6,7 @@ import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
 import MinZeroInput from "../routine/components/MinZeroInput.vue";
 import {PracticeType} from "../routine/types";
+import BPMSelect from "../routine/components/BPMSelect.vue";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -59,6 +60,12 @@ function onStepUpdate(value: number) {
             label="Clone Repeat"
             :can-set="false"
             :component="ToggleSwitch"
+          />
+          <SettingsEditField
+            v-model="item.targetBPM"
+            label="BPM"
+            :set-value="120"
+            :component="BPMSelect"
           />
         </section>
       </StepPanel>
