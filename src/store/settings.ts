@@ -1,8 +1,8 @@
 import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
-import {NumberRangeLike} from "../common/NumberRange";
 import {RNBOParameter} from "./types";
 import {MAX_MIDI_NOTES} from "../routine";
+import {PracticeSettings, PracticeType, NoteRangeType} from "../routine/types";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -21,76 +21,6 @@ interface InstrumentData {
 interface InstrumentSettings {
     volume: number,
     instrumentData: InstrumentData[]
-}
-
-export enum NoteRangeType {
-    Notes,
-    Frets,
-    Octaves,
-}
-
-export interface FretRangeOptions {
-    range: NumberRangeLike;
-}
-
-export interface OctaveRangeOptions {
-    range: NumberRangeLike;
-}
-
-export interface NoteRangeOptions {
-    range: NumberRangeLike;
-}
-
-export enum PracticeType {
-    Chords,
-    Scales,
-    Fixed,
-}
-
-class FixedPractice {
-    readonly beats: Beat[];
-}
-
-class Beat {
-    readonly notes: number[];
-}
-
-interface PracticeSettings {
-    practiceType: PracticeType;
-    scale: {
-        setName: string,
-        baseNote: string
-    },
-    chordRatio: number,
-    requireOctave: boolean,
-    minSuccessVelocity: number,
-    noteRangeType: NoteRangeType,
-    fretRangeOptions: FretRangeOptions,
-    octaveRangeOptions: OctaveRangeOptions,
-    noteRangeOptions: NoteRangeOptions,
-    noteCount: number,
-    fixed: FixedPractice | null,
-    promptCount: number,
-}
-
-export enum ParentType {
-    Settings,
-    Previous,
-    First,
-}
-
-type NullablePracticeSettings = {
-    [K in keyof PracticeSettings]: PracticeSettings[K] | null;
-}
-
-export interface RoutinePartSettings extends NullablePracticeSettings {
-    repeatCount: number;
-    cloneRepeat: boolean;
-    parentSettings: ParentType;
-}
-
-export interface RoutineSettings {
-    parts: RoutinePartSettings[];
 }
 
 interface SettingsStore {

@@ -1,14 +1,13 @@
 import {defineStore} from "pinia";
 import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
-import {NoteRangeType, ParentType, useSettingsStore} from "./settings";
+import {useSettingsStore} from "./settings";
 import {generateRoutineSet, Prompt, RoutinePart, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
-import {ac} from "vitest/dist/chunks/reporters.D7Jzd9GS";
-import {formatMidiNote} from "../notes";
+import {NoteRangeType, ParentType} from "../routine/types";
 
-const SECONDS_IN_MINUTE = 60;
+const MILISECONDS_IN_MINUTE = 60000;
 
 export interface PromptData {
     success: boolean;
@@ -55,13 +54,13 @@ export const usePracticeStore = defineStore('practice', () => {
             return 0;
         }
 
-        const frame = Date.now() - 60000;
+        const frame = Date.now() - MILISECONDS_IN_MINUTE;
         const successesWithinFrame = successes.value
             .toReversed()
             .filter((d) => d.successTime > frame && d.success);
 
-        if (dif < 60000) {
-            const ratio = 60000 / dif;
+        if (dif < MILISECONDS_IN_MINUTE) {
+            const ratio = MILISECONDS_IN_MINUTE / dif;
             return successesWithinFrame.length * ratio;
         } else {
             return successesWithinFrame.length;
@@ -94,6 +93,8 @@ export const usePracticeStore = defineStore('practice', () => {
         } else if (p >= .09375) {
             return "2" // .125
         }
+
+        return "-"
     })
 
     // const notesPerMinute = computed(() => notesPerSeconds.value * 15);
@@ -133,6 +134,7 @@ export const usePracticeStore = defineStore('practice', () => {
     function generatePrompts() {
         routine.value = generateRoutineSet({
             repeatCount: 1,
+            cloneRepeat: false,
             parentSettings: ParentType.Settings,
             ...settingsStore.practice
         })

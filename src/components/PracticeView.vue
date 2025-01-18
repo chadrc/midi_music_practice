@@ -4,10 +4,11 @@ import {PromptData, usePracticeStore} from "../store/practice";
 import NoteGrid from "./NoteGrid.vue";
 import {computed, ref} from "vue";
 import ScaleSelect from "./ScaleSelect.vue";
-import {NoteRangeType, useSettingsStore} from "../store/settings";
+import {useSettingsStore} from "../store/settings";
 import {SCALES} from "../notes/scales";
 import Settings from "./SettingsView.vue";
 import RNBOPatch from "./RNBOPatch.vue";
+import {NoteRangeType} from "../routine/types";
 
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()

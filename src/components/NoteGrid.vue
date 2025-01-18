@@ -111,29 +111,40 @@ function makeNoteText(row: number, column: number) {
 
 <template>
   <section class="note-grid">
-    <div v-for="r in rowIndices"
-         :key="`row-${r}`"
-         class="note-grid-row">
+    <div
+      v-for="r in rowIndices"
+      :key="`row-${r}`"
+      class="note-grid-row"
+    >
       <div
-          v-for="c in columnIndices"
-          :key="`cell-${r}-${c}`"
+        v-for="c in columnIndices"
+        :key="`cell-${r}-${c}`"
       >
-        <div v-if="hasNote(r, c)"
-             :style="{
-                opacity: opacityForNote(r, c),
-                'background-color': colorForNote(r, c)
-              }"
-             :class="makeStyleClass(r, c)">
+        <div
+          v-if="hasNote(r, c)"
+          :style="{
+            opacity: opacityForNote(r, c),
+            'background-color': colorForNote(r, c)
+          }"
+          :class="makeStyleClass(r, c)"
+        >
           <span>{{ makeNoteText(r, c) }}</span>
         </div>
-        <div v-else
-             :style="{opacity: opacityForNote(r, c)}"
-             :class="`${makeStyleClass(r, c)} empty`">
-        </div>
+        <div
+          v-else
+          :style="{opacity: opacityForNote(r, c)}"
+          :class="`${makeStyleClass(r, c)} empty`"
+        />
       </div>
     </div>
-    <div v-if="props.headers.length > 0" class="note-grid-row header">
-      <div v-for="header in props.headers">
+    <div
+      v-if="props.headers.length > 0"
+      class="note-grid-row header"
+    >
+      <div
+        v-for="header in props.headers"
+        :key="header"
+      >
         <div :class="`${makeStyleClass()} header`">
           <span>{{ header }}</span>
         </div>

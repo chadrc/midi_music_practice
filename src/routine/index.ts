@@ -1,4 +1,4 @@
-import {NoteRangeType, RoutinePartSettings} from "../store/settings";
+import {NoteRangeType, RoutinePartSettings} from "./types";
 import {formatChord, formatMidiNote} from "../notes";
 import {SCALES} from "../notes/scales";
 
