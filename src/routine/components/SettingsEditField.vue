@@ -12,6 +12,11 @@ const props = defineProps<{
 </template>
 
 <style scoped>
+.settings-edit-field {
+  display: flex;
+  align-items: center;
+}
+
 .settings-edit-field > span {
   margin-right: 1rem;
 }

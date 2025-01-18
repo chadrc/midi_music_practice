@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Stepper, StepList, Step, StepPanels, StepPanel} from "primevue";
+import {Stepper, StepList, Step, StepPanels, StepPanel, InputNumber, ToggleSwitch} from "primevue";
 import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
@@ -36,6 +36,15 @@ function onStepUpdate(value: number) {
           <SettingsEditField label="Parent">
             <ParentTypeSelect v-model="item.parentSettings" />
           </SettingsEditField>
+          <SettingsEditField label="Repeat Count">
+            <InputNumber
+              v-model="item.repeatCount"
+              :min="0"
+            />
+          </SettingsEditField>
+          <SettingsEditField label="Clone Repeat">
+            <ToggleSwitch v-model="item.cloneRepeat" />
+          </SettingsEditField>
         </section>
       </StepPanel>
     </StepPanels>
@@ -45,5 +54,9 @@ function onStepUpdate(value: number) {
 <style scoped>
 .settings-edit {
   padding: 1rem;
+}
+
+.settings-edit > .settings-edit-field {
+  margin: 1rem 0;
 }
 </style>
