@@ -3,6 +3,9 @@ import {Stepper, StepList, Step, StepPanels, StepPanel, InputNumber, ToggleSwitc
 import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
+import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
+import MinZeroInput from "../routine/components/MinZeroInput.vue";
+import {PracticeType} from "../routine/types";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -33,18 +36,30 @@ function onStepUpdate(value: number) {
         :value="index + 1"
       >
         <section class="settings-edit">
-          <SettingsEditField label="Parent">
-            <ParentTypeSelect v-model="item.parentSettings" />
-          </SettingsEditField>
-          <SettingsEditField label="Repeat Count">
-            <InputNumber
-              v-model="item.repeatCount"
-              :min="0"
-            />
-          </SettingsEditField>
-          <SettingsEditField label="Clone Repeat">
-            <ToggleSwitch v-model="item.cloneRepeat" />
-          </SettingsEditField>
+          <SettingsEditField
+            v-model="item.parentSettings"
+            label="Parent"
+            :can-set="false"
+            :component="ParentTypeSelect"
+          />
+          <SettingsEditField
+            v-model="item.practiceType"
+            label="Type"
+            :set-value="PracticeType.Generated"
+            :component="PracticeTypeSelect"
+          />
+          <SettingsEditField
+            v-model="item.repeatCount"
+            label="Repeat Count"
+            :can-set="false"
+            :component="MinZeroInput"
+          />
+          <SettingsEditField
+            v-model="item.cloneRepeat"
+            label="Clone Repeat"
+            :can-set="false"
+            :component="ToggleSwitch"
+          />
         </section>
       </StepPanel>
     </StepPanels>

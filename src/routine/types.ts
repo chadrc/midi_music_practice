@@ -19,9 +19,8 @@ export interface NoteRangeOptions {
 }
 
 export enum PracticeType {
-    Chords,
-    Scales,
-    Fixed,
+    Generated,
+    Composed,
 }
 
 export class FixedPractice {

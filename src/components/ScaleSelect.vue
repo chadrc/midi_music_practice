@@ -30,7 +30,6 @@ const props = withDefaults(defineProps<{
 })
 const emit = defineEmits(['scaleSelected'])
 
-
 function makeScaleOptions() {
   function transformScaleName(name: string) {
     return name
