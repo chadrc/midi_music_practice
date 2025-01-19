@@ -11,6 +11,7 @@ import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
 import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
 import RangeSlider from "../routine/components/RangeSlider.vue";
+import {exists} from "../utilities";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -22,7 +23,21 @@ function onStepUpdate(value: number) {
 </script>
 
 <template>
+  <section class="routine-settings">
+    <SettingsEditField
+      v-model="routineEditStore.currentEdit.name"
+      label="Routine Name"
+      :can-set="false"
+      :component="InputText"
+    />
+  </section>
+  <section class="title-divider">
+    <hr>
+    <span>Steps</span>
+    <hr>
+  </section>
   <Stepper
+    v-if="exists(routineEditStore.currentEdit)"
     :value="1"
     class="routine-stepper"
     @update:value="onStepUpdate"
@@ -32,8 +47,12 @@ function onStepUpdate(value: number) {
         v-for="(item, index) in routineEditStore.currentEdit.parts"
         :key="index"
         :value="index + 1"
-      />
-      <Step :value="routineEditStore.currentEdit.parts.length + 1" />
+      >
+        {{ item.name }}
+      </Step>
+      <Step :value="routineEditStore.currentEdit.parts.length + 1">
+        New
+      </Step>
     </StepList>
     <StepPanels class="routine-settings-panels">
       <StepPanel
@@ -45,7 +64,7 @@ function onStepUpdate(value: number) {
         <section class="settings-edit">
           <SettingsEditField
             v-model="item.name"
-            label="Name"
+            label="Part Name"
             :can-set="false"
             :component="InputText"
           />
@@ -157,5 +176,17 @@ function onStepUpdate(value: number) {
 
 .settings-edit > .settings-edit-field {
   margin: 1rem 0;
+}
+
+.title-divider {
+  display: flex;
+  align-items: center;
+}
+.title-divider > span {
+  padding: 0.5rem 1rem;
+}
+
+.title-divider > hr {
+  flex: 1;
 }
 </style>

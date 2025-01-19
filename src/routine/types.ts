@@ -78,6 +78,7 @@ export interface RoutinePartSettings extends NullablePracticeSettings {
 }
 
 export interface RoutineSettings {
+    id: string;
     appVersion: string;
     schemaVersion: string;
     name: string;

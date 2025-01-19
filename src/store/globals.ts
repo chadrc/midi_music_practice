@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
+import {exists} from "../utilities";
 
 declare global {
     interface Window {
@@ -12,9 +13,13 @@ declare global {
 export const useGlobalStore = defineStore('global', () => {
     const appVersion = ref("");
 
-    window.MMPGlobal.appVersion().then((v: string) => {
-        appVersion.value = v;
-    });
+    if (exists(window.MMPGlobal)) {
+        window.MMPGlobal.appVersion().then((v: string) => {
+            appVersion.value = v;
+        });
+    } else {
+        appVersion.value = "[N/A]";
+    }
 
     return {
         appVersion

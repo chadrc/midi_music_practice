@@ -10,3 +10,11 @@ export function arrayOf(count: number, value: any) {
 export function clone<T>(obj: T) {
     return JSON.parse(JSON.stringify(obj));
 }
+
+export function notEmptyOr(value: string, other: string): string {
+    if (!exists(value) || value.trim().length === 0) {
+        return other;
+    } else {
+        return value;
+    }
+}

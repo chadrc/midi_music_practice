@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {ParentType, RoutinePartSettings, RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
 import {exists} from "../utilities";
@@ -31,27 +31,42 @@ const ROUTINES_LOCAL_STORAGE_KEY = "routines";
 export const useRoutineEditStore = defineStore('routineEdit', () => {
     const globalStore = useGlobalStore();
 
-    const currentEdit = ref<RoutineSettings>({
-        appVersion: "[unset]",
-        schemaVersion: ROUTINE_SCHEMA_VERSION,
-        name: "",
-        parts: [
-            makeDefaultRoutinePartSettings()
-        ],
+    const routines = ref<RoutineSettings[]>(getSavedRoutines());
+    const currentRoutine = ref<string | null>(null);
+    if (routines.value.length > 0) {
+        currentRoutine.value = routines.value[0].id
+    }
+
+    const currentEdit = computed<RoutineSettings | null>(() =>
+        routines.value.find((routine) => routine.id == currentRoutine.value) || null
+    )
+
+    const savedRoutines = computed(() => {
+        const saved = getSavedRoutines();
+        return routines.value.filter((routine) => exists(saved.find((s) => routine.id === s.id)));
     });
+
+    function createRoutine() {
+        const routine = {
+            id: window.crypto.randomUUID(),
+            appVersion: "[unset]",
+            schemaVersion: ROUTINE_SCHEMA_VERSION,
+            name: "",
+            parts: [
+                makeDefaultRoutinePartSettings()
+            ],
+        };
+
+        currentRoutine.value = routine.id;
+        routines.value.push(routine);
+    }
 
     function addNewPart() {
         currentEdit.value.parts.push(makeDefaultRoutinePartSettings());
     }
 
     function saveRoutine() {
-        const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
-        let routines = null;
-        if (exists(stored)) {
-            routines = JSON.parse(stored);
-        } else {
-            routines = [];
-        }
+        const routines = getSavedRoutines()
 
         currentEdit.value.appVersion = globalStore.appVersion;
         routines.push(currentEdit.value);
@@ -59,8 +74,32 @@ export const useRoutineEditStore = defineStore('routineEdit', () => {
         localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(routines));
     }
 
+    function getSavedRoutines(): RoutineSettings[] {
+        const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
+        if (exists(stored)) {
+            try {
+                return JSON.parse(stored);
+            } catch (error) {
+                const uuid = window.crypto.randomUUID()
+                const errorKey = `error-${uuid}`
+                console.error(`Failed to parse routines from localStorage. Saving found data to '' and resetting routines.`);
+                console.error(error);
+
+                localStorage.setItem(errorKey, stored);
+                localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, "[]");
+                return [];
+            }
+        } else {
+            return [];
+        }
+    }
+
     return {
+        routines,
+        currentRoutine,
         currentEdit,
+        savedRoutines,
+        createRoutine,
         addNewPart,
         saveRoutine,
     }
