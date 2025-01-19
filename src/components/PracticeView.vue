@@ -93,7 +93,7 @@ const gridColumns = computed(() => {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRangeOptions.range;
+      const {start, end} = settingsStore.practice.fretRange;
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -108,7 +108,7 @@ const gridHeaders = computed(() => {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRangeOptions.range;
+      const {start, end} = settingsStore.practice.fretRange;
       const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -145,16 +145,16 @@ function updateNoteRange(range: number[]) {
   let s = settingsStore.practice
   switch (s.noteRangeType) {
     case NoteRangeType.Notes:
-      s.noteRangeOptions.range.start = range[0]
-      s.noteRangeOptions.range.end = range[1]
+      s.noteRange.start = range[0]
+      s.noteRange.end = range[1]
       break;
     case NoteRangeType.Frets:
-      s.fretRangeOptions.range.start = range[0]
-      s.fretRangeOptions.range.end = range[1]
+      s.fretRange.start = range[0]
+      s.fretRange.end = range[1]
       break;
     case NoteRangeType.Octaves:
-      s.octaveRangeOptions.range.start = range[0]
-      s.octaveRangeOptions.range.end = range[1]
+      s.octaveRange.start = range[0]
+      s.octaveRange.end = range[1]
       break;
   }
 }

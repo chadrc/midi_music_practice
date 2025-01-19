@@ -4,11 +4,13 @@ import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
-import {PracticeType} from "../routine/types";
+import {NoteRangeType, PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
+import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
+import RangeSlider from "../routine/components/RangeSlider.vue";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -94,6 +96,33 @@ function onStepUpdate(value: number) {
             label="Minimum Velocity"
             :set-value="32"
             :component="InputNumber"
+            :component-props="{min: 0, max: 127}"
+          />
+          <SettingsEditField
+            v-model="item.noteRangeType"
+            label="Note Range Type"
+            :set-value="NoteRangeType.Notes"
+            :component="NoteRangeSelect"
+          />
+          <SettingsEditField
+            v-model="item.fretRange"
+            label="Fret Range"
+            :set-value="{min: 0, max: 4}"
+            :component="RangeSlider"
+            :component-props="{min: 0, max: 22}"
+          />
+          <SettingsEditField
+            v-model="item.octaveRange"
+            label="Octave Range"
+            :set-value="{min: 4, max: 6}"
+            :component="RangeSlider"
+            :component-props="{min: 0, max: 12}"
+          />
+          <SettingsEditField
+            v-model="item.noteRange"
+            label="Note Range"
+            :set-value="{min: 0, max: 127}"
+            :component="RangeSlider"
             :component-props="{min: 0, max: 127}"
           />
         </section>

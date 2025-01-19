@@ -129,14 +129,14 @@ export const generateNotesForRange = (
     const notes = []
     switch (noteRangeType) {
         case NoteRangeType.Notes: {
-            const {start, end} = settings.noteRangeOptions.range;
+            const {start, end} = settings.noteRange;
             for (let i = start; i <= end; i++) {
                 notes.push(i)
             }
             break;
         }
         case NoteRangeType.Frets: {
-            const {start, end} = settings.fretRangeOptions.range;
+            const {start, end} = settings.fretRange;
             for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
                 for (let i = start; i <= end; i++) {
                     notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
@@ -145,7 +145,7 @@ export const generateNotesForRange = (
             break;
         }
         case NoteRangeType.Octaves: {
-            const {start, end} = settings.octaveRangeOptions.range;
+            const {start, end} = settings.octaveRange;
             const startingC = start * 12
             const noteCount = (end - start) * 12;
             const lastNote = startingC + noteCount;

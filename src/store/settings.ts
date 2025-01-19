@@ -57,23 +57,17 @@ export const useSettingsStore = defineStore('settings', {
             requireOctave: true,
             minSuccessVelocity: 100,
             noteRangeType: NoteRangeType.Notes,
-            fretRangeOptions: {
-                range: {
-                    start: 0,
-                    end: 4,
-                }
+            fretRange: {
+                start: 0,
+                end: 4,
             },
-            octaveRangeOptions: {
-                range: {
-                    start: 4,
-                    end: 6,
-                }
+            octaveRange: {
+                start: 4,
+                end: 6,
             },
-            noteRangeOptions: {
-                range: {
-                    start: 0,
-                    end: MAX_MIDI_NOTES,
-                }
+            noteRange: {
+                start: 0,
+                end: MAX_MIDI_NOTES,
             },
             noteCount: 0,
             fixed: null,
@@ -103,11 +97,11 @@ export const useSettingsStore = defineStore('settings', {
         currentRange: (state) => {
             switch (state.practice.noteRangeType) {
                 case NoteRangeType.Notes:
-                    return state.practice.noteRangeOptions.range;
+                    return state.practice.noteRange;
                 case NoteRangeType.Frets:
-                    return state.practice.fretRangeOptions.range;
+                    return state.practice.fretRange;
                 case NoteRangeType.Octaves:
-                    return state.practice.octaveRangeOptions.range;
+                    return state.practice.octaveRange;
             }
         },
         chordRatioMax: (state) => state.practice.promptCount
