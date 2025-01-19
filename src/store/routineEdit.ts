@@ -66,12 +66,29 @@ export const useRoutineEditStore = defineStore('routineEdit', () => {
     }
 
     function saveRoutine() {
-        const routines = getSavedRoutines()
+        const routines = getSavedRoutines();
+        const existing = routines.findIndex((routine) => routine.id == currentRoutine.value);
 
         currentEdit.value.appVersion = globalStore.appVersion;
-        routines.push(currentEdit.value);
+
+        if (existing === -1) {
+            routines.push(currentEdit.value);
+        } else {
+            routines.splice(existing, 1, currentEdit.value);
+        }
 
         localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(routines));
+    }
+
+    function deleteRoutine(id: string) {
+        const inMem = routines.value.findIndex((routine) => routine.id == id);
+        routines.value.splice(inMem, 1);
+
+        const saved = getSavedRoutines();
+        const inSaved = saved.findIndex((routine) => routine.id == id);
+        saved.splice(inSaved, 1);
+
+        localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(saved));
     }
 
     function getSavedRoutines(): RoutineSettings[] {
@@ -102,5 +119,6 @@ export const useRoutineEditStore = defineStore('routineEdit', () => {
         createRoutine,
         addNewPart,
         saveRoutine,
+        deleteRoutine,
     }
 })

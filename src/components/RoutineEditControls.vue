@@ -11,7 +11,8 @@ function onSave() {
 }
 
 const routineSelectOptions = computed(() =>
-  routineStore.routines.map(routine => ({
+  routineStore.routines
+      .map(routine => ({
     name: notEmptyOr(routine.name, "[Unnamed Routine]"),
     value: routine.id,
   }))
@@ -27,7 +28,7 @@ const actions = [
   {
     label: "Delete",
     command: () => {
-      console.log("deleting");
+      routineStore.deleteRoutine(routineStore.currentRoutine);
     }
   }
 ]
@@ -40,6 +41,7 @@ const actions = [
       :options="routineSelectOptions"
       option-label="name"
       option-value="value"
+      placeholder="No routines"
     />
   </div>
   <div class="control-wrapper">

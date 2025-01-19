@@ -23,7 +23,10 @@ function onStepUpdate(value: number) {
 </script>
 
 <template>
-  <section class="routine-settings">
+  <section
+    v-if="exists(routineEditStore.currentEdit)"
+    class="routine-settings"
+  >
     <SettingsEditField
       v-model="routineEditStore.currentEdit.name"
       label="Routine Name"
@@ -31,7 +34,10 @@ function onStepUpdate(value: number) {
       :component="InputText"
     />
   </section>
-  <section class="title-divider">
+  <section
+    v-if="exists(routineEditStore.currentEdit)"
+    class="title-divider"
+  >
     <hr>
     <span>Steps</span>
     <hr>
