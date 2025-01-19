@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch} from "primevue";
+import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber} from "primevue";
 import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
-import MinZeroInput from "../routine/components/MinZeroInput.vue";
 import {PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
@@ -56,7 +55,8 @@ function onStepUpdate(value: number) {
             v-model="item.repeatCount"
             label="Repeat Count"
             :can-set="false"
-            :component="MinZeroInput"
+            :component="InputNumber"
+            :component-props="{min: 0}"
           />
           <SettingsEditField
             v-model="item.cloneRepeat"
@@ -82,6 +82,19 @@ function onStepUpdate(value: number) {
             :set-value="0"
             :component="ChordRatioSlider"
             :component-props="{max: 8}"
+          />
+          <SettingsEditField
+            v-model="item.requireOctave"
+            label="Require Octave"
+            :set-value="false"
+            :component="ToggleSwitch"
+          />
+          <SettingsEditField
+            v-model="item.minSuccessVelocity"
+            label="Minimum Velocity"
+            :set-value="32"
+            :component="InputNumber"
+            :component-props="{min: 0, max: 127}"
           />
         </section>
       </StepPanel>
