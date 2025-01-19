@@ -35,7 +35,10 @@ function formatPromptColor(prompt: PromptData) {
       </div>
     </div>
   </div>
-  <div v-else-if="practiceStore.activePrompts.length === 0 && practiceStore.practicing">
+  <div
+    v-else-if="practiceStore.activePrompts.length === 0 && practiceStore.practicing"
+    class="advance-step"
+  >
     <span>No Prompts</span>
     <Button @click="practiceStore.advanceStep">
       Next Step
@@ -91,5 +94,17 @@ function formatPromptColor(prompt: PromptData) {
 
 .prompt-text > .chord-text {
   font-size: 1rem;
+}
+
+.advance-step {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.advance-step > span {
+  margin-bottom: 1rem;
 }
 </style>
