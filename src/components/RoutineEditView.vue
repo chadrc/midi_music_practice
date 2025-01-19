@@ -106,4 +106,8 @@ function onStepUpdate(value: number) {
 .settings-edit {
   padding: 1rem;
 }
+
+.settings-edit > .settings-edit-field {
+  margin: 1rem 0;
+}
 </style>
