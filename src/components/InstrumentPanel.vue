@@ -145,7 +145,10 @@ function updateNoteRange(range: number[]) {
       </Tab>
     </TabList>
     <TabPanels>
-      <TabPanel value="instrument">
+      <TabPanel
+        value="instrument"
+        class="instrument-panel"
+      >
         <div class="instrument-options">
           <div class="instrument-option">
             <div class="chord-ratio-slider-wrapper">
@@ -231,14 +234,21 @@ function updateNoteRange(range: number[]) {
   justify-content: center;
   align-items: center;
 }
+
+.instrument-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 </style>
 
 <style scoped>
 .p-tabs {
-  height: unset;
+  height: 100%;
 }
 
 .instrument-display {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;

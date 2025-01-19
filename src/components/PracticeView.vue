@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Button, SelectButton, Dialog, Select, Slider, Toolbar} from "primevue";
+import {Button, SelectButton, Dialog, Select, Slider, Toolbar, Splitter, SplitterPanel} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import {markRaw, ref} from "vue";
 import {useSettingsStore} from "../store/settings";
@@ -113,10 +113,20 @@ function makeTargetBPMOptions() {
         <Settings />
       </Dialog>
     </section>
-    <div class="active-view">
-      <component :is="currentView.component" />
-    </div>
-    <InstrumentPanel />
+    <Splitter
+      class="splitter"
+      layout="vertical"
+      style="height: 500px"
+    >
+      <SplitterPanel>
+        <div class="active-view">
+          <component :is="currentView.component" />
+        </div>
+      </SplitterPanel>
+      <SplitterPanel>
+        <InstrumentPanel />
+      </SplitterPanel>
+    </Splitter>
   </section>
 </template>
 
@@ -148,8 +158,15 @@ function makeTargetBPMOptions() {
   width: 10rem;
 }
 
-.active-view {
+.splitter {
   flex: 1;
+  border: none;
+  background: none;
+}
+
+.active-view {
+  height: 100%;
+  overflow-y: scroll;
   margin: 0 1rem 1rem 1rem;
 }
 

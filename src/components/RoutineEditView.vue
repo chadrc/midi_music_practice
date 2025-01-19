@@ -24,6 +24,7 @@ function onStepUpdate(value: number) {
 <template>
   <Stepper
     :value="1"
+    class="routine-stepper"
     @update:value="onStepUpdate"
   >
     <StepList>
@@ -34,11 +35,12 @@ function onStepUpdate(value: number) {
       />
       <Step :value="routineEditStore.currentEdit.parts.length + 1" />
     </StepList>
-    <StepPanels>
+    <StepPanels class="routine-settings-panels">
       <StepPanel
         v-for="(item, index) in routineEditStore.currentEdit.parts"
         :key="index"
         :value="index + 1"
+        class="routine-settings-panel"
       >
         <section class="settings-edit">
           <SettingsEditField
@@ -139,6 +141,10 @@ function onStepUpdate(value: number) {
 </template>
 
 <style scoped>
+.routine-stepper {
+  height: 100%;
+}
+
 .settings-edit {
   padding: 1rem;
 }
