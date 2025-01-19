@@ -5,10 +5,13 @@ import {Button} from "primevue";
 const props = withDefaults(defineProps<{
   label: string,
   component: object,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  componentProps?: any,
   canSet?: boolean,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setValue?: any,
 }>(), {
+  componentProps: {},
   canSet: true,
   setValue: null,
 });
@@ -32,6 +35,7 @@ function setNull() {
       :is="props.component"
       v-if="exists(model)"
       v-model="model"
+      v-bind="props.componentProps"
     />
     <Button
       v-if="exists(model) && props.canSet"

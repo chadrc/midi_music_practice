@@ -9,6 +9,7 @@ import {PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
+import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
 
 const routineEditStore = useRoutineEditStore();
 
@@ -74,6 +75,13 @@ function onStepUpdate(value: number) {
             label="Scale"
             :set-value="{setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes[BaseNotes.C]}"
             :component="ScaleSelect"
+          />
+          <SettingsEditField
+            v-model="item.chordRatio"
+            label="Chord Ratio"
+            :set-value="0"
+            :component="ChordRatioSlider"
+            :component-props="{max: 8}"
           />
         </section>
       </StepPanel>
