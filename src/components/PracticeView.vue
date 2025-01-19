@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import {Button, SelectButton, Dialog, Select, Slider, Toolbar, Splitter, SplitterPanel} from "primevue";
-import {usePracticeStore} from "../store/practice";
+import {Button, SelectButton, Dialog, Slider, Toolbar, Splitter, SplitterPanel} from "primevue";
 import {markRaw, ref} from "vue";
 import {useSettingsStore} from "../store/settings";
 import Settings from "./SettingsView.vue";
 import PromptsView from "./PromptsView.vue";
 import RoutineEditView from "./RoutineEditView.vue";
 import InstrumentPanel from "./InstrumentPanel.vue";
+import PracticeControls from "./PracticeControls.vue";
+import RoutineEditControls from "./RoutineEditControls.vue";
 
 interface ViewOption {
   name: string;
   component: object;
+  toolbar: object;
+  overflow: boolean;
 }
 
-const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
 const settingsOpen = ref(false)
@@ -21,28 +23,25 @@ const views = [
   {
     name: "Practice",
     component: markRaw(PromptsView),
+    toolbar: markRaw(PracticeControls),
+    overflow: false,
   },
   {
     name: "Routines",
-    current: false,
     component: markRaw(RoutineEditView),
+    toolbar: markRaw(RoutineEditControls),
+    overflow: true,
   }
 ];
 
 const currentView = ref<ViewOption>(views[0]);
 
-function formatPracticeTime() {
-  let seconds = practiceStore.practiceSessionTime % 60;
-  let minutes = Math.floor(practiceStore.practiceSessionTime / 60);
-  return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-}
-
-function makeTargetBPMOptions() {
-  const options = [];
-  for (let i = 5; i <= 200; i += 5) {
-    options.push(i);
+function makeOverflowClass(overflow: boolean) {
+  if (overflow) {
+    return "overflow";
   }
-  return options;
+
+  return "";
 }
 
 </script>
@@ -60,31 +59,7 @@ function makeTargetBPMOptions() {
           />
         </template>
         <template #center>
-          <div class="instrument-option">
-            <span>Target BPM: </span>
-            <Select
-              v-model="settingsStore.practice.targetBPM"
-              class="target-bpm-control"
-              :options="makeTargetBPMOptions()"
-            />
-          </div>
-          <span class="feedback-text">
-            Play Rate: {{ practiceStore.playRateDisplay }}
-          </span>
-          <Button
-            :label="practiceStore.practicing ? 'Stop' : 'Start' "
-            :severity="practiceStore.practicing ? 'danger' : 'info'"
-            size="small"
-            @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
-          >
-            {{ practiceStore.practicing ? 'Stop' : 'Start' }}
-          </Button>
-          <span class="feedback-text">
-            Time: {{ formatPracticeTime() }}
-          </span>
-          <span class="feedback-text">
-            Notes Played: {{ practiceStore.successCount }}
-          </span>
+          <component :is="currentView.toolbar" />
         </template>
         <template #end>
           <div class="volume-control">
@@ -119,7 +94,10 @@ function makeTargetBPMOptions() {
       style="height: 500px"
     >
       <SplitterPanel>
-        <div class="active-view">
+        <div
+          class="active-view"
+          :class="makeOverflowClass(currentView.overflow)"
+        >
           <component :is="currentView.component" />
         </div>
       </SplitterPanel>
@@ -166,8 +144,14 @@ function makeTargetBPMOptions() {
 
 .active-view {
   height: 100%;
+  margin: 0 1rem 0 1rem;
+  overflow: hidden;
+  scrollbar-width: none;
+}
+
+.overflow {
   overflow-y: scroll;
-  margin: 0 1rem 1rem 1rem;
+  scrollbar-width: thin;
 }
 
 .feedback-text {

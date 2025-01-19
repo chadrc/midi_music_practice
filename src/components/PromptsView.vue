@@ -49,8 +49,6 @@ function formatPromptColor(prompt: PromptData) {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
 .prompt-column {
