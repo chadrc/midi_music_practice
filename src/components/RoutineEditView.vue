@@ -58,7 +58,7 @@ function onStepUpdate(value: number) {
             label="Repeat Count"
             :can-set="false"
             :component="InputNumber"
-            :component-props="{min: 0}"
+            :component-props="{min: 0, showButtons: true}"
           />
           <SettingsEditField
             v-model="item.cloneRepeat"
@@ -96,7 +96,7 @@ function onStepUpdate(value: number) {
             label="Minimum Velocity"
             :set-value="32"
             :component="InputNumber"
-            :component-props="{min: 0, max: 127}"
+            :component-props="{min: 0, max: 127, showButtons: true}"
           />
           <SettingsEditField
             v-model="item.noteRangeType"
@@ -124,6 +124,13 @@ function onStepUpdate(value: number) {
             :set-value="{min: 0, max: 127}"
             :component="RangeSlider"
             :component-props="{min: 0, max: 127}"
+          />
+          <SettingsEditField
+            v-model="item.promptCount"
+            label="Prompt Count"
+            :set-value="8"
+            :component="InputNumber"
+            :component-props="{min: 0, showButtons: true}"
           />
         </section>
       </StepPanel>

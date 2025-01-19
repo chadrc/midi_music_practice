@@ -41,7 +41,6 @@ export interface PracticeSettings {
     fretRange: NumberRangeLike,
     octaveRange: NumberRangeLike,
     noteRange: NumberRangeLike,
-    noteCount: number,
     promptCount: number,
 }
 
