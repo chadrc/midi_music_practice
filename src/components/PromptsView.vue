@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {Button} from "primevue";
 import {PromptData, usePracticeStore} from "../store/practice";
 
 const practiceStore = usePracticeStore();
@@ -33,6 +34,12 @@ function formatPromptColor(prompt: PromptData) {
         </span>
       </div>
     </div>
+  </div>
+  <div v-else-if="practiceStore.activePrompts.length === 0 && practiceStore.practicing">
+    <span>No Prompts</span>
+    <Button @click="practiceStore.advanceStep">
+      Next Step
+    </Button>
   </div>
   <div
     v-else 

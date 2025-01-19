@@ -137,6 +137,7 @@ export const usePracticeStore = defineStore('practice', () => {
     function refreshActivePrompts() {
         if (currentPart.value >= routine.value.parts.length) {
             complete.value = true;
+            return;
         }
 
         const part = routine.value.parts[currentPart.value];
@@ -158,12 +159,12 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function start() {
-        generatePrompts();
-
+        complete.value = false;
         practicing.value = true;
         successCount.value = 0;
         currentPart.value = 0;
 
+        generatePrompts();
         refreshActivePrompts();
 
         practiceSessionTimer.value = window.setInterval(() => {
@@ -207,15 +208,24 @@ export const usePracticeStore = defineStore('practice', () => {
 
                         currentPrompt.value += 1;
                         if (currentPrompt.value >= activePrompts.value.length) {
-                            currentPrompt.value = 0;
-                            currentPart.value += 1;
-                            refreshActivePrompts();
+                            advanceStep();
+                        } else {
+                            activePrompts.value[currentPrompt.value].current = true;
                         }
-
-                        activePrompts.value[currentPrompt.value].current = true;
                     }
                 },
             });
+    }
+
+    function advanceStep() {
+        currentPrompt.value = 0;
+        currentPart.value += 1;
+        refreshActivePrompts();
+
+        if (complete.value) {
+            stop();
+            return;
+        }
     }
 
     function stop() {
@@ -240,5 +250,6 @@ export const usePracticeStore = defineStore('practice', () => {
         playRateDisplay,
         start,
         stop,
+        advanceStep,
     }
 })

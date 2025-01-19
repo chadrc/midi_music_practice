@@ -121,7 +121,9 @@ export const generateRoutineSet = (settings: BakeRoutineSettings): RoutinePart =
     const prompts = []
 
     if (scale.chords.length > 0) {
-        for (let i = 0; i < settings.chordRatio; i++) {
+        const chordRatio = Math.min(settings.chordRatio, settings.promptCount);
+
+        for (let i = 0; i < chordRatio; i++) {
             const colorRoll = Math.floor(Math.random() * colorOptions.length);
             const chordRoll = Math.floor(Math.random() * scale.chords.length);
             const chord = scale.chords[chordRoll];
