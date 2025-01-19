@@ -21,6 +21,8 @@ export interface PracticeAttempt {
     data: PracticeMIDIData;
 }
 
+export const NONE_VALUE = "none";
+
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
     const settingsStore = useSettingsStore();
@@ -32,6 +34,7 @@ export const usePracticeStore = defineStore('practice', () => {
     const practicing = ref(false);
     const midiSubscription = ref<Subscription>(null);
 
+    const selectedRoutine = ref<string>(NONE_VALUE);
     const routine = ref<RoutinePart | null>(null);
     const activePrompts = ref<PromptData[]>([]);
     const currentPrompt = ref(0);
@@ -229,6 +232,7 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     return {
+        selectedRoutine,
         routine,
         startTime,
         practiceSessionTimer,

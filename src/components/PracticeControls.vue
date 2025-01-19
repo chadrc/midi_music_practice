@@ -1,10 +1,31 @@
 <script setup lang="ts">
 import {Button, Select} from "primevue";
-import {usePracticeStore} from "../store/practice";
+import {NONE_VALUE, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
+import {computed} from "vue";
+import {useRoutineEditStore} from "../store/routineEdit";
 
-const practiceStore = usePracticeStore()
-const settingsStore = useSettingsStore()
+const practiceStore = usePracticeStore();
+const settingsStore = useSettingsStore();
+const routineStore = useRoutineEditStore();
+
+const routineOptions = computed(() => {
+  const options: {name: string, value: string | null}[] = [
+    {
+      name: "None",
+      value: NONE_VALUE,
+    }
+  ];
+
+  for (let routine of routineStore.routines) {
+    options.push({
+      name: routine.name,
+      value: routine.id,
+    });
+  }
+
+  return options;
+})
 
 function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;
@@ -22,6 +43,15 @@ function makeTargetBPMOptions() {
 </script>
 
 <template>
+  <div class="instrument-option">
+    <span>Routine: </span>
+    <Select
+      v-model="practiceStore.selectedRoutine"
+      :options="routineOptions"
+      option-label="name"
+      option-value="value"
+    />
+  </div>
   <div class="instrument-option">
     <span>Target BPM: </span>
     <Select
@@ -53,5 +83,9 @@ function makeTargetBPMOptions() {
 .feedback-text {
   margin-left: 1rem;
   margin-right: 1rem;
+}
+
+.instrument-option {
+  margin: 0 .5rem;
 }
 </style>
