@@ -70,7 +70,6 @@ export const useSettingsStore = defineStore('settings', {
                 end: MAX_MIDI_NOTES,
             },
             noteCount: 0,
-            fixed: null,
             promptCount: 8,
         }
 

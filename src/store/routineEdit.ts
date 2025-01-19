@@ -18,7 +18,6 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         octaveRange: null,
         noteRange: null,
         noteCount: null,
-        fixed: null,
         promptCount: null,
 
         // practiceType: PracticeType.Generated,

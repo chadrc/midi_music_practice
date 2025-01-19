@@ -23,10 +23,6 @@ export enum PracticeType {
     Composed,
 }
 
-export class FixedPractice {
-    readonly beats: Beat[];
-}
-
 export class Beat {
     readonly notes: number[];
 }
@@ -46,7 +42,6 @@ export interface PracticeSettings {
     octaveRange: NumberRangeLike,
     noteRange: NumberRangeLike,
     noteCount: number,
-    fixed: FixedPractice | null,
     promptCount: number,
 }
 

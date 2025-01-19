@@ -80,7 +80,7 @@ function onStepUpdate(value: number) {
           />
           <SettingsEditField
             v-model="item.chordRatio"
-            label="Chord Ratio"
+            label="Chords Per Set"
             :set-value="0"
             :component="ChordRatioSlider"
             :component-props="{max: 8}"
