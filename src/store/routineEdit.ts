@@ -2,6 +2,7 @@ import {defineStore} from "pinia";
 import {ref} from "vue";
 import {ParentType, RoutinePartSettings, RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
+import {exists} from "../utilities";
 
 const ROUTINE_SCHEMA_VERSION = "0.0.1";
 
@@ -25,11 +26,13 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
     }
 }
 
+const ROUTINES_LOCAL_STORAGE_KEY = "routines";
+
 export const useRoutineEditStore = defineStore('routineEdit', () => {
     const globalStore = useGlobalStore();
 
     const currentEdit = ref<RoutineSettings>({
-        appVersion: globalStore.appVersion,
+        appVersion: "[unset]",
         schemaVersion: ROUTINE_SCHEMA_VERSION,
         name: "",
         parts: [
@@ -41,8 +44,24 @@ export const useRoutineEditStore = defineStore('routineEdit', () => {
         currentEdit.value.parts.push(makeDefaultRoutinePartSettings());
     }
 
+    function saveRoutine() {
+        const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
+        let routines = null;
+        if (exists(stored)) {
+            routines = JSON.parse(stored);
+        } else {
+            routines = [];
+        }
+
+        currentEdit.value.appVersion = globalStore.appVersion;
+        routines.push(currentEdit.value);
+
+        localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(routines));
+    }
+
     return {
         currentEdit,
         addNewPart,
+        saveRoutine,
     }
 })

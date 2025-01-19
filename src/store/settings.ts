@@ -47,6 +47,7 @@ export const useSettingsStore = defineStore('settings', {
         }
 
         const defaultPractice: PracticeSettings = {
+            name: "",
             practiceType: PracticeType.Generated,
             targetBPM: 120,
             scale: {
