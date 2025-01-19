@@ -3,11 +3,11 @@ import {Button, Select} from "primevue";
 import {NONE_VALUE, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
 import {computed} from "vue";
-import {useRoutineEditStore} from "../store/routineEdit";
+import {useRoutineStore} from "../store/routineEdit";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
-const routineStore = useRoutineEditStore();
+const routineStore = useRoutineStore();
 
 const routineOptions = computed(() => {
   const options: {name: string, value: string | null}[] = [

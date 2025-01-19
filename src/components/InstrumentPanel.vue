@@ -68,7 +68,7 @@ const gridColumns = computed(() => {
       return end - start + 1
     }
     case NoteRangeType.Octaves:
-      return practiceStore.selectedNotes.length
+      return settingsStore.selectedNotes.length
     default:
       return 0;
   }
@@ -197,7 +197,7 @@ function updateNoteRange(range: number[]) {
         </div>
         <div class="instrument-display">
           <NoteGrid
-            :notes="practiceStore.selectedNotes"
+            :notes="settingsStore.selectedNotes"
             :scale="selectedScale"
             :note-style="gridStyle"
             :headers="gridHeaders"

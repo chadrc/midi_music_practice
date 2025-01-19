@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber, InputText} from "primevue";
-import {useRoutineEditStore} from "../store/routineEdit";
+import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
@@ -13,7 +13,7 @@ import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
 import RangeSlider from "../routine/components/RangeSlider.vue";
 import {exists} from "../utilities";
 
-const routineEditStore = useRoutineEditStore();
+const routineEditStore = useRoutineStore();
 
 function onStepUpdate(value: number) {
   if (value >= routineEditStore.currentEdit.parts.length + 1) {

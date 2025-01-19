@@ -45,6 +45,8 @@ export interface PracticeSettings {
     promptCount: number,
 }
 
+export type PracticeSettingsKeys = (keyof PracticeSettings)[];
+
 export interface PromptDisplay {
     note: string;
     chordType: string;
@@ -71,11 +73,15 @@ export type NullablePracticeSettings = {
     [K in keyof PracticeSettings]: PracticeSettings[K] | null;
 }
 
-export interface RoutinePartSettings extends NullablePracticeSettings {
+interface BaseRoutineSettings {
     repeatCount: number;
     cloneRepeat: boolean;
     parentSettings: ParentType;
 }
+
+export interface RoutinePartSettings extends BaseRoutineSettings, NullablePracticeSettings {}
+
+export interface BakeRoutineSettings extends BaseRoutineSettings, PracticeSettings {}
 
 export interface RoutineSettings {
     id: string;
@@ -83,4 +89,8 @@ export interface RoutineSettings {
     schemaVersion: string;
     name: string;
     parts: RoutinePartSettings[];
+}
+
+export interface Routine {
+    parts: RoutinePart[];
 }

@@ -1,8 +1,9 @@
 import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {RNBOParameter} from "./types";
-import {MAX_MIDI_NOTES} from "../routine";
+import {MAX_MIDI_NOTES, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {PracticeSettings, PracticeType, NoteRangeType} from "../routine/types";
+import {NumberRangeLike} from "../common/NumberRange";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -92,8 +93,10 @@ export const useSettingsStore = defineStore('settings', {
         }
     },
     getters: {
-        noteScale: (state) => SCALES[state.practice.scale.setName][state.practice.scale.baseNote],
-        currentRange: (state) => {
+        noteScale(state) {
+            return SCALES[state.practice.scale.setName][state.practice.scale.baseNote];
+        },
+        currentRange (state): NumberRangeLike {
             switch (state.practice.noteRangeType) {
                 case NoteRangeType.Notes:
                     return state.practice.noteRange;
@@ -103,7 +106,40 @@ export const useSettingsStore = defineStore('settings', {
                     return state.practice.octaveRange;
             }
         },
-        chordRatioMax: (state) => state.practice.promptCount
+        chordRatioMax(state) {
+            return state.practice.promptCount;
+        },
+        selectedNotes(state): number[] {
+            const notes = []
+            const {start, end} = this.currentRange;
+
+            switch (state.practice.noteRangeType) {
+                case NoteRangeType.Notes:
+                    for (let i = start; i <= end; i++) {
+                        notes.push(i)
+                    }
+                    break;
+                case NoteRangeType.Frets:
+                    for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
+                        for (let i = start; i <= end; i++) {
+                            notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
+                        }
+                    }
+                    break;
+                case NoteRangeType.Octaves: {
+                    const startingC = start * 12
+                    const noteCount = (end - start) * 12;
+                    const lastNote = startingC + noteCount;
+
+                    for (let i = startingC; i <= lastNote; i++) {
+                        notes.push(i)
+                    }
+                    break;
+                }
+            }
+
+            return notes
+        },
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {SplitButton, Select} from "primevue";
-import {useRoutineEditStore} from "../store/routineEdit";
+import {useRoutineStore} from "../store/routineEdit";
 import {computed} from "vue";
 import {exists, notEmptyOr} from "../utilities";
 
-const routineStore = useRoutineEditStore();
+const routineStore = useRoutineStore();
 
 function onSave() {
   routineStore.saveRoutine();

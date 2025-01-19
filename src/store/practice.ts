@@ -2,10 +2,11 @@ import {defineStore} from "pinia";
 import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {useSettingsStore} from "./settings";
-import {generateRoutineSet, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {generateRoutine} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
-import {NoteRangeType, ParentType, Prompt, RoutinePart} from "../routine/types";
+import {ParentType, Prompt, Routine} from "../routine/types";
+import {useRoutineStore} from "./routineEdit";
 
 const MILISECONDS_IN_MINUTE = 60000;
 
@@ -26,6 +27,7 @@ export const NONE_VALUE = "none";
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
     const settingsStore = useSettingsStore();
+    const routineStore = useRoutineStore();
 
     const startTime = ref(0);
     const practiceSessionTimer = ref(null);
@@ -35,9 +37,12 @@ export const usePracticeStore = defineStore('practice', () => {
     const midiSubscription = ref<Subscription>(null);
 
     const selectedRoutine = ref<string>(NONE_VALUE);
-    const routine = ref<RoutinePart | null>(null);
+    const routine = ref<Routine | null>(null);
     const activePrompts = ref<PromptData[]>([]);
+
+    const currentPart = ref(0);
     const currentPrompt = ref(0);
+    const complete = ref(false);
 
     const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
@@ -97,56 +102,48 @@ export const usePracticeStore = defineStore('practice', () => {
         }
 
         return "-"
-    })
-
-    // const notesPerMinute = computed(() => notesPerSeconds.value * 15);
-
-    const selectedNotes = computed(() => {
-        const notes = []
-        const {start, end} = settingsStore.currentRange;
-
-        switch (settingsStore.practice.noteRangeType) {
-            case NoteRangeType.Notes:
-                for (let i = start; i <= end; i++) {
-                    notes.push(i)
-                }
-                break;
-            case NoteRangeType.Frets:
-                for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                    for (let i = start; i <= end; i++) {
-                        notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
-                    }
-                }
-                break;
-            case NoteRangeType.Octaves: {
-                const startingC = start * 12
-                const noteCount = (end - start) * 12;
-                const lastNote = startingC + noteCount;
-
-                for (let i = startingC; i <= lastNote; i++) {
-                    notes.push(i)
-                }
-                break;
-            }
-        }
-
-        return notes
-    })
+    });
 
     function generatePrompts() {
-        routine.value = generateRoutineSet({
-            repeatCount: 1,
-            cloneRepeat: false,
-            parentSettings: ParentType.Settings,
-            ...settingsStore.practice
-        })
+        const routineSettings = routineStore.routines.find((r) => r.id === selectedRoutine.value);
+
+        if (exists(routineSettings)) {
+            routine.value = generateRoutine(
+                routineSettings,
+                settingsStore.practice,
+            )
+        } else {
+            routine.value = generateRoutine(
+                {
+                    name: "",
+                    id: "",
+                    appVersion: "",
+                    schemaVersion: "",
+                    parts: [
+                        {
+                            name: "",
+                            repeatCount: 0,
+                            cloneRepeat: false,
+                            parentSettings: ParentType.Settings,
+                            ...settingsStore.practice
+                        }
+                    ]
+                },
+                settingsStore.practice,
+            )
+        }
     }
 
     function refreshActivePrompts() {
+        if (currentPart.value >= routine.value.parts.length) {
+            complete.value = true;
+        }
+
+        const part = routine.value.parts[currentPart.value];
         activePrompts.value = [];
         currentPrompt.value = 0;
 
-        for (const prompt of routine.value.prompts) {
+        for (const prompt of part.prompts) {
             activePrompts.value.push({
                 success: false,
                 current: false,
@@ -165,6 +162,7 @@ export const usePracticeStore = defineStore('practice', () => {
 
         practicing.value = true;
         successCount.value = 0;
+        currentPart.value = 0;
 
         refreshActivePrompts();
 
@@ -199,21 +197,19 @@ export const usePracticeStore = defineStore('practice', () => {
                         }
                     }
 
-                    // if (data2 < settingsStore.practice.minSuccessVelocity) return;
-                    // const success = exists(activePrompt.prompt.notes.find((n) => n === data1))
-
                     if (success) {
-                        successCount.value += 1
+                        successCount.value += 1;
                         activePrompt.success = true;
                         activePrompt.successTime = now;
                         activePrompt.current = false;
 
                         successes.value.push(clone(activePrompt));
 
-                        currentPrompt.value += 1
+                        currentPrompt.value += 1;
                         if (currentPrompt.value >= activePrompts.value.length) {
-                            currentPrompt.value = 0
-                            refreshActivePrompts()
+                            currentPrompt.value = 0;
+                            currentPart.value += 1;
+                            refreshActivePrompts();
                         }
 
                         activePrompts.value[currentPrompt.value].current = true;
@@ -237,7 +233,6 @@ export const usePracticeStore = defineStore('practice', () => {
         startTime,
         practiceSessionTimer,
         practiceSessionTime,
-        selectedNotes,
         activePrompts,
         currentPrompt,
         successCount,

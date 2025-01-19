@@ -28,7 +28,7 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
 
 const ROUTINES_LOCAL_STORAGE_KEY = "routines";
 
-export const useRoutineEditStore = defineStore('routineEdit', () => {
+export const useRoutineStore = defineStore('routineEdit', () => {
     const globalStore = useGlobalStore();
 
     const routines = ref<RoutineSettings[]>(getSavedRoutines());

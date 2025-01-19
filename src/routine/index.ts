@@ -1,6 +1,15 @@
-import {NoteRangeType, RoutinePart, RoutinePartSettings} from "./types";
+import {
+    BakeRoutineSettings,
+    NoteRangeType, ParentType,
+    PracticeSettings, PracticeSettingsKeys,
+    Routine,
+    RoutinePart,
+    RoutinePartSettings,
+    RoutineSettings
+} from "./types";
 import {formatChord, formatMidiNote} from "../notes";
 import {SCALES} from "../notes/scales";
+import {clone, exists} from "../utilities";
 
 export const MAX_MIDI_NOTES = 127
 export const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
@@ -26,7 +35,84 @@ const colorOptions = [
     "slate"
 ]
 
-export const generateRoutineSet = (settings: RoutinePartSettings): RoutinePart => {
+export const resolveValues = (
+    base: RoutinePartSettings,
+    defaults: PracticeSettings,
+): BakeRoutineSettings => {
+    const toClone: PracticeSettingsKeys = [
+        "name",
+        "practiceType",
+        "targetBPM",
+        "scale",
+        "chordRatio",
+        "requireOctave",
+        "minSuccessVelocity",
+        "noteRangeType",
+        "fretRange",
+        "octaveRange",
+        "noteRange",
+        "promptCount",
+    ];
+
+    const baked: BakeRoutineSettings = {
+        repeatCount: base.repeatCount,
+        cloneRepeat: base.cloneRepeat,
+        parentSettings: base.parentSettings,
+        ...clone(defaults)
+    };
+
+    for (const prop of toClone) {
+        const val = base[prop];
+        if (exists(val)) {
+            // @ts-expect-error Getting 'never' error which is wrong
+            baked[prop] = val;
+        }
+    }
+
+    return baked;
+}
+
+export const generateRoutine = (
+    settings: RoutineSettings,
+    userSettings: PracticeSettings,
+) => {
+    const routine: Routine = {
+        parts: [],
+    };
+
+    if (settings.parts.length === 0) {
+        return routine;
+    }
+
+    const first = resolveValues(settings.parts[0], userSettings);
+    let previous = first;
+
+    const baked = [first];
+    for (let i=1; i<settings.parts.length; i++) {
+        const setting = settings.parts[i];
+        let parent = userSettings;
+        switch (setting.parentSettings) {
+            case ParentType.Settings:
+                parent = userSettings;
+                break;
+            case ParentType.First:
+                parent = first;
+                break;
+            case ParentType.Previous:
+                parent = previous;
+                break;
+        }
+        const bake = resolveValues(setting, parent);
+        previous = bake;
+        baked.push(bake);
+    }
+
+    routine.parts = baked.map((b) => generateRoutineSet(b));
+
+    return routine;
+}
+
+export const generateRoutineSet = (settings: BakeRoutineSettings): RoutinePart => {
     const scale = SCALES[settings.scale.setName][settings.scale.baseNote]
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
