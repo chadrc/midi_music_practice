@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import {Button, SelectButton, Dialog, Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton, Toolbar} from "primevue";
+import {Button, SelectButton, Dialog, Select, Slider, Toolbar} from "primevue";
 import {usePracticeStore} from "../store/practice";
-import NoteGrid from "./NoteGrid.vue";
-import {computed, markRaw, ref} from "vue";
-import ScaleSelect from "../routine/components/ScaleSelect.vue";
+import {markRaw, ref} from "vue";
 import {useSettingsStore} from "../store/settings";
-import {SCALES} from "../notes/scales";
 import Settings from "./SettingsView.vue";
-import RNBOPatch from "./RNBOPatch.vue";
-import {NoteRangeType} from "../routine/types";
 import PromptsView from "./PromptsView.vue";
 import RoutineEditView from "./RoutineEditView.vue";
+import InstrumentPanel from "./InstrumentPanel.vue";
 
 interface ViewOption {
   name: string;
@@ -39,124 +35,6 @@ function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;
   let minutes = Math.floor(practiceStore.practiceSessionTime / 60);
   return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-}
-
-function makeNoteRangeOptions() {
-  return [
-    {
-      name: "Notes",
-      value: NoteRangeType.Notes
-    },
-    {
-      name: "Frets",
-      value: NoteRangeType.Frets
-    },
-    {
-      name: "Octaves",
-      value: NoteRangeType.Octaves
-    }
-  ]
-}
-
-const noteRangeValues = computed(() => {
-  return [settingsStore.currentRange.start, settingsStore.currentRange.end];
-})
-
-const noteRangeMax = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
-    case NoteRangeType.Notes:
-      return 127;
-    case NoteRangeType.Frets:
-      return 22;
-    case NoteRangeType.Octaves:
-      return 12;
-    default:
-      return 0;
-  }
-})
-
-const gridStyle = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
-    case NoteRangeType.Notes:
-      return "box"
-    case NoteRangeType.Frets:
-      return "circle"
-    case NoteRangeType.Octaves:
-      return "bar"
-    default:
-      return "box";
-  }
-})
-
-const gridColumns = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
-    case NoteRangeType.Notes:
-      return 12
-    case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRange;
-      return end - start + 1
-    }
-    case NoteRangeType.Octaves:
-      return practiceStore.selectedNotes.length
-    default:
-      return 0;
-  }
-})
-
-const gridHeaders = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
-    case NoteRangeType.Notes:
-      return []
-    case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRange;
-      const headers = []
-      for (let i = start; i <= end; ++i) {
-        headers.push(i.toString())
-      }
-
-      return headers
-    }
-    case NoteRangeType.Octaves:
-      return []
-    default:
-      return [];
-  }
-})
-
-const gridNoteFormat = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
-    case NoteRangeType.Notes:
-      return "letter-octave"
-    case NoteRangeType.Frets:
-      return "letter-octave"
-    case NoteRangeType.Octaves:
-      return "letter"
-    default:
-      return "letter";
-  }
-})
-
-const selectedScale = computed(() => {
-  let {setName, baseNote} = settingsStore.practice.scale
-  return SCALES[setName][baseNote];
-})
-
-function updateNoteRange(range: number[]) {
-  let s = settingsStore.practice
-  switch (s.noteRangeType) {
-    case NoteRangeType.Notes:
-      s.noteRange.start = range[0]
-      s.noteRange.end = range[1]
-      break;
-    case NoteRangeType.Frets:
-      s.fretRange.start = range[0]
-      s.fretRange.end = range[1]
-      break;
-    case NoteRangeType.Octaves:
-      s.octaveRange.start = range[0]
-      s.octaveRange.end = range[1]
-      break;
-  }
 }
 
 function makeTargetBPMOptions() {
@@ -238,113 +116,11 @@ function makeTargetBPMOptions() {
     <div class="active-view">
       <component :is="currentView.component" />
     </div>
-    <Tabs value="instrument">
-      <TabList class="centered">
-        <Tab value="instrument">
-          Instrument
-        </Tab>
-        <Tab value="patch">
-          Patch
-        </Tab>
-        <Tab value="options">
-          Options
-        </Tab>
-      </TabList>
-      <TabPanels>
-        <TabPanel value="instrument">
-          <div class="instrument-options">
-            <div class="instrument-option">
-              <div class="chord-ratio-slider-wrapper">
-                <span>Chords Per Set: {{ settingsStore.practice.chordRatio }}</span>
-                <Slider
-                  v-model="settingsStore.practice.chordRatio"
-                  :max="settingsStore.chordRatioMax"
-                  class="note-range-slider"
-                />
-              </div>
-            </div>
-            <div class="instrument-option">
-              <ToggleButton
-                v-model="settingsStore.practice.requireOctave"
-                on-label="Octave On"
-                off-label="Octave Off"
-              />
-            </div>
-            <div class="instrument-option">
-              <ScaleSelect
-                v-model="settingsStore.practice.scale"
-                :disabled="practiceStore.practicing"
-              />
-            </div>
-            <div class="instrument-option">
-              <Select
-                v-model="settingsStore.practice.noteRangeType"
-                :options="makeNoteRangeOptions()"
-                option-value="value"
-                option-label="name"
-              />
-            </div>
-            <div class="instrument-option">
-              <div class="note-range-slider-wrapper">
-                <span>{{ noteRangeValues[0] }}</span>
-                <Slider
-                  :model-value="noteRangeValues"
-                  :max="noteRangeMax"
-                  range
-                  class="note-range-slider"
-                  @value-change="updateNoteRange"
-                />
-                <span>{{ noteRangeValues[1] }}</span>
-              </div>
-            </div>
-          </div>
-          <div class="instrument-display">
-            <NoteGrid
-              :notes="practiceStore.selectedNotes"
-              :scale="selectedScale"
-              :note-style="gridStyle"
-              :headers="gridHeaders"
-              :columns="gridColumns"
-              :note-format="gridNoteFormat"
-            />
-          </div>
-        </TabPanel>
-        <TabPanel value="patch">
-          <Suspense>
-            <RNBOPatch />
-            <template #fallback>
-              Loading Instrument...
-            </template>
-          </Suspense>
-        </TabPanel>
-        <TabPanel value="options">
-          <div class="option-control">
-            <span>Min Velocity for Success</span>
-            <Slider
-              v-model="settingsStore.practice.minSuccessVelocity"
-              class="min-success-slider"
-              :max="127"
-            />
-            <span>{{ settingsStore.practice.minSuccessVelocity }}</span>
-          </div>
-        </TabPanel>
-      </TabPanels>
-    </Tabs>
+    <InstrumentPanel />
   </section>
 </template>
 
-<style>
-.p-tablist.centered .p-tablist-tab-list {
-  justify-content: center;
-  align-items: center;
-}
-</style>
-
 <style scoped>
-.p-tabs {
-  height: unset;
-}
-
 .practice-view {
   height: 100vh;
   width: 100vw;
@@ -382,63 +158,11 @@ function makeTargetBPMOptions() {
   margin-right: 1rem;
 }
 
-.instrument-display {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: scroll;
-}
-
-.instrument-display::-webkit-scrollbar {
-  display: none;
-}
-
-.instrument-options {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1rem;
-}
-
 .instrument-option {
   margin-right: 0.5rem;
 }
 
-.note-range-slider {
-  width: 10rem;
-  margin-left: 1rem;
-  margin-right: 1rem;
-}
-
-.note-range-slider-wrapper {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-left: 1rem;
-  margin-right: 1rem;
-}
-
-.chord-ratio-slider-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
 .chord-ratio-slider-wrapper > span {
   margin-bottom: 0.5rem;
-}
-
-.option-control {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.min-success-slider {
-  width: 10rem;
-  margin-left: 1rem;
-  margin-right: 1rem;
 }
 </style>
