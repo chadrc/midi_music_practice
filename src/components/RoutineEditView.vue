@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber} from "primevue";
+import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber, InputText} from "primevue";
 import {useRoutineEditStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
@@ -43,6 +43,12 @@ function onStepUpdate(value: number) {
         class="routine-settings-panel"
       >
         <section class="settings-edit">
+          <SettingsEditField
+            v-model="item.name"
+            label="Name"
+            :can-set="false"
+            :component="InputText"
+          />
           <SettingsEditField
             v-model="item.parentSettings"
             label="Parent"

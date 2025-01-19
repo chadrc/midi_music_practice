@@ -1,9 +1,13 @@
 import {defineStore} from "pinia";
 import {ref} from "vue";
 import {ParentType, RoutinePartSettings, RoutineSettings} from "../routine/types";
+import {useGlobalStore} from "./globals";
+
+const ROUTINE_SCHEMA_VERSION = "0.0.1";
 
 function makeDefaultRoutinePartSettings(): RoutinePartSettings {
     return {
+        name: "",
         parentSettings: ParentType.Settings,
         repeatCount: 1,
         cloneRepeat: false,
@@ -18,43 +22,16 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         octaveRange: null,
         noteRange: null,
         promptCount: null,
-
-        // practiceType: PracticeType.Generated,
-        // targetBPM: 120,
-        // scale: {
-        //     setName: CHROMATIC_SCALE_SET_NAME,
-        //     baseNote: BaseNotes[BaseNotes.C],
-        // },
-        // chordRatio: 0,
-        // requireOctave: true,
-        // minSuccessVelocity: 100,
-        // noteRangeType: NoteRangeType.Notes,
-        // fretRangeOptions: {
-        //     range: {
-        //         start: 0,
-        //         end: 4,
-        //     }
-        // },
-        // octaveRangeOptions: {
-        //     range: {
-        //         start: 4,
-        //         end: 6,
-        //     }
-        // },
-        // noteRangeOptions: {
-        //     range: {
-        //         start: 0,
-        //         end: MAX_MIDI_NOTES,
-        //     }
-        // },
-        // noteCount: 0,
-        // fixed: null,
-        // promptCount: 8,
     }
 }
 
 export const useRoutineEditStore = defineStore('routineEdit', () => {
+    const globalStore = useGlobalStore();
+
     const currentEdit = ref<RoutineSettings>({
+        appVersion: globalStore.appVersion,
+        schemaVersion: ROUTINE_SCHEMA_VERSION,
+        name: "",
         parts: [
             makeDefaultRoutinePartSettings()
         ],

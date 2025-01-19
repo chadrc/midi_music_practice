@@ -54,7 +54,7 @@ watch(
 
 navigator.permissions.query({
     name: "midi",
-    // @ts-ignore
+    // @ts-expect-error Typing is incorrect
     sysex: true,
 }).then(result => {
     if (result.state === "granted") {

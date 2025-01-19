@@ -28,6 +28,7 @@ export class Beat {
 }
 
 export interface PracticeSettings {
+    name: string;
     practiceType: PracticeType;
     targetBPM: number;
     scale: {
@@ -77,5 +78,8 @@ export interface RoutinePartSettings extends NullablePracticeSettings {
 }
 
 export interface RoutineSettings {
+    appVersion: string;
+    schemaVersion: string;
+    name: string;
     parts: RoutinePartSettings[];
 }
