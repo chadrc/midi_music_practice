@@ -4,6 +4,8 @@ import {RNBOParameter} from "./types";
 import {MAX_MIDI_NOTES, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
+import {exists} from "../utilities";
+import {usePracticeStore} from "./practice";
 
 interface NoteGridSettings {
     formatted: boolean;
@@ -26,6 +28,7 @@ interface InstrumentSettings {
 
 interface PracticeSettings {
     selectedRoutine: string;
+    matchPracticeRoutine: boolean;
 }
 
 interface SettingsStore {
@@ -84,6 +87,7 @@ export const useSettingsStore = defineStore('settings', {
 
         const defaultPractice: PracticeSettings = {
             selectedRoutine: NONE_VALUE,
+            matchPracticeRoutine: true,
         }
 
         if (localStorage.getItem('settings')) {
@@ -154,6 +158,24 @@ export const useSettingsStore = defineStore('settings', {
 
             return notes
         },
+        currentSettings() {
+            if (this.practice.matchPracticeRoutine) {
+                const practiceStore = usePracticeStore();
+                if (practiceStore.practicing) {
+                    const part = practiceStore.currentRoutinePart;
+                    if (!exists(part)) {
+                        return this.userRoutine;
+                    }
+
+                    return part.bakedSettings;
+                }
+            }
+            return this.userRoutine
+        },
+        editingDisabled() {
+            const practiceStore = usePracticeStore();
+            return practiceStore.practicing;
+        }
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {

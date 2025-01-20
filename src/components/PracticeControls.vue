@@ -50,14 +50,16 @@ function makeTargetBPMOptions() {
       :options="routineOptions"
       option-label="name"
       option-value="value"
+      :disabled="settingsStore.editingDisabled"
     />
   </div>
   <div class="instrument-option">
     <span>Target BPM: </span>
     <Select
-      v-model="settingsStore.userRoutine.targetBPM"
+      v-model="settingsStore.currentSettings.targetBPM"
       class="target-bpm-control"
       :options="makeTargetBPMOptions()"
+      :disabled="settingsStore.editingDisabled"
     />
   </div>
   <span class="feedback-text">

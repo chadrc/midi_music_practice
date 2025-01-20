@@ -9,11 +9,10 @@ import {NoteRangeType} from "../routine/types";
 import {computed} from "vue";
 import {SCALES} from "../notes/scales";
 
-const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
-const editingDisabled = computed(() => practiceStore.practicing)
-const currentSettings = computed(() => settingsStore.userRoutine);
+const editingDisabled = computed(() => settingsStore.editingDisabled);
+const currentSettings = computed(() => settingsStore.currentSettings);
 
 function makeNoteRangeOptions() {
   return [
@@ -163,6 +162,13 @@ function updateNoteRange(range: number[]) {
         class="instrument-panel"
       >
         <div class="instrument-options">
+          <div class="instrument-option">
+            <ToggleButton
+              v-model="settingsStore.practice.matchPracticeRoutine"
+              on-label="Matching"
+              off-label="Not Matching"
+            />
+          </div>
           <div class="instrument-option">
             <div class="chord-ratio-slider-wrapper">
               <span>Chords Per Set: {{ currentSettings.chordRatio }}</span>

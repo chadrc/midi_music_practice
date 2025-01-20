@@ -55,6 +55,7 @@ function makeOverflowClass(overflow: boolean) {
             v-model="currentView"
             :options="views"
             option-label="name"
+            :disabled="settingsStore.editingDisabled"
             :option-disabled="(data) => data.name === currentView.name"
           />
         </template>

@@ -44,6 +44,18 @@ export const usePracticeStore = defineStore('practice', () => {
     const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
 
+    const currentRoutinePart = computed(() => {
+        if (!exists(routine.value)) {
+            return null;
+        }
+
+        if (currentPart.value >= 0 && currentPart.value < routine.value.parts.length) {
+            return routine.value.parts[currentPart.value];
+        }
+
+        return null;
+    })
+
     const firstNoteTime = computed(() => {
         if (successes.value.length > 0) {
             return successes.value[0].successTime;
@@ -243,6 +255,7 @@ export const usePracticeStore = defineStore('practice', () => {
 
     return {
         currentPart,
+        currentRoutinePart,
         routine,
         startTime,
         practiceSessionTimer,
