@@ -2,8 +2,22 @@ const NUMBER_BIT_LENGTH = Math.ceil(Math.log2(Number.MAX_SAFE_INTEGER));
 
 export class NumberGenerator {
     private state: number;
-    constructor(private readonly seed: number = (Math.random() * Number.MAX_SAFE_INTEGER)) {
+    private _seed: number;
+
+    constructor(seed: number = (Math.random() * Number.MAX_SAFE_INTEGER)) {
+        // ensure seed is whole number
+        if (seed > -1 && seed < 1) {
+            // given a fractional value, likely from Math.random()
+            seed = seed * Number.MAX_SAFE_INTEGER;
+        }
+
+        // ensure whole number
+        this._seed = Math.round(seed);
         this.state = seed;
+    }
+
+    get seed(): number {
+        return this._seed;
     }
 
     reset() {

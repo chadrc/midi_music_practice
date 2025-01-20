@@ -1,6 +1,18 @@
 import {expect, test} from "vitest";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 
+test('Seed between 1 and 0 gets transformed to be non fractional', () => {
+    const gen1 = new NumberGenerator(Math.random());
+
+    expect(gen1.seed).to.be.greaterThan(1);
+});
+
+test('Non-whole number seed get rounded', () => {
+    const gen1 = new NumberGenerator(15.5);
+
+    expect(gen1.seed).to.be.equal(16);
+});
+
 test('Two generators generate different values', () => {
     const gen1 = new NumberGenerator();
     const gen2 = new NumberGenerator();
