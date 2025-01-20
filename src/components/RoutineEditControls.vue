@@ -3,8 +3,11 @@ import {SplitButton, Select} from "primevue";
 import {useRoutineStore} from "../store/routineEdit";
 import {computed} from "vue";
 import {exists, notEmptyOr} from "../utilities";
+import {useSettingsStore} from "../store/settings";
+import RoutineSelect from "./RoutineSelect.vue";
 
 const routineStore = useRoutineStore();
+const settingsStore = useSettingsStore();
 
 function onSave() {
   routineStore.saveRoutine();
@@ -36,13 +39,7 @@ const actions = [
 
 <template>
   <div class="control-wrapper">
-    <Select
-      v-model="routineStore.currentRoutine"
-      :options="routineSelectOptions"
-      option-label="name"
-      option-value="value"
-      placeholder="No routines"
-    />
+    <RoutineSelect />
   </div>
   <div class="control-wrapper">
     <SplitButton

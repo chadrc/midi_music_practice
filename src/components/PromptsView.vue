@@ -102,6 +102,7 @@ function formatPromptColor(prompt: PromptData) {
 
 .prompt-cards {
   flex: 1;
+  display: flex;
 }
 
 .prompt-column {

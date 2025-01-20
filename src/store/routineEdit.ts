@@ -3,6 +3,7 @@ import {computed, ref} from "vue";
 import {ParentType, RoutinePartSettings, RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
 import {exists} from "../utilities";
+import {NONE_VALUE, useSettingsStore} from "./settings";
 
 const ROUTINE_SCHEMA_VERSION = "0.0.1";
 
@@ -31,12 +32,10 @@ const ROUTINES_LOCAL_STORAGE_KEY = "routines";
 
 export const useRoutineStore = defineStore('routineEdit', () => {
     const globalStore = useGlobalStore();
+    const settingsStore = useSettingsStore();
 
     const routines = ref<RoutineSettings[]>(getSavedRoutines());
-    const currentRoutine = ref<string | null>(null);
-    if (routines.value.length > 0) {
-        currentRoutine.value = routines.value[0].id
-    }
+    const currentRoutine = computed(() => settingsStore.practice.selectedRoutine);
 
     const currentEdit = computed<RoutineSettings | null>(() =>
         routines.value.find((routine) => routine.id == currentRoutine.value) || null
@@ -58,7 +57,7 @@ export const useRoutineStore = defineStore('routineEdit', () => {
             ],
         };
 
-        currentRoutine.value = routine.id;
+        settingsStore.practice.selectedRoutine = routine.id;
         routines.value.push(routine);
     }
 
@@ -83,13 +82,17 @@ export const useRoutineStore = defineStore('routineEdit', () => {
 
     function deleteRoutine(id: string) {
         const inMem = routines.value.findIndex((routine) => routine.id == id);
-        routines.value.splice(inMem, 1);
+        if (inMem !== -1) {
+            routines.value.splice(inMem, 1);
+            settingsStore.practice.selectedRoutine = NONE_VALUE;
+        }
 
         const saved = getSavedRoutines();
         const inSaved = saved.findIndex((routine) => routine.id == id);
-        saved.splice(inSaved, 1);
-
-        localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(saved));
+        if (inSaved !== -1) {
+            saved.splice(inSaved, 1);
+            localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(saved));
+        }
     }
 
     function getSavedRoutines(): RoutineSettings[] {

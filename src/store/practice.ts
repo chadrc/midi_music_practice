@@ -246,6 +246,10 @@ export const usePracticeStore = defineStore('practice', () => {
                         if (currentPrompt.value >= activePrompts.value.length) {
                             currentRepetition.value += 1;
                             setupStep();
+
+                            if (complete.value) {
+                                stop();
+                            }
                         } else {
                             activePrompts.value[currentPrompt.value].current = true;
                         }

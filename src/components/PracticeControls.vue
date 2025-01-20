@@ -1,31 +1,11 @@
 <script setup lang="ts">
 import {Button, Select} from "primevue";
 import {usePracticeStore} from "../store/practice";
-import {NONE_VALUE, useSettingsStore} from "../store/settings";
-import {computed} from "vue";
-import {useRoutineStore} from "../store/routineEdit";
+import {useSettingsStore} from "../store/settings";
+import RoutineSelect from "./RoutineSelect.vue";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
-const routineStore = useRoutineStore();
-
-const routineOptions = computed(() => {
-  const options: {name: string, value: string | null}[] = [
-    {
-      name: "None",
-      value: NONE_VALUE,
-    }
-  ];
-
-  for (let routine of routineStore.routines) {
-    options.push({
-      name: routine.name,
-      value: routine.id,
-    });
-  }
-
-  return options;
-})
 
 function formatPracticeTime() {
   let seconds = practiceStore.practiceSessionTime % 60;
@@ -40,18 +20,17 @@ function makeTargetBPMOptions() {
   }
   return options;
 }
+
+function onStop() {
+  practiceStore.stop();
+  practiceStore.finalize();
+}
 </script>
 
 <template>
   <div class="instrument-option">
     <span>Routine: </span>
-    <Select
-      v-model="settingsStore.practice.selectedRoutine"
-      :options="routineOptions"
-      option-label="name"
-      option-value="value"
-      :disabled="settingsStore.editingDisabled"
-    />
+    <RoutineSelect />
   </div>
   <div class="instrument-option">
     <span>Target BPM: </span>
@@ -70,7 +49,7 @@ function makeTargetBPMOptions() {
     :severity="practiceStore.practicing ? 'danger' : 'info'"
     size="small"
     :disabled="!practiceStore.practicing && practiceStore.complete"
-    @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
+    @click="practiceStore.practicing ? onStop() : practiceStore.start()"
   >
     {{ practiceStore.practicing ? 'Stop' : 'Start' }}
   </Button>
