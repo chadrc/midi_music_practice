@@ -25,6 +25,12 @@ test('Non-whole number seed get rounded', () => {
     expect(gen1.seed).to.be.equal(16);
 });
 
+test('Seed greater than max number gets clamped', () => {
+    const gen1 = new NumberGenerator(400000000, 8);
+
+    expect(gen1.seed).to.be.equal(255);
+});
+
 test('Max number calculated correctly', () => {
     const gen1 = new NumberGenerator(15.5, 4);
 
@@ -52,6 +58,14 @@ test('One generator that is reset generates same value', () => {
     expect(val1).to.equal(gen1.next());
 });
 
+test('Next returns positive values', () => {
+    const gen = new NumberGenerator();
+    for (let i = 0; i < 100; i++) {
+        const val = gen.next();
+        expect(val).to.be.greaterThanOrEqual(0);
+    }
+});
+
 test('Range returns number between given numbers', () => {
     const gen1 = new NumberGenerator(100);
     const val1 = gen1.range(10.5, 25.12234);
@@ -72,6 +86,14 @@ test('RangeI returns integer between given numbers', () => {
     expect(val1).to.be.greaterThanOrEqual(10);
     expect(parts[1]).toBeUndefined();
     expect(val1).to.not.be.equal(val2);
+});
+
+test('RangeI returns positive integers when range is positive integers', () => {
+    for (let i = 0; i < 100; i++) {
+        const gen = new NumberGenerator();
+        const val = gen.rangeI(0, 25);
+        expect(val).to.be.greaterThanOrEqual(0);
+    }
 });
 
 test('bit8 sets bit length to 8', () => {

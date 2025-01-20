@@ -7,21 +7,29 @@ export class NumberGenerator {
     readonly maxNumber: number;
 
     constructor(
-        seed: number = (Math.random() * Number.MAX_SAFE_INTEGER),
+        seed: number = Math.random(),
         bitLength: number = 32,
     ) {
         this.bitLength = Math.max(1, Math.min(Math.round(bitLength), MAX_BIT_LENGTH));
         this.maxNumber = Math.pow(2, this.bitLength);
 
-        // ensure seed is whole number
+        // a number from Math.random() will be between -1 and 1
+        // we need an integer, so we scale it up
         if (seed > -1 && seed < 1) {
-            // given a fractional value, likely from Math.random()
             seed = seed * this.maxNumber;
         }
 
-        // ensure whole number
-        this.seed = Math.round(seed);
-        this.state = seed;
+        // ensure seed is within bit length range
+        // dropping with bitwise, because just clamping would result in same seed for all values over maxNumber
+        if (seed > this.maxNumber) {
+            seed = seed | this.maxNumber;
+        }
+
+        // abs because just clamp would result in same seed for values below 0
+        // round to ensure whole numbers
+        // min/max to prevent all 0 or 1 bits
+        this.seed = Math.max(1, Math.min(Math.round(Math.abs(seed)), this.maxNumber - 1));
+        this.state = this.seed;
     }
 
     reset() {
@@ -36,10 +44,10 @@ export class NumberGenerator {
             num = (num << 1) | output;
 
             const bit = (this.state ^ (this.state >> 1) ^ (this.state >> 2) ^ (this.state >> 3) ^ (this.state >> 5)) & 1;
-            this.state = (this.state >> 1) | (bit << (this.bitLength - 1));
+            this.state = Math.abs((this.state >> 1) | (bit << (this.bitLength - 1)));
         }
 
-        return num / this.maxNumber;
+        return Math.abs(num / this.maxNumber);
     }
 
     range(min: number, max: number): number {
@@ -51,7 +59,7 @@ export class NumberGenerator {
 
     rangeI(min: number, max: number): number {
         const roll = this.range(min, max);
-        return Math.round(roll);
+        return Math.round(Math.abs(roll));
     }
 
     static bit8(seed: number = (Math.random() * Number.MAX_SAFE_INTEGER)): NumberGenerator {
