@@ -55,6 +55,7 @@ export const resolveValues = (
     ];
 
     const baked: BakeRoutineSettings = {
+        name: base.name,
         repeatCount: base.repeatCount,
         cloneRepeat: base.cloneRepeat,
         parentSettings: base.parentSettings,
@@ -195,6 +196,7 @@ export const generateRoutineSet = (settings: BakeRoutineSettings): RoutinePart =
     shuffle(prompts);
 
     return {
+        name: settings.name,
         prompts,
     }
 }

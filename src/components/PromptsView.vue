@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {Button} from "primevue";
+import {Button, Step, StepList, Stepper} from "primevue";
 import {PromptData, usePracticeStore} from "../store/practice";
+import {exists} from "../utilities";
 
 const practiceStore = usePracticeStore();
 
@@ -11,6 +12,21 @@ function formatPromptColor(prompt: PromptData) {
 </script>
 
 <template>
+  <Stepper
+    v-if="exists(practiceStore.routine) && practiceStore.routine.parts.length > 0"
+    :value="practiceStore.currentPart + 1"
+  >
+    <StepList>
+      <Step
+        v-for="(item, index) in practiceStore.routine.parts"
+        :key="index"
+        :value="index + 1"
+      >
+        {{ item.name }}
+      </Step>
+      <Step :value="practiceStore.routine.parts.length + 1" />
+    </StepList>
+  </Stepper>
   <div
     v-if="practiceStore.activePrompts.length > 0"
     class="prompt-area"
@@ -42,6 +58,15 @@ function formatPromptColor(prompt: PromptData) {
     <span>No Prompts</span>
     <Button @click="practiceStore.advanceStep">
       Next Step
+    </Button>
+  </div>
+  <div
+    v-else-if="!practiceStore.practicing && practiceStore.complete"
+    class="advance-step"
+  >
+    <span>Complete</span>
+    <Button @click="practiceStore.finalize">
+      Finish
     </Button>
   </div>
   <div

@@ -232,13 +232,19 @@ export const usePracticeStore = defineStore('practice', () => {
         window.clearInterval(practiceSessionTimer.value)
         midiSubscription.value.unsubscribe()
         activePrompts.value = []
+        currentPrompt.value = routine.value.parts.length;
+        practicing.value = false;
+    }
+
+    function finalize() {
         attempts.value = [];
         routine.value = null;
-        practicing.value = false;
+        complete.value = false;
     }
 
     return {
         selectedRoutine,
+        currentPart,
         routine,
         startTime,
         practiceSessionTimer,
@@ -247,9 +253,11 @@ export const usePracticeStore = defineStore('practice', () => {
         currentPrompt,
         successCount,
         practicing,
+        complete,
         playRateDisplay,
         start,
         stop,
         advanceStep,
+        finalize,
     }
 })

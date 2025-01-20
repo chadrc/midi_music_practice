@@ -67,6 +67,7 @@ function makeTargetBPMOptions() {
     :label="practiceStore.practicing ? 'Stop' : 'Start' "
     :severity="practiceStore.practicing ? 'danger' : 'info'"
     size="small"
+    :disabled="!practiceStore.practicing && practiceStore.complete"
     @click="practiceStore.practicing ? practiceStore.stop() : practiceStore.start()"
   >
     {{ practiceStore.practicing ? 'Stop' : 'Start' }}

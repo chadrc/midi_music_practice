@@ -60,6 +60,7 @@ export interface Prompt {
 }
 
 export interface RoutinePart {
+    name: string;
     prompts: Prompt[];
 }
 
