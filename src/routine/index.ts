@@ -10,6 +10,7 @@ import {
 import {formatChord, formatMidiNote} from "../notes";
 import {SCALES} from "../notes/scales";
 import {clone, exists} from "../utilities";
+import {NumberGenerator} from "../common/NumberGenerator";
 
 export const MAX_MIDI_NOTES = 127
 export const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
@@ -114,6 +115,8 @@ export const generateRoutine = (
 }
 
 export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
+    const seed = settings.seed || Math.random();
+    const generator = new NumberGenerator(seed);
     const scale = SCALES[settings.scale.setName][settings.scale.baseNote]
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
@@ -125,8 +128,8 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
         const chordRatio = Math.min(settings.chordRatio, settings.promptCount);
 
         for (let i = 0; i < chordRatio; i++) {
-            const colorRoll = Math.floor(Math.random() * colorOptions.length);
-            const chordRoll = Math.floor(Math.random() * scale.chords.length);
+            const colorRoll = generator.rangeI(0, colorOptions.length);
+            const chordRoll = generator.rangeI(0, scale.chords.length);
             const chord = scale.chords[chordRoll];
 
             // find chord fundamentals in note options
@@ -150,7 +153,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
                 continue;
             }
 
-            const fundamentalRoll = Math.floor(Math.random() * playableChordFundamentals.length);
+            const fundamentalRoll = generator.rangeI(0, playableChordFundamentals.length);
             const fundamental = playableChordFundamentals[fundamentalRoll];
             const notes = [];
             const baseFundamental = chord.notes[0];
@@ -175,8 +178,8 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
     }
 
     for (let i = count; i < settings.promptCount; i++) {
-        const noteRoll = Math.floor(Math.random() * noteOptions.length);
-        const colorRoll = Math.floor(Math.random() * colorOptions.length);
+        const noteRoll = generator.rangeI(0, noteOptions.length);
+        const colorRoll = generator.rangeI(0, colorOptions.length);
 
         const note = noteOptions[noteRoll]
 
@@ -193,18 +196,19 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
         })
     }
 
-    shuffle(prompts);
+    shuffle(prompts, generator);
 
     return {
         name: settings.name,
+        generator,
         prompts,
     }
 }
 
-export const shuffle = <T>(input: T[], count: number = 2) => {
+export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number = 2) => {
     for (let j = 0; j < count; j++) {
         for (let i = 0; i < input.length; i++) {
-            const roll = Math.floor(Math.random() * input.length);
+            const roll = generator.rangeI(0, input.length);
             const temp = input[i];
             input[i] = input[roll];
             input[roll] = temp;

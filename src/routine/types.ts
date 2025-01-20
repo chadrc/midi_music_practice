@@ -1,4 +1,5 @@
 import {NumberRangeLike} from "../common/NumberRange";
+import {NumberGenerator} from "../common/NumberGenerator";
 
 export enum NoteRangeType {
     Notes,
@@ -11,8 +12,15 @@ export enum PracticeType {
     Composed,
 }
 
+export enum ParentType {
+    Settings,
+    Previous,
+    First,
+}
+
 export interface UserRoutinePartSettings {
     name: string;
+    seed: number | null;
     practiceType: PracticeType;
     targetBPM: number;
     scale: {
@@ -30,24 +38,6 @@ export interface UserRoutinePartSettings {
 }
 
 export type UserRoutineSettingsKeys = (keyof UserRoutinePartSettings)[];
-
-export interface PromptDisplay {
-    note: string;
-    chordType: string;
-}
-
-export interface Prompt {
-    index: number;
-    notes: number[];
-    color: string;
-    displays: PromptDisplay[];
-}
-
-export enum ParentType {
-    Settings,
-    Previous,
-    First,
-}
 
 export type NullableUserRoutinePartSettings = {
     [K in keyof UserRoutinePartSettings]: UserRoutinePartSettings[K] | null;
@@ -71,8 +61,21 @@ export interface RoutineSettings {
     parts: RoutinePartSettings[];
 }
 
+export interface PromptDisplay {
+    note: string;
+    chordType: string;
+}
+
+export interface Prompt {
+    index: number;
+    notes: number[];
+    color: string;
+    displays: PromptDisplay[];
+}
+
 export interface RoutinePart {
     name: string;
+    generator: NumberGenerator;
     prompts: Prompt[];
 }
 

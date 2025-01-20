@@ -10,6 +10,7 @@ import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
 import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
 import RangeSlider from "../routine/components/RangeSlider.vue";
+import {CHROMATIC_SCALE_SET_NAME, BaseNotes} from "../notes/scales"
 import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
@@ -78,6 +79,13 @@ function onStepUpdate(value: number) {
             label="Parent"
             :can-set="false"
             :component="ParentTypeSelect"
+          />
+          <SettingsEditField
+            v-model="item.seed"
+            label="Fixed Seed"
+            :set-value="Math.round(Math.random() * 1000)"
+            :component="InputNumber"
+            :component-props="{min: 0, showButtons: true}"
           />
           <SettingsEditField
             v-model="item.practiceType"

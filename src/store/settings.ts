@@ -56,6 +56,7 @@ export const useSettingsStore = defineStore('settings', {
 
         const defaultUserRoutine: UserRoutinePartSettings = {
             name: "",
+            seed: null,
             practiceType: PracticeType.Generated,
             targetBPM: 120,
             scale: {
