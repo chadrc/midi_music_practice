@@ -147,21 +147,21 @@ function onStepUpdate(value: number) {
           <SettingsEditField
             v-model="item.fretRange"
             label="Fret Range"
-            :set-value="{min: 0, max: 4}"
+            :set-value="{start: 0, end: 4}"
             :component="RangeSlider"
             :component-props="{min: 0, max: 22}"
           />
           <SettingsEditField
             v-model="item.octaveRange"
             label="Octave Range"
-            :set-value="{min: 4, max: 6}"
+            :set-value="{start: 4, end: 6}"
             :component="RangeSlider"
             :component-props="{min: 0, max: 12}"
           />
           <SettingsEditField
             v-model="item.noteRange"
             label="Note Range"
-            :set-value="{min: 0, max: 127}"
+            :set-value="{start: 0, end: 127}"
             :component="RangeSlider"
             :component-props="{min: 0, max: 127}"
           />

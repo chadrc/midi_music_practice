@@ -3,13 +3,15 @@ import {Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton} f
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import RNBOPatch from "./RNBOPatch.vue";
 import NoteGrid from "./NoteGrid.vue";
-import {usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
 import {NoteRangeType} from "../routine/types";
 import {computed} from "vue";
 import {SCALES} from "../notes/scales";
+import {usePracticeStore} from "../store/practice";
+import {exists} from "../utilities";
 
-const settingsStore = useSettingsStore()
+const settingsStore = useSettingsStore();
+const practiceStore = usePracticeStore();
 
 const editingDisabled = computed(() => settingsStore.editingDisabled);
 const currentSettings = computed(() => settingsStore.currentSettings);
@@ -30,6 +32,15 @@ function makeNoteRangeOptions() {
     }
   ]
 }
+
+const currentPromptHints = computed(() => {
+  const prompt = practiceStore.activePrompts[practiceStore.currentPrompt];
+  if (exists(prompt)) {
+    return prompt.prompt.notes;
+  }
+
+  return [];
+})
 
 const noteRangeValues = computed(() => {
   const settings = currentSettings.value;
@@ -77,12 +88,14 @@ const gridColumns = computed(() => {
       return 12
     case NoteRangeType.Frets: {
       const {start, end} = currentSettings.value.fretRange;
+      console.log(currentSettings.value);
+      console.log(start, end);
       return end - start + 1
     }
     case NoteRangeType.Octaves:
       return settingsStore.selectedNotes.length
     default:
-      return 0;
+      return 1;
   }
 })
 
@@ -226,6 +239,7 @@ function updateNoteRange(range: number[]) {
             :headers="gridHeaders"
             :columns="gridColumns"
             :note-format="gridNoteFormat"
+            :hints="currentPromptHints"
           />
         </div>
       </TabPanel>

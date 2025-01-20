@@ -8,15 +8,17 @@ import {exists} from "../utilities";
 
 interface NoteGridProps {
   notes: Array<number>,
+  hints?: Array<number>,
   columns: number,
   noteStyle?: "box" | "circle" | "bar",
   scale?: NoteScale,
   headers?: string[],
-  noteFormat?: "number" | "letter" | "letter-octave"
+  noteFormat?: "number" | "letter" | "letter-octave",
 }
 
 const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
+  hints: () => [],
   noteStyle: "box",
   scale: () => SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes[BaseNotes.C]],
   headers: () => [],
@@ -25,8 +27,15 @@ const props = withDefaults(defineProps<NoteGridProps>(), {
 
 const midiStore = useMidiStore();
 
-const rowCount = computed(() => Math.ceil(props.notes.length / props.columns));
-const rowIndices = computed(() => Array.from(Array(rowCount.value).keys()));
+const rowCount = computed(() => {
+  console.log(props.notes.length, props.columns);
+  return Math.ceil(props.notes.length / props.columns)
+});
+const rowIndices = computed(() => {
+  console.log(rowCount.value);
+
+  return Array.from(Array(rowCount.value).keys())
+});
 const columnIndices = computed(() => Array.from(Array(props.columns).keys()));
 
 const hueIncrement = 360 / 128;
@@ -40,6 +49,10 @@ function opacityForNote(row: number, column: number) {
   let playData = midiStore.playData[note];
   if (playData.on) {
     return 1;
+  }
+
+  if (exists(props.hints.find((n) => n === note))) {
+    return .5;
   }
   return 0.25;
 }

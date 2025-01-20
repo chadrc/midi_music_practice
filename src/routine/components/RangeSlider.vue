@@ -3,8 +3,8 @@ import {Slider} from "primevue";
 import {computed} from "vue";
 
 const model = defineModel<{
-  min: number;
-  max: number;
+  start: number;
+  end: number;
 }>();
 
 const props = withDefaults(defineProps<{
@@ -15,17 +15,17 @@ const props = withDefaults(defineProps<{
   max: 100,
 })
 
-const internalModel = computed(() => [model.value.min, model.value.max])
+const internalModel = computed(() => [model.value.start, model.value.end])
 
 function updateRange(value: number[]) {
-  model.value.min = value[0];
-  model.value.max = value[1];
+  model.value.start = value[0];
+  model.value.end = value[1];
 }
 </script>
 
 <template>
   <div class="note-range-slider-wrapper">
-    <span>{{ model.min }}</span>
+    <span>{{ model.start }}</span>
     <Slider
       :model-value="internalModel"
       :max="props.max"
@@ -34,7 +34,7 @@ function updateRange(value: number[]) {
       class="note-range-slider"
       @update:model-value="updateRange"
     />
-    <span>{{ model.max }}</span>
+    <span>{{ model.end }}</span>
   </div>
 </template>
 
