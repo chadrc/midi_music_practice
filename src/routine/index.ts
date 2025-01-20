@@ -5,10 +5,10 @@ import {
     Routine,
     RoutinePart,
     RoutinePartSettings,
-    RoutineSettings
+    RoutineSettings, Prompt
 } from "./types";
 import {formatChord, formatMidiNote} from "../notes";
-import {SCALES} from "../notes/scales";
+import {NoteScale, SCALES} from "../notes/scales";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
 
@@ -121,6 +121,95 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
 
+    const repetitions = []
+
+    const totalReps = settings.repeatCount + 1;
+    if (settings.cloneRepeat) {
+        const rep = generatePrompts(
+            settings,
+            scale,
+            generator,
+            noteOptions,
+        );
+        for (let i=0; i<totalReps; i++) {
+            repetitions.push({ prompts: clone(rep) });
+        }
+    } else {
+        for (let i=0; i<totalReps; i++) {
+            repetitions.push({
+                prompts: generatePrompts(
+                    settings,
+                    scale,
+                    generator,
+                    noteOptions,
+                )
+            });
+        }
+    }
+
+    return {
+        name: settings.name,
+        generator,
+        repetitions,
+        bakedSettings: settings,
+    }
+}
+
+export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number = 2) => {
+    for (let j = 0; j < count; j++) {
+        for (let i = 0; i < input.length; i++) {
+            const roll = generator.rangeI(0, input.length);
+            const temp = input[i];
+            input[i] = input[roll];
+            input[roll] = temp;
+        }
+    }
+}
+
+export const generateNotesForRange = (
+    settings: RoutinePartSettings,
+) => {
+    const {noteRangeType} = settings;
+    const notes = []
+    switch (noteRangeType) {
+        case NoteRangeType.Notes: {
+            const {start, end} = settings.noteRange;
+            for (let i = start; i <= end; i++) {
+                notes.push(i)
+            }
+            break;
+        }
+        case NoteRangeType.Frets: {
+            const {start, end} = settings.fretRange;
+            for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
+                for (let i = start; i <= end; i++) {
+                    notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
+                }
+            }
+            break;
+        }
+        case NoteRangeType.Octaves: {
+            const {start, end} = settings.octaveRange;
+            const startingC = start * 12
+            const noteCount = (end - start) * 12;
+            const lastNote = startingC + noteCount;
+
+            for (let i = startingC; i <= lastNote; i++) {
+                notes.push(i)
+            }
+            break;
+        }
+    }
+
+    return notes;
+}
+
+function generatePrompts(
+    settings: BakedRoutinePartSettings,
+    scale: NoteScale,
+    generator: NumberGenerator,
+    noteOptions: number[],
+): Prompt[] {
     let count = 0;
     const prompts = []
 
@@ -198,59 +287,5 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
 
     shuffle(prompts, generator);
 
-    return {
-        name: settings.name,
-        generator,
-        prompts,
-        bakedSettings: settings,
-    }
-}
-
-export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number = 2) => {
-    for (let j = 0; j < count; j++) {
-        for (let i = 0; i < input.length; i++) {
-            const roll = generator.rangeI(0, input.length);
-            const temp = input[i];
-            input[i] = input[roll];
-            input[roll] = temp;
-        }
-    }
-}
-
-export const generateNotesForRange = (
-    settings: RoutinePartSettings,
-) => {
-    const {noteRangeType} = settings;
-    const notes = []
-    switch (noteRangeType) {
-        case NoteRangeType.Notes: {
-            const {start, end} = settings.noteRange;
-            for (let i = start; i <= end; i++) {
-                notes.push(i)
-            }
-            break;
-        }
-        case NoteRangeType.Frets: {
-            const {start, end} = settings.fretRange;
-            for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                for (let i = start; i <= end; i++) {
-                    notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
-                }
-            }
-            break;
-        }
-        case NoteRangeType.Octaves: {
-            const {start, end} = settings.octaveRange;
-            const startingC = start * 12
-            const noteCount = (end - start) * 12;
-            const lastNote = startingC + noteCount;
-
-            for (let i = startingC; i <= lastNote; i++) {
-                notes.push(i)
-            }
-            break;
-        }
-    }
-
-    return notes;
+    return prompts;
 }

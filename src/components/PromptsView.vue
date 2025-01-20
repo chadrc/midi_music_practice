@@ -32,22 +32,29 @@ function formatPromptColor(prompt: PromptData) {
     class="prompt-area"
   >
     <div
-      v-for="prompt in practiceStore.activePrompts"
-      :key="prompt.prompt.index"
-      :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+      class="repetition-display"
     >
+      {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
+    </div>
+    <div class="prompt-cards">
       <div
-        class="prompt-card"
-        :style="{backgroundColor: formatPromptColor(prompt)}"
+        v-for="prompt in practiceStore.activePrompts"
+        :key="prompt.prompt.index"
+        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
-        <span
-          v-for="note in prompt.prompt.displays"
-          :key="note.note"
-          class="prompt-text"
+        <div
+          class="prompt-card"
+          :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <span>{{ note.note }}</span>
-          <span class="chord-text">{{ note.chordType }}</span>
-        </span>
+          <span
+            v-for="note in prompt.prompt.displays"
+            :key="note.note"
+            class="prompt-text"
+          >
+            <span>{{ note.note }}</span>
+            <span class="chord-text">{{ note.chordType }}</span>
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -70,7 +77,7 @@ function formatPromptColor(prompt: PromptData) {
     </Button>
   </div>
   <div
-    v-else 
+    v-else
     class="prompt-area"
   >
     <h1>Press start to practice</h1>
@@ -82,8 +89,19 @@ function formatPromptColor(prompt: PromptData) {
   height: 100%;
   width: 100%;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+}
+
+.repetition-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.prompt-cards {
+  flex: 1;
 }
 
 .prompt-column {

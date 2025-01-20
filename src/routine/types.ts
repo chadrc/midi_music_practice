@@ -73,10 +73,14 @@ export interface Prompt {
     displays: PromptDisplay[];
 }
 
+export interface RoutinePartRepetition {
+    prompts: Prompt[];
+}
+
 export interface RoutinePart {
     name: string;
     generator: NumberGenerator;
-    prompts: Prompt[];
+    repetitions: RoutinePartRepetition[];
     bakedSettings: BakedRoutinePartSettings;
 }
 

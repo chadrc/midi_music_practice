@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {MIDIInstruction, PracticeMIDIData, useMidiStore} from "./midi";
 import {computed, ref} from "vue";
 import {useSettingsStore} from "./settings";
-import {generateRoutine} from "../routine";
+import {generateRoutine, generateRoutineSet} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
 import {ParentType, Prompt, Routine} from "../routine/types";
@@ -37,6 +37,7 @@ export const usePracticeStore = defineStore('practice', () => {
     const routine = ref<Routine | null>(null);
     const activePrompts = ref<PromptData[]>([]);
 
+    const currentRepetition = ref(0);
     const currentPart = ref(0);
     const currentPrompt = ref(0);
     const complete = ref(false);
@@ -54,6 +55,15 @@ export const usePracticeStore = defineStore('practice', () => {
         }
 
         return null;
+    });
+
+    const targetRepetitions = computed(() => {
+        const part = currentRoutinePart.value;
+        if (exists(part)) {
+            return part.repetitions.length;
+        }
+
+        return 0;
     })
 
     const firstNoteTime = computed(() => {
@@ -145,17 +155,31 @@ export const usePracticeStore = defineStore('practice', () => {
         }
     }
 
-    function refreshActivePrompts() {
+    function setupStep() {
         if (currentPart.value >= routine.value.parts.length) {
             complete.value = true;
             return;
         }
 
-        const part = routine.value.parts[currentPart.value];
+        let part = routine.value.parts[currentPart.value];
+        if (currentRepetition.value >= part.repetitions.length) {
+            currentPart.value += 1;
+
+            if (currentPart.value >= routine.value.parts.length) {
+                complete.value = true;
+                return;
+            }
+
+            part = routine.value.parts[currentPart.value];
+            currentRepetition.value = 0;
+        }
+
+        const rep = part.repetitions[currentRepetition.value];
+
         activePrompts.value = [];
         currentPrompt.value = 0;
 
-        for (const prompt of part.prompts) {
+        for (const prompt of rep.prompts) {
             activePrompts.value.push({
                 success: false,
                 current: false,
@@ -174,9 +198,10 @@ export const usePracticeStore = defineStore('practice', () => {
         practicing.value = true;
         successCount.value = 0;
         currentPart.value = 0;
+        currentRepetition.value = 0;
 
         generatePrompts();
-        refreshActivePrompts();
+        setupStep();
 
         practiceSessionTimer.value = window.setInterval(() => {
             practiceSessionTime.value += 1
@@ -219,7 +244,8 @@ export const usePracticeStore = defineStore('practice', () => {
 
                         currentPrompt.value += 1;
                         if (currentPrompt.value >= activePrompts.value.length) {
-                            advanceStep();
+                            currentRepetition.value += 1;
+                            setupStep();
                         } else {
                             activePrompts.value[currentPrompt.value].current = true;
                         }
@@ -228,14 +254,14 @@ export const usePracticeStore = defineStore('practice', () => {
             });
     }
 
-    function advanceStep() {
+    function skipToNextStep() {
         currentPrompt.value = 0;
-        currentPart.value += 1;
-        refreshActivePrompts();
+
+        currentRepetition.value = currentRoutinePart.value.repetitions.length;
+        setupStep();
 
         if (complete.value) {
             stop();
-            return;
         }
     }
 
@@ -256,6 +282,8 @@ export const usePracticeStore = defineStore('practice', () => {
     return {
         currentPart,
         currentRoutinePart,
+        currentRepetition,
+        targetRepetitions,
         routine,
         startTime,
         practiceSessionTimer,
@@ -268,7 +296,7 @@ export const usePracticeStore = defineStore('practice', () => {
         playRateDisplay,
         start,
         stop,
-        advanceStep,
+        advanceStep: skipToNextStep,
         finalize,
     }
 })

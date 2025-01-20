@@ -9,6 +9,7 @@ const ROUTINE_SCHEMA_VERSION = "0.0.1";
 function makeDefaultRoutinePartSettings(): RoutinePartSettings {
     return {
         name: "",
+        seed: null,
         parentSettings: ParentType.Settings,
         repeatCount: 1,
         cloneRepeat: false,
