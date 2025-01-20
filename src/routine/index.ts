@@ -202,6 +202,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
         name: settings.name,
         generator,
         prompts,
+        bakedSettings: settings,
     }
 }
 

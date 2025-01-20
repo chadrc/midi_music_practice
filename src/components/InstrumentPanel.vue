@@ -12,6 +12,9 @@ import {SCALES} from "../notes/scales";
 const practiceStore = usePracticeStore()
 const settingsStore = useSettingsStore()
 
+const editingDisabled = computed(() => practiceStore.practicing)
+const currentSettings = computed(() => settingsStore.userRoutine);
+
 function makeNoteRangeOptions() {
   return [
     {
@@ -30,11 +33,21 @@ function makeNoteRangeOptions() {
 }
 
 const noteRangeValues = computed(() => {
-  return [settingsStore.currentRange.start, settingsStore.currentRange.end];
+  const settings = currentSettings.value;
+  switch (currentSettings.value.noteRangeType) {
+    case NoteRangeType.Notes:
+      return [settings.noteRange.start, settings.noteRange.end];
+    case NoteRangeType.Frets:
+      return [settings.fretRange.start, settings.fretRange.end];
+    case NoteRangeType.Octaves:
+      return [settings.octaveRange.start, settings.octaveRange.end];
+    default:
+      return [0, 0];
+  }
 })
 
 const noteRangeMax = computed(() => {
-  switch (settingsStore.userRoutine.noteRangeType) {
+  switch (currentSettings.value.noteRangeType) {
     case NoteRangeType.Notes:
       return 127;
     case NoteRangeType.Frets:
@@ -47,7 +60,7 @@ const noteRangeMax = computed(() => {
 })
 
 const gridStyle = computed(() => {
-  switch (settingsStore.userRoutine.noteRangeType) {
+  switch (currentSettings.value.noteRangeType) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -60,11 +73,11 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (settingsStore.userRoutine.noteRangeType) {
+  switch (currentSettings.value.noteRangeType) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.userRoutine.fretRange;
+      const {start, end} = currentSettings.value.fretRange;
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -75,11 +88,11 @@ const gridColumns = computed(() => {
 })
 
 const gridHeaders = computed(() => {
-  switch (settingsStore.userRoutine.noteRangeType) {
+  switch (currentSettings.value.noteRangeType) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.userRoutine.fretRange;
+      const {start, end} = currentSettings.value.fretRange;
       const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -95,7 +108,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (settingsStore.userRoutine.noteRangeType) {
+  switch (currentSettings.value.noteRangeType) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -108,12 +121,12 @@ const gridNoteFormat = computed(() => {
 })
 
 const selectedScale = computed(() => {
-  let {setName, baseNote} = settingsStore.userRoutine.scale
+  let {setName, baseNote} = currentSettings.value.scale;
   return SCALES[setName][baseNote];
 })
 
 function updateNoteRange(range: number[]) {
-  let s = settingsStore.userRoutine
+  let s = currentSettings.value;
   switch (s.noteRangeType) {
     case NoteRangeType.Notes:
       s.noteRange.start = range[0]
@@ -152,33 +165,36 @@ function updateNoteRange(range: number[]) {
         <div class="instrument-options">
           <div class="instrument-option">
             <div class="chord-ratio-slider-wrapper">
-              <span>Chords Per Set: {{ settingsStore.userRoutine.chordRatio }}</span>
+              <span>Chords Per Set: {{ currentSettings.chordRatio }}</span>
               <Slider
-                v-model="settingsStore.userRoutine.chordRatio"
+                v-model="currentSettings.chordRatio"
                 :max="settingsStore.chordRatioMax"
                 class="note-range-slider"
+                :disabled="editingDisabled"
               />
             </div>
           </div>
           <div class="instrument-option">
             <ToggleButton
-              v-model="settingsStore.userRoutine.requireOctave"
+              v-model="currentSettings.requireOctave"
               on-label="Octave On"
               off-label="Octave Off"
+              :disabled="editingDisabled"
             />
           </div>
           <div class="instrument-option">
             <ScaleSelect
-              v-model="settingsStore.userRoutine.scale"
-              :disabled="practiceStore.practicing"
+              v-model="currentSettings.scale"
+              :disabled="editingDisabled"
             />
           </div>
           <div class="instrument-option">
             <Select
-              v-model="settingsStore.userRoutine.noteRangeType"
+              v-model="currentSettings.noteRangeType"
               :options="makeNoteRangeOptions()"
               option-value="value"
               option-label="name"
+              :disabled="editingDisabled"
             />
           </div>
           <div class="instrument-option">
@@ -189,6 +205,7 @@ function updateNoteRange(range: number[]) {
                 :max="noteRangeMax"
                 range
                 class="note-range-slider"
+                :disabled="editingDisabled"
                 @value-change="updateNoteRange"
               />
               <span>{{ noteRangeValues[1] }}</span>
@@ -218,11 +235,11 @@ function updateNoteRange(range: number[]) {
         <div class="option-control">
           <span>Min Velocity for Success</span>
           <Slider
-            v-model="settingsStore.userRoutine.minSuccessVelocity"
+            v-model="currentSettings.minSuccessVelocity"
             class="min-success-slider"
             :max="127"
           />
-          <span>{{ settingsStore.userRoutine.minSuccessVelocity }}</span>
+          <span>{{ currentSettings.minSuccessVelocity }}</span>
         </div>
       </TabPanel>
     </TabPanels>

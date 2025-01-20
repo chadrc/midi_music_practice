@@ -77,6 +77,7 @@ export interface RoutinePart {
     name: string;
     generator: NumberGenerator;
     prompts: Prompt[];
+    bakedSettings: BakedRoutinePartSettings;
 }
 
 export interface Routine {
