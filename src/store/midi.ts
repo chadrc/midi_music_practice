@@ -64,12 +64,19 @@ export const useMidiStore = defineStore('midi', {
             const items: MIDIInputOption[] = []
             if (state.midi == null) return items;
 
-            state.midi.inputs.forEach((entry) => items.push({
-                id: entry.id,
-                name: entry.name,
-                manufacturer: entry.manufacturer,
-                receiving: state.ioStates.get(entry.id).receiving
-            }))
+            state.midi.inputs.forEach((entry) => {
+                let receiving = false;
+                if (state.ioStates.has(entry.id)) {
+                    receiving = state.ioStates.get(entry.id).receiving;
+                }
+
+                items.push({
+                    id: entry.id,
+                    name: entry.name,
+                    manufacturer: entry.manufacturer,
+                    receiving,
+                })
+            })
 
             return items;
         }
