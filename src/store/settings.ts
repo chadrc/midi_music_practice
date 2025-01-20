@@ -2,7 +2,7 @@ import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {RNBOParameter} from "./types";
 import {MAX_MIDI_NOTES, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
-import {PracticeSettings, PracticeType, NoteRangeType} from "../routine/types";
+import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 
 interface NoteGridSettings {
@@ -24,12 +24,19 @@ interface InstrumentSettings {
     instrumentData: InstrumentData[]
 }
 
+interface PracticeSettings {
+    selectedRoutine: string;
+}
+
 interface SettingsStore {
     noteGrid: NoteGridSettings;
     audio: AudioSettings;
     instruments: InstrumentSettings;
+    userRoutine: UserRoutinePartSettings;
     practice: PracticeSettings;
 }
+
+export const NONE_VALUE = "none";
 
 export const useSettingsStore = defineStore('settings', {
     state: (): SettingsStore => {
@@ -47,7 +54,7 @@ export const useSettingsStore = defineStore('settings', {
             instrumentData: []
         }
 
-        const defaultPractice: PracticeSettings = {
+        const defaultUserRoutine: UserRoutinePartSettings = {
             name: "",
             practiceType: PracticeType.Generated,
             targetBPM: 120,
@@ -74,6 +81,10 @@ export const useSettingsStore = defineStore('settings', {
             promptCount: 8,
         }
 
+        const defaultPractice: PracticeSettings = {
+            selectedRoutine: NONE_VALUE,
+        }
+
         if (localStorage.getItem('settings')) {
             const stored = JSON.parse(localStorage.getItem('settings'))
 
@@ -81,7 +92,8 @@ export const useSettingsStore = defineStore('settings', {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
-                practice: Object.assign(defaultPractice, stored.practice)
+                userRoutine: Object.assign(defaultUserRoutine, stored.practice),
+                practice: Object.assign(defaultPractice, stored.practice),
             }
         }
 
@@ -89,31 +101,32 @@ export const useSettingsStore = defineStore('settings', {
             noteGrid: defaultNoteGrid,
             audio: defaultAudio,
             instruments: defaultInstrument,
+            userRoutine: defaultUserRoutine,
             practice: defaultPractice,
         }
     },
     getters: {
         noteScale(state) {
-            return SCALES[state.practice.scale.setName][state.practice.scale.baseNote];
+            return SCALES[state.userRoutine.scale.setName][state.userRoutine.scale.baseNote];
         },
         currentRange (state): NumberRangeLike {
-            switch (state.practice.noteRangeType) {
+            switch (state.userRoutine.noteRangeType) {
                 case NoteRangeType.Notes:
-                    return state.practice.noteRange;
+                    return state.userRoutine.noteRange;
                 case NoteRangeType.Frets:
-                    return state.practice.fretRange;
+                    return state.userRoutine.fretRange;
                 case NoteRangeType.Octaves:
-                    return state.practice.octaveRange;
+                    return state.userRoutine.octaveRange;
             }
         },
         chordRatioMax(state) {
-            return state.practice.promptCount;
+            return state.userRoutine.promptCount;
         },
         selectedNotes(state): number[] {
             const notes = []
             const {start, end} = this.currentRange;
 
-            switch (state.practice.noteRangeType) {
+            switch (state.userRoutine.noteRangeType) {
                 case NoteRangeType.Notes:
                     for (let i = start; i <= end; i++) {
                         notes.push(i)

@@ -7,7 +7,6 @@ import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
 import {NoteRangeType, PracticeType} from "../routine/types";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
-import {BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
 import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
 import RangeSlider from "../routine/components/RangeSlider.vue";

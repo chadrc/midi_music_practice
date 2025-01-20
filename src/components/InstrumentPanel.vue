@@ -34,7 +34,7 @@ const noteRangeValues = computed(() => {
 })
 
 const noteRangeMax = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
+  switch (settingsStore.userRoutine.noteRangeType) {
     case NoteRangeType.Notes:
       return 127;
     case NoteRangeType.Frets:
@@ -47,7 +47,7 @@ const noteRangeMax = computed(() => {
 })
 
 const gridStyle = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
+  switch (settingsStore.userRoutine.noteRangeType) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -60,11 +60,11 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
+  switch (settingsStore.userRoutine.noteRangeType) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRange;
+      const {start, end} = settingsStore.userRoutine.fretRange;
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -75,11 +75,11 @@ const gridColumns = computed(() => {
 })
 
 const gridHeaders = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
+  switch (settingsStore.userRoutine.noteRangeType) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets: {
-      const {start, end} = settingsStore.practice.fretRange;
+      const {start, end} = settingsStore.userRoutine.fretRange;
       const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -95,7 +95,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (settingsStore.practice.noteRangeType) {
+  switch (settingsStore.userRoutine.noteRangeType) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -108,12 +108,12 @@ const gridNoteFormat = computed(() => {
 })
 
 const selectedScale = computed(() => {
-  let {setName, baseNote} = settingsStore.practice.scale
+  let {setName, baseNote} = settingsStore.userRoutine.scale
   return SCALES[setName][baseNote];
 })
 
 function updateNoteRange(range: number[]) {
-  let s = settingsStore.practice
+  let s = settingsStore.userRoutine
   switch (s.noteRangeType) {
     case NoteRangeType.Notes:
       s.noteRange.start = range[0]
@@ -152,9 +152,9 @@ function updateNoteRange(range: number[]) {
         <div class="instrument-options">
           <div class="instrument-option">
             <div class="chord-ratio-slider-wrapper">
-              <span>Chords Per Set: {{ settingsStore.practice.chordRatio }}</span>
+              <span>Chords Per Set: {{ settingsStore.userRoutine.chordRatio }}</span>
               <Slider
-                v-model="settingsStore.practice.chordRatio"
+                v-model="settingsStore.userRoutine.chordRatio"
                 :max="settingsStore.chordRatioMax"
                 class="note-range-slider"
               />
@@ -162,20 +162,20 @@ function updateNoteRange(range: number[]) {
           </div>
           <div class="instrument-option">
             <ToggleButton
-              v-model="settingsStore.practice.requireOctave"
+              v-model="settingsStore.userRoutine.requireOctave"
               on-label="Octave On"
               off-label="Octave Off"
             />
           </div>
           <div class="instrument-option">
             <ScaleSelect
-              v-model="settingsStore.practice.scale"
+              v-model="settingsStore.userRoutine.scale"
               :disabled="practiceStore.practicing"
             />
           </div>
           <div class="instrument-option">
             <Select
-              v-model="settingsStore.practice.noteRangeType"
+              v-model="settingsStore.userRoutine.noteRangeType"
               :options="makeNoteRangeOptions()"
               option-value="value"
               option-label="name"
@@ -218,11 +218,11 @@ function updateNoteRange(range: number[]) {
         <div class="option-control">
           <span>Min Velocity for Success</span>
           <Slider
-            v-model="settingsStore.practice.minSuccessVelocity"
+            v-model="settingsStore.userRoutine.minSuccessVelocity"
             class="min-success-slider"
             :max="127"
           />
-          <span>{{ settingsStore.practice.minSuccessVelocity }}</span>
+          <span>{{ settingsStore.userRoutine.minSuccessVelocity }}</span>
         </div>
       </TabPanel>
     </TabPanels>

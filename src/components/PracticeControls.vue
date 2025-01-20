@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Button, Select} from "primevue";
-import {NONE_VALUE, usePracticeStore} from "../store/practice";
-import {useSettingsStore} from "../store/settings";
+import {usePracticeStore} from "../store/practice";
+import {NONE_VALUE, useSettingsStore} from "../store/settings";
 import {computed} from "vue";
 import {useRoutineStore} from "../store/routineEdit";
 
@@ -46,7 +46,7 @@ function makeTargetBPMOptions() {
   <div class="instrument-option">
     <span>Routine: </span>
     <Select
-      v-model="practiceStore.selectedRoutine"
+      v-model="settingsStore.practice.selectedRoutine"
       :options="routineOptions"
       option-label="name"
       option-value="value"
@@ -55,7 +55,7 @@ function makeTargetBPMOptions() {
   <div class="instrument-option">
     <span>Target BPM: </span>
     <Select
-      v-model="settingsStore.practice.targetBPM"
+      v-model="settingsStore.userRoutine.targetBPM"
       class="target-bpm-control"
       :options="makeTargetBPMOptions()"
     />

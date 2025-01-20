@@ -1,45 +1,25 @@
 <script setup lang="ts">
-import {formatMidiNote} from "../notes";
-import {useMidiStore} from "../store/midi";
 import {useSettingsStore} from "../store/settings";
 import {Checkbox} from "primevue";
 import NoteGrid from "./NoteGrid.vue";
 
-const midiStore = useMidiStore();
 const settingsStore = useSettingsStore();
 const noteOrder = Array.from(Array(128).keys());
-
-const hueIncrement = 360 / 128;
-
-function opacityForNote(note: number) {
-  let playData = midiStore.playData[note];
-  if (playData.on) {
-    return 1;
-  }
-  return 0.25;
-}
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-function colorForNote(note: number) {
-  let playData = midiStore.playData[note];
-  let hue = note * hueIncrement;
-  let saturation = lerp(25, 100, playData.velocity / 127);
-
-  return `hsl(${hue}, ${saturation}%, 50%)`;
-}
 </script>
 
 <template>
   <section class="note-test-grid-options">
     <span>Formatted</span>
-    <Checkbox v-model="settingsStore.noteGrid.formatted" binary/>
+    <Checkbox
+      v-model="settingsStore.noteGrid.formatted"
+      binary
+    />
   </section>
-  <NoteGrid :notes="noteOrder"
-            :columns="12"
-            :formatted="settingsStore.noteGrid.formatted"/>
+  <NoteGrid
+    :notes="noteOrder"
+    :columns="12"
+    :formatted="settingsStore.noteGrid.formatted"
+  />
 </template>
 
 <style scoped>

@@ -22,8 +22,6 @@ export interface PracticeAttempt {
     data: PracticeMIDIData;
 }
 
-export const NONE_VALUE = "none";
-
 export const usePracticeStore = defineStore('practice', () => {
     const midiStore = useMidiStore();
     const settingsStore = useSettingsStore();
@@ -36,7 +34,6 @@ export const usePracticeStore = defineStore('practice', () => {
     const practicing = ref(false);
     const midiSubscription = ref<Subscription>(null);
 
-    const selectedRoutine = ref<string>(NONE_VALUE);
     const routine = ref<Routine | null>(null);
     const activePrompts = ref<PromptData[]>([]);
 
@@ -74,7 +71,7 @@ export const usePracticeStore = defineStore('practice', () => {
         }
     });
 
-    const playRate = computed(() => notesPerMinute.value / settingsStore.practice.targetBPM);
+    const playRate = computed(() => notesPerMinute.value / settingsStore.userRoutine.targetBPM);
 
     const playRateDisplay = computed(() => {
         const p = playRate.value;
@@ -105,12 +102,14 @@ export const usePracticeStore = defineStore('practice', () => {
     });
 
     function generatePrompts() {
-        const routineSettings = routineStore.routines.find((r) => r.id === selectedRoutine.value);
+        const routineSettings = routineStore.routines.find(
+            (r) => r.id === settingsStore.practice.selectedRoutine
+        );
 
         if (exists(routineSettings)) {
             routine.value = generateRoutine(
                 routineSettings,
-                settingsStore.practice,
+                settingsStore.userRoutine,
             )
         } else {
             routine.value = generateRoutine(
@@ -125,11 +124,11 @@ export const usePracticeStore = defineStore('practice', () => {
                             repeatCount: 0,
                             cloneRepeat: false,
                             parentSettings: ParentType.Settings,
-                            ...settingsStore.practice
+                            ...settingsStore.userRoutine
                         }
                     ]
                 },
-                settingsStore.practice,
+                settingsStore.userRoutine,
             )
         }
     }
@@ -192,7 +191,7 @@ export const usePracticeStore = defineStore('practice', () => {
                             .filter((a) => a.time > frameTime);
 
                         if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
-                            data1 === note && data2 >= settingsStore.practice.minSuccessVelocity
+                            data1 === note && data2 >= settingsStore.userRoutine.minSuccessVelocity
                         ))) {
                             success = false;
                         }
@@ -243,7 +242,6 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     return {
-        selectedRoutine,
         currentPart,
         routine,
         startTime,

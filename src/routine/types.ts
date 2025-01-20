@@ -6,28 +6,12 @@ export enum NoteRangeType {
     Octaves,
 }
 
-export interface FretRangeOptions {
-    range: NumberRangeLike;
-}
-
-export interface OctaveRangeOptions {
-    range: NumberRangeLike;
-}
-
-export interface NoteRangeOptions {
-    range: NumberRangeLike;
-}
-
 export enum PracticeType {
     Generated,
     Composed,
 }
 
-export class Beat {
-    readonly notes: number[];
-}
-
-export interface PracticeSettings {
+export interface UserRoutinePartSettings {
     name: string;
     practiceType: PracticeType;
     targetBPM: number;
@@ -45,7 +29,7 @@ export interface PracticeSettings {
     promptCount: number,
 }
 
-export type PracticeSettingsKeys = (keyof PracticeSettings)[];
+export type UserRoutineSettingsKeys = (keyof UserRoutinePartSettings)[];
 
 export interface PromptDisplay {
     note: string;
@@ -59,30 +43,25 @@ export interface Prompt {
     displays: PromptDisplay[];
 }
 
-export interface RoutinePart {
-    name: string;
-    prompts: Prompt[];
-}
-
 export enum ParentType {
     Settings,
     Previous,
     First,
 }
 
-export type NullablePracticeSettings = {
-    [K in keyof PracticeSettings]: PracticeSettings[K] | null;
+export type NullableUserRoutinePartSettings = {
+    [K in keyof UserRoutinePartSettings]: UserRoutinePartSettings[K] | null;
 }
 
-interface BaseRoutineSettings {
+interface BaseRoutinePartSettings {
     repeatCount: number;
     cloneRepeat: boolean;
     parentSettings: ParentType;
 }
 
-export interface RoutinePartSettings extends BaseRoutineSettings, NullablePracticeSettings {}
+export interface RoutinePartSettings extends BaseRoutinePartSettings, NullableUserRoutinePartSettings {}
 
-export interface BakeRoutineSettings extends BaseRoutineSettings, PracticeSettings {}
+export interface BakedRoutinePartSettings extends BaseRoutinePartSettings, UserRoutinePartSettings {}
 
 export interface RoutineSettings {
     id: string;
@@ -90,6 +69,11 @@ export interface RoutineSettings {
     schemaVersion: string;
     name: string;
     parts: RoutinePartSettings[];
+}
+
+export interface RoutinePart {
+    name: string;
+    prompts: Prompt[];
 }
 
 export interface Routine {

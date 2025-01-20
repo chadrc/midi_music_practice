@@ -6,6 +6,7 @@ import {MIDIEvent} from "@rnbo/js";
 import {useSettingsStore} from "./settings";
 import {exists} from "../utilities";
 import {RNBOParameter} from "./types";
+import {Subscription} from "rxjs";
 
 export const useInstrumentStore = defineStore('instruments', () => {
     const settingsStore = useSettingsStore();
@@ -20,7 +21,7 @@ export const useInstrumentStore = defineStore('instruments', () => {
 
     const paramValues = ref<{ [key: string]: RNBOParameter }>({})
 
-    const midiListenerUnsubscribe = ref<any>();
+    const midiListenerUnsubscribe = ref<Subscription>();
     const currentDevice = ref<Device | null>(null);
     const currentDeviceName = ref<string | null>(null);
 
@@ -54,7 +55,7 @@ export const useInstrumentStore = defineStore('instruments', () => {
         }
     }
 
-    midiStore.midiEventSubject
+    midiListenerUnsubscribe.value = midiStore.midiEventSubject
         .subscribe(({instruction, channel, data1, data2}) => {
             const event = new MIDIEvent(
                 currentDevice.value.context.currentTime * 1000,

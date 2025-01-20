@@ -1,7 +1,7 @@
 import {
-    BakeRoutineSettings,
+    BakedRoutinePartSettings,
     NoteRangeType, ParentType,
-    PracticeSettings, PracticeSettingsKeys,
+    UserRoutinePartSettings, UserRoutineSettingsKeys,
     Routine,
     RoutinePart,
     RoutinePartSettings,
@@ -37,9 +37,9 @@ const colorOptions = [
 
 export const resolveValues = (
     base: RoutinePartSettings,
-    defaults: PracticeSettings,
-): BakeRoutineSettings => {
-    const toClone: PracticeSettingsKeys = [
+    defaults: UserRoutinePartSettings,
+): BakedRoutinePartSettings => {
+    const toClone: UserRoutineSettingsKeys = [
         "name",
         "practiceType",
         "targetBPM",
@@ -54,7 +54,7 @@ export const resolveValues = (
         "promptCount",
     ];
 
-    const baked: BakeRoutineSettings = {
+    const baked: BakedRoutinePartSettings = {
         name: base.name,
         repeatCount: base.repeatCount,
         cloneRepeat: base.cloneRepeat,
@@ -75,7 +75,7 @@ export const resolveValues = (
 
 export const generateRoutine = (
     settings: RoutineSettings,
-    userSettings: PracticeSettings,
+    userSettings: UserRoutinePartSettings,
 ) => {
     const routine: Routine = {
         parts: [],
@@ -113,7 +113,7 @@ export const generateRoutine = (
     return routine;
 }
 
-export const generateRoutineSet = (settings: BakeRoutineSettings): RoutinePart => {
+export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
     const scale = SCALES[settings.scale.setName][settings.scale.baseNote]
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
