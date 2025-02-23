@@ -55,20 +55,20 @@ export const useInstrumentStore = defineStore('instruments', () => {
         }
     }
 
-    function playNote(note: number, velocity: number): () => void {
+    function playNote(note: number, velocity: number, duration: number) {
         currentDevice.value.scheduleEvent(new MIDIEvent(
             currentDevice.value.context.currentTime * 1000,
             0,
             [MIDIInstruction.NoteOn, note, velocity]
         ));
 
-        return () => {
+        window.setTimeout(() => {
             currentDevice.value.scheduleEvent(new MIDIEvent(
                 currentDevice.value.context.currentTime * 1000,
                 0,
                 [MIDIInstruction.NoteOff, note, velocity]
             ));
-        }
+        }, duration);
     }
 
     midiListenerUnsubscribe.value = midiStore.midiEventSubject
