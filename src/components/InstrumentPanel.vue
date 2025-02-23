@@ -9,6 +9,7 @@ import {computed} from "vue";
 import {SCALES} from "../notes/scales";
 import {usePracticeStore} from "../store/practice";
 import {exists} from "../utilities";
+import {generateNotesForRange} from "../routine";
 
 const settingsStore = useSettingsStore();
 const practiceStore = usePracticeStore();
@@ -32,6 +33,10 @@ function makeNoteRangeOptions() {
     }
   ]
 }
+
+const currentNotes = computed(() =>
+    generateNotesForRange(settingsStore.currentSettings)
+);
 
 const currentPromptHints = computed(() => {
   const prompt = practiceStore.activePrompts[practiceStore.currentPrompt];
@@ -88,8 +93,6 @@ const gridColumns = computed(() => {
       return 12
     case NoteRangeType.Frets: {
       const {start, end} = currentSettings.value.fretRange;
-      console.log(currentSettings.value);
-      console.log(start, end);
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -233,7 +236,7 @@ function updateNoteRange(range: number[]) {
         </div>
         <div class="instrument-display">
           <NoteGrid
-            :notes="settingsStore.selectedNotes"
+            :notes="currentNotes"
             :scale="selectedScale"
             :note-style="gridStyle"
             :headers="gridHeaders"

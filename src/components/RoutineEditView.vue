@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber, InputText} from "primevue";
+import {Button, Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, InputNumber, InputText} from "primevue";
 import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
@@ -15,11 +15,7 @@ import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
 
-function onStepUpdate(value: number) {
-  if (value >= routineEditStore.currentEdit.parts.length + 1) {
-    routineEditStore.addNewPart();
-  }
-}
+const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes[BaseNotes.C]};
 </script>
 
 <template>
@@ -44,12 +40,12 @@ function onStepUpdate(value: number) {
   </section>
   <Stepper
     v-if="exists(routineEditStore.currentEdit)"
-    :value="1"
+    :value="routineEditStore.selectedStep"
     class="routine-stepper"
-    @update:value="onStepUpdate"
+    @update:value="routineEditStore.onStepUpdate"
   >
     <StepList>
-      <Step 
+      <Step
         v-for="(item, index) in routineEditStore.currentEdit.parts"
         :key="index"
         :value="index + 1"
@@ -115,7 +111,7 @@ function onStepUpdate(value: number) {
           <SettingsEditField
             v-model="item.scale"
             label="Scale"
-            :set-value="{setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes[BaseNotes.C]}"
+            :set-value="defaultScale"
             :component="ScaleSelect"
           />
           <SettingsEditField
@@ -172,6 +168,13 @@ function onStepUpdate(value: number) {
             :component="InputNumber"
             :component-props="{min: 0, showButtons: true}"
           />
+          <Button
+            v-if="routineEditStore.selectedStep !== 1"
+            severity="danger"
+            @click="routineEditStore.removeStep(index)"
+          >
+            Remove Step
+          </Button>
         </section>
       </StepPanel>
     </StepPanels>

@@ -228,7 +228,7 @@ export const usePracticeStore = defineStore('practice', () => {
                             .filter((a) => a.time > frameTime);
 
                         if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
-                            data1 === note && data2 >= settingsStore.userRoutine.minSuccessVelocity
+                            data1 === note && data2 >= settingsStore.currentSettings.minSuccessVelocity
                         ))) {
                             success = false;
                         }

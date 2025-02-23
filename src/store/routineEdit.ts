@@ -35,6 +35,7 @@ export const useRoutineStore = defineStore('routineEdit', () => {
     const settingsStore = useSettingsStore();
 
     const routines = ref<RoutineSettings[]>(getSavedRoutines());
+    const selectedStep = ref(1);
     const currentRoutine = computed(() => settingsStore.practice.selectedRoutine);
 
     const currentEdit = computed<RoutineSettings | null>(() =>
@@ -115,14 +116,30 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         }
     }
 
+    function removeStep(index: number) {
+        if (index >= 0 && index < currentEdit.value.parts.length) {
+            currentEdit.value.parts.splice(index, 1);
+            selectedStep.value = 1;
+        }
+    }
+
+    function onStepUpdate(value: number) {
+        if (value >= currentEdit.value.parts.length + 1) {
+            addNewPart();
+        }
+        selectedStep.value = value;
+    }
+
     return {
+        selectedStep,
         routines,
         currentRoutine,
         currentEdit,
         savedRoutines,
         createRoutine,
-        addNewPart,
         saveRoutine,
         deleteRoutine,
+        removeStep,
+        onStepUpdate
     }
 })

@@ -117,7 +117,7 @@ export const generateRoutine = (
 export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
     const seed = settings.seed || Math.random();
     const generator = new NumberGenerator(seed);
-    const scale = SCALES[settings.scale.setName][settings.scale.baseNote]
+    const scale = SCALES[settings.scale.setName][settings.scale.baseNote];
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
 
@@ -171,6 +171,7 @@ export const generateNotesForRange = (
 ) => {
     const {noteRangeType} = settings;
     const notes = []
+
     switch (noteRangeType) {
         case NoteRangeType.Notes: {
             const {start, end} = settings.noteRange;

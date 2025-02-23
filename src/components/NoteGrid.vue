@@ -28,12 +28,9 @@ const props = withDefaults(defineProps<NoteGridProps>(), {
 const midiStore = useMidiStore();
 
 const rowCount = computed(() => {
-  console.log(props.notes.length, props.columns);
   return Math.ceil(props.notes.length / props.columns)
 });
 const rowIndices = computed(() => {
-  console.log(rowCount.value);
-
   return Array.from(Array(rowCount.value).keys())
 });
 const columnIndices = computed(() => Array.from(Array(props.columns).keys()));
