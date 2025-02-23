@@ -8,6 +8,8 @@ import RoutineEditView from "./RoutineEditView.vue";
 import InstrumentPanel from "./InstrumentPanel.vue";
 import PracticeControls from "./PracticeControls.vue";
 import RoutineEditControls from "./RoutineEditControls.vue";
+import EarTrainingView from "../ear_training/components/EarTrainingView.vue";
+import EarTrainingControls from "../ear_training/components/EarTrainingControls.vue";
 
 interface ViewOption {
   name: string;
@@ -25,6 +27,12 @@ const views = [
     component: markRaw(PromptsView),
     toolbar: markRaw(PracticeControls),
     overflow: false,
+  },
+  {
+    name: "Ear Training",
+    component: markRaw(EarTrainingView),
+    toolbar: markRaw(EarTrainingControls),
+    overflow: true,
   },
   {
     name: "Routines",

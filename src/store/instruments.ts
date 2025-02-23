@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
 import {createDevice, Device, IPatcher} from "@rnbo/js";
 import {ref, watch} from "vue";
-import {useMidiStore} from "./midi";
+import {MIDIInstruction, useMidiStore} from "./midi";
 import {MIDIEvent} from "@rnbo/js";
 import {useSettingsStore} from "./settings";
 import {exists} from "../utilities";
@@ -55,6 +55,22 @@ export const useInstrumentStore = defineStore('instruments', () => {
         }
     }
 
+    function playNote(note: number, velocity: number): () => void {
+        currentDevice.value.scheduleEvent(new MIDIEvent(
+            currentDevice.value.context.currentTime * 1000,
+            0,
+            [MIDIInstruction.NoteOn, note, velocity]
+        ));
+
+        return () => {
+            currentDevice.value.scheduleEvent(new MIDIEvent(
+                currentDevice.value.context.currentTime * 1000,
+                0,
+                [MIDIInstruction.NoteOff, note, velocity]
+            ));
+        }
+    }
+
     midiListenerUnsubscribe.value = midiStore.midiEventSubject
         .subscribe(({instruction, channel, data1, data2}) => {
             const event = new MIDIEvent(
@@ -83,5 +99,6 @@ export const useInstrumentStore = defineStore('instruments', () => {
         paramValues,
         currentDevice,
         loadDevice,
+        playNote,
     }
 })
