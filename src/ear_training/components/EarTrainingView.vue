@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Button} from "primevue";
+import {Button, ToggleButton} from "primevue";
 import {useInstrumentStore} from "../../store/instruments";
 import {ref} from "vue";
 import {NumberGenerator} from "../../common/NumberGenerator";
@@ -18,9 +18,22 @@ const selectedOctave = ref(null)
 const answered = ref(false)
 const noteCorrect = ref(null)
 const octaveCorrect = ref(null)
+const octaveLock = ref(false)
+const noteLock = ref(false)
 
 function setNote() {
-  currentNote.value = generator.rangeI(minNote, maxNote)
+  let note = generator.rangeI(0, 12)
+  if (noteLock.value) {
+    note = selectedNote.value
+  }
+
+  let octave = generator.rangeI(2, 9)
+  if (octaveLock.value) {
+    octave = selectedOctave.value + 2
+  }
+
+  currentNote.value = octave * 12 + note
+  console.log(note, octave, currentNote.value)
 }
 
 function playNote() {
@@ -51,19 +64,44 @@ function submit() {
 
   answered.value = true
 
-  console.log("Octave Answer: ", octave);
-  console.log("Octave Guess: ", octaveAnswer)
-  console.log("Note Guess: ", note)
-  console.log("Note Answer: ", currentNote.value)
+  // console.log("Octave Answer: ", octave);
+  // console.log("Octave Guess: ", octaveAnswer)
+  // console.log("Note Guess: ", note)
+  // console.log("Note Answer: ", currentNote.value)
 }
 
 function next() {
-  setNote()
   answered.value = false
   noteCorrect.value = null
   octaveCorrect.value = null
-  selectedNote.value = null
-  selectedOctave.value = null
+  if (!noteLock.value) {
+    selectedNote.value = null
+  }
+
+  if (!octaveLock.value) {
+    selectedOctave.value = null
+  }
+  setNote()
+}
+
+function lockOctave(value: boolean) {
+  if (value) {
+    selectedOctave.value = generator.rangeI(0, 7)
+  } else {
+    selectedOctave.value = null
+  }
+
+  setNote()
+}
+
+function lockNote(value: boolean) {
+  if (value) {
+    selectedNote.value = generator.rangeI(0, 12)
+  } else {
+    selectedNote.value = null
+  }
+
+  setNote()
 }
 
 setNote()
@@ -83,13 +121,27 @@ setNote()
       </span>
     </div>
   </section>
+  <section>
+    <ToggleButton
+      v-model="octaveLock"
+      on-label="Single Octave"
+      off-label="Any Octave"
+      @update:model-value="lockOctave"
+    />
+    <ToggleButton
+      v-model="noteLock"
+      on-label="Single Note"
+      off-label="Any Note"
+      @update:model-value="lockNote"
+    />
+  </section>
   <section class="options">
     <div class="option-row">
       <div
         v-for="n in new NumberRange(0, numberOfOctaves)"
         :key="n"
         class="option-cell"
-        :class="{selected: selectedOctave === n}"
+        :class="{selected: selectedOctave === n, disabled: octaveLock}"
         @click="selectOctave(n)"
       >
         {{ n + 1 }}
@@ -100,7 +152,7 @@ setNote()
         v-for="n in new NumberRange(0, 12)"
         :key="n"
         class="option-cell"
-        :class="{selected: selectedNote === n}"
+        :class="{selected: selectedNote === n, disabled: noteLock}"
         @click="selectNote(n)"
       >
         {{ LETTER_NOTES[n] }}
@@ -162,7 +214,12 @@ section {
   transition: opacity 0.2s;
 }
 
+.option-cell.disabled {
+  opacity: .25;
+}
+
 .option-cell.selected {
+  opacity: 1;
   background-color: var(--p-neutral-600);
 }
 

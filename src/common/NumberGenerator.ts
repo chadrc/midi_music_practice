@@ -11,7 +11,9 @@ export class NumberGenerator {
         bitLength: number = 32,
     ) {
         this.bitLength = Math.max(1, Math.min(Math.round(bitLength), MAX_BIT_LENGTH));
-        this.maxNumber = Math.pow(2, this.bitLength);
+        // working with signed values but only going to work in positive range
+        // so minus one from bit length to half
+        this.maxNumber = Math.pow(2, this.bitLength - 1);
 
         // a number from Math.random() will be between -1 and 1
         // we need an integer, so we scale it up
@@ -41,10 +43,10 @@ export class NumberGenerator {
 
         for (let i = 0; i < this.bitLength; i++) {
             const output = this.state & 1;
-            num = (num << 1) | output;
+            num = Math.abs((num << 1) | output);
 
-            const bit = (this.state ^ (this.state >> 1) ^ (this.state >> 2) ^ (this.state >> 3) ^ (this.state >> 5)) & 1;
-            this.state = Math.abs((this.state >> 1) | (bit << (this.bitLength - 1)));
+            const bit = (this.state ^ (this.state >>> 1) ^ (this.state >>> 2) ^ (this.state >>> 3) ^ (this.state >>> 5)) & 1;
+            this.state = Math.abs((this.state >>> 1) | (bit << (this.bitLength - 1)));
         }
 
         return Math.abs(num / this.maxNumber);
