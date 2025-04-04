@@ -167,11 +167,13 @@ function makeNoteText(row: number, column: number) {
 .note-grid {
   display: flex;
   flex-direction: column-reverse;
+  height: 100%;
 }
 
 .note-grid-row {
   display: flex;
   flex-direction: row;
+  height: 100%;
 }
 
 .note-grid-cell {
@@ -202,7 +204,7 @@ function makeNoteText(row: number, column: number) {
 
 .note-style-bar {
   width: calc(var(--note-test-grid-cell-size) * .75);
-  height: calc(var(--note-test-grid-cell-size) * 5)
+  height: 100%;
 }
 
 .note-style-bar.black-key {
