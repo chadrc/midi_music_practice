@@ -101,6 +101,33 @@ export const MINOR_CHORDS_SET_NAME = "MINOR";
 export const MAJOR_CHORDS_SET_NAME = "MAJOR";
 export const DIMINISHED_CHORDS_SET_NAME = "DIMINISHED";
 
+export const MAJOR_CHORD_PATTERN = [1, 5, 8]
+export const MAJOR_7TH_CHORD_PATHERN = [1, 5, 8, 12]
+export const MINOR_CHORD_PATTERN = [1, 4, 8]
+export const MINOR_7th_CHORD_PATTERN = [1, 4, 8, 11]
+export const DIMINISHED_CHORD_PATTERN = [1, 4, 7]
+export const DIMINISHED_7TH_CHORD_PATTERN = [1, 4, 7, 10]
+export const HALF_DIMINISHED_7TH_CHORD_PATTERN = [1, 4, 7, 11]
+export const AUGMENTED_CHORD_PATTERN = [1, 5, 9]
+export const AUGMENTED_7TH_CHORD_PATTERN = [1, 5, 9, 11]
+export const DOMINANT_7TH_CHORD_PATTERN = [1, 5, 8, 11]
+export const DOMINANT_9TH_CHORD_PATTERN = [1, 5, 8, 11, 15]
+export const MAJOR_6TH_CHORD_PATTERN = [1, 5, 8, 10]
+export const MINOR_6TH_CHORD_PATTERN = [1, 4, 8, 10]
+export const SUS_2_CHORD_PATTERN = [1, 3, 8]
+export const SUS_4_CHORD_PATTERN = [1, 6, 8]
+export const ADD_9_CHORD_PATTERN = [1, 5, 8, 15]
+export const ADD_2_CHORD_PATTERN = [1, 3, 5, 8]
+export const FIVE_CHORD_PATTERN = [1, 8]
+
+export const IONIAN_MODE_PATTERN = [1, 3, 5, 6, 8, 10, 12]
+export const DORIAN_MODE_PATTERN = [1, 3, 4, 6, 8, 10, 11]
+export const PHRYGIAN_MODE_PATTERN = [1, 2, 4, 6, 8, 9, 11]
+export const LYDIAN_MODE_PATTERN = [1, 3, 5, 7, 8, 10, 12]
+export const MIXOLYDIAN_MODE_PATTERN = [1, 3, 5, 6, 8, 10, 11]
+export const AEOLIAN_MODE_PATTERN = [1, 3, 4, 6, 8, 9, 11]
+export const LOCRIAN_MODE_PATTERN = [1, 2, 4, 6, 7, 9, 11]
+
 export const MAJOR_SCALE_PATTERN = [WHOLE, WHOLE, HALF, WHOLE, WHOLE, WHOLE]
 export const MAJOR_PENTATONIC_SCALE_PATTERN = [WHOLE, WHOLE, WHOLE + HALF, WHOLE, WHOLE + HALF]
 export const MINOR_SCALE_PATTERN = [WHOLE, HALF, WHOLE, WHOLE, HALF, WHOLE]
