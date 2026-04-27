@@ -84,23 +84,20 @@ export class NoteScale {
     }
 }
 
-export class Chord extends NoteScale {
-    public readonly type: string;
+export class Chord {
+    public readonly baseNote: BaseNotes;
+    public readonly pattern: ScaleDegreePattern;
 
     /**
-     * @param pattern Semitone degrees from root, same 1 = root, 12 = M7 (11 semitones) as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
+     * @param pattern Semitone degrees from root, same encoding as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
      */
-    constructor(
-        baseNote: BaseNotes,
-        pattern: ScaleDegreePattern,
-        type: string,
-    ) {
-        super(baseNote, pattern);
-        this.type = type;
+    constructor(baseNote: BaseNotes, pattern: ScaleDegreePattern) {
+        this.baseNote = baseNote;
+        this.pattern = pattern;
     }
 
-    public contains(note: number): boolean {
-        return exists(this.notes.find((n) => n === note));
+    get fundamental(): BaseNotes {
+        return this.baseNote;
     }
 }
 
@@ -227,7 +224,7 @@ export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
     BaseNotes.B,
 ].forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
 
-function makeChordsForPattern(degreePattern: ScaleDegreePattern, type: string) {
+function makeChordsForPattern(degreePattern: ScaleDegreePattern) {
     const chords: {[key: string]: Chord} = {};
 
     [BaseNotes.C,
@@ -248,14 +245,14 @@ function makeChordsForPattern(degreePattern: ScaleDegreePattern, type: string) {
         BaseNotes.BFlat,
         BaseNotes.B
     ].forEach((note) => {
-        chords[BaseNotes[note]] = new Chord(note, degreePattern, type)
+        chords[BaseNotes[note]] = new Chord(note, degreePattern)
     });
 
     return chords;
 }
 
-CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern(MINOR_CHORD_PATTERN, MINOR_CHORDS_SET_NAME);
-CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern(MAJOR_CHORD_PATTERN, MAJOR_CHORDS_SET_NAME);
-CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern(DIMINISHED_CHORD_PATTERN, DIMINISHED_CHORDS_SET_NAME);
+CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern(MINOR_CHORD_PATTERN);
+CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern(MAJOR_CHORD_PATTERN);
+CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern(DIMINISHED_CHORD_PATTERN);
 
 export const SCALES = SCALES_MAP
