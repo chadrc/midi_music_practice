@@ -50,6 +50,23 @@ function pitchClassFromDegrees(baseNote: number, pattern: number[]): number[] {
     });
 }
 
+export class Chord {
+    public readonly baseNote: BaseNotes;
+    public readonly pattern: ScaleDegreePattern;
+
+    /**
+     * @param pattern Semitone degrees from root, same encoding as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
+     */
+    constructor(baseNote: BaseNotes, pattern: ScaleDegreePattern) {
+        this.baseNote = baseNote;
+        this.pattern = pattern;
+    }
+
+    get fundamental(): BaseNotes {
+        return this.baseNote;
+    }
+}
+
 export class NoteScale {
     public readonly notes: number[];
 
@@ -82,22 +99,16 @@ export class NoteScale {
 
         return false;
     }
-}
 
-export class Chord {
-    public readonly baseNote: BaseNotes;
-    public readonly pattern: ScaleDegreePattern;
-
-    /**
-     * @param pattern Semitone degrees from root, same encoding as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
-     */
-    constructor(baseNote: BaseNotes, pattern: ScaleDegreePattern) {
-        this.baseNote = baseNote;
-        this.pattern = pattern;
-    }
-
-    get fundamental(): BaseNotes {
-        return this.baseNote;
+    /** True if every pitch class of `chord` is a note of this scale. */
+    public containsChord(chord: Chord): boolean {
+        const chordPcs = pitchClassFromDegrees(chord.baseNote, chord.pattern);
+        for (const pc of chordPcs) {
+            if (!this.notes.includes(pc)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

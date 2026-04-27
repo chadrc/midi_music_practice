@@ -1,5 +1,11 @@
 import {expect, test} from "vitest";
-import {BaseNotes, IONIAN_MODE_PATTERN, NoteScale} from "../../src/notes/scales";
+import {
+    BaseNotes,
+    Chord,
+    IONIAN_MODE_PATTERN,
+    MAJOR_CHORD_PATTERN,
+    NoteScale,
+} from "../../src/notes/scales";
 
 test('created with specified pattern', () => {
     const scale = new NoteScale(BaseNotes.C, IONIAN_MODE_PATTERN)
@@ -51,4 +57,16 @@ test('scale does not contain out of bound note', () => {
     const scale = new NoteScale(BaseNotes.C, IONIAN_MODE_PATTERN)
 
     expect(scale.contains(132)).toBe(false);
+})
+
+test('C major triad is in C major scale', () => {
+    const scale = new NoteScale(BaseNotes.C, IONIAN_MODE_PATTERN)
+    const cMajor = new Chord(BaseNotes.C, MAJOR_CHORD_PATTERN)
+    expect(scale.containsChord(cMajor)).toBe(true);
+})
+
+test('D major triad is not in C major scale', () => {
+    const scale = new NoteScale(BaseNotes.C, IONIAN_MODE_PATTERN)
+    const dMajor = new Chord(BaseNotes.D, MAJOR_CHORD_PATTERN)
+    expect(scale.containsChord(dMajor)).toBe(false);
 })
