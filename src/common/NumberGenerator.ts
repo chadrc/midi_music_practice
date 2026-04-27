@@ -64,6 +64,21 @@ export class NumberGenerator {
         return Math.round(Math.abs(roll));
     }
 
+    /**
+     * Uniform integer in the half-open interval [min, max) — the upper bound is **exclusive**, so
+     * `max` is never a result. E.g. `rangeExclusiveI(0, a.length)` is always a valid index when `a.length > 0`.
+     * Implemented with `Math.floor` on the same [min, max) float range as `range`, so the distribution is
+     * not biased by `Math.round` straddling the end (unlike `rangeI` for array length–style bounds).
+     */
+    rangeExclusiveI(min: number, maxExclusive: number): number {
+        if (maxExclusive <= min) {
+            throw new RangeError(
+                `rangeExclusiveI: maxExclusive (${maxExclusive}) must be > min (${min})`,
+            );
+        }
+        return Math.floor(this.range(min, maxExclusive));
+    }
+
     static bit8(seed: number = (Math.random() * Number.MAX_SAFE_INTEGER)): NumberGenerator {
         return new NumberGenerator(seed, 8);
     }

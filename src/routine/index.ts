@@ -158,7 +158,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
 export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number = 2) => {
     for (let j = 0; j < count; j++) {
         for (let i = 0; i < input.length; i++) {
-            const roll = generator.rangeI(0, input.length);
+            const roll = generator.rangeExclusiveI(0, input.length);
             const temp = input[i];
             input[i] = input[roll];
             input[roll] = temp;
@@ -218,8 +218,8 @@ function generatePrompts(
         const chordRatio = Math.min(settings.chordRatio, settings.promptCount);
 
         for (let i = 0; i < chordRatio; i++) {
-            const colorRoll = generator.rangeI(0, colorOptions.length);
-            const chordRoll = generator.rangeI(0, scale.chords.length);
+            const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+            const chordRoll = generator.rangeExclusiveI(0, scale.chords.length);
             const chord = scale.chords[chordRoll];
 
             // find chord fundamentals in note options
@@ -243,7 +243,7 @@ function generatePrompts(
                 continue;
             }
 
-            const fundamentalRoll = generator.rangeI(0, playableChordFundamentals.length);
+            const fundamentalRoll = generator.rangeExclusiveI(0, playableChordFundamentals.length);
             const fundamental = playableChordFundamentals[fundamentalRoll];
             const notes = [];
             const baseFundamental = chord.notes[0];
@@ -268,8 +268,8 @@ function generatePrompts(
     }
 
     for (let i = count; i < settings.promptCount; i++) {
-        const noteRoll = generator.rangeI(0, noteOptions.length);
-        const colorRoll = generator.rangeI(0, colorOptions.length);
+        const noteRoll = generator.rangeExclusiveI(0, noteOptions.length);
+        const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
 
         const note = noteOptions[noteRoll]
 

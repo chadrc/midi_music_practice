@@ -22,12 +22,12 @@ const octaveLock = ref(false)
 const noteLock = ref(false)
 
 function setNote() {
-  let note = generator.rangeI(0, 12)
+  let note = generator.rangeExclusiveI(0, 12)
   if (noteLock.value) {
     note = selectedNote.value
   }
 
-  let octave = generator.rangeI(2, 9)
+  let octave = generator.rangeExclusiveI(2, 9)
   if (octaveLock.value) {
     octave = selectedOctave.value + 2
   }
@@ -86,7 +86,7 @@ function next() {
 
 function lockOctave(value: boolean) {
   if (value) {
-    selectedOctave.value = generator.rangeI(0, 7)
+    selectedOctave.value = generator.rangeExclusiveI(0, 7)
   } else {
     selectedOctave.value = null
   }
@@ -96,7 +96,7 @@ function lockOctave(value: boolean) {
 
 function lockNote(value: boolean) {
   if (value) {
-    selectedNote.value = generator.rangeI(0, 12)
+    selectedNote.value = generator.rangeExclusiveI(0, 12)
   } else {
     selectedNote.value = null
   }

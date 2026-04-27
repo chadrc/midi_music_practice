@@ -96,6 +96,23 @@ test('RangeI returns positive integers when range is positive integers', () => {
     }
 });
 
+test('rangeExclusiveI returns only valid indices in [0, n)', () => {
+    const gen = new NumberGenerator(42);
+    for (const n of [1, 2, 3, 5, 10, 100]) {
+        for (let k = 0; k < 200; k++) {
+            const v = gen.rangeExclusiveI(0, n);
+            expect(v).to.be.greaterThanOrEqual(0);
+            expect(v).to.be.lessThan(n);
+            expect(v).toBe(Math.floor(v));
+        }
+    }
+});
+
+test('rangeExclusiveI(0, 0) is invalid', () => {
+    const gen = new NumberGenerator(1);
+    expect(() => gen.rangeExclusiveI(0, 0)).toThrow(RangeError);
+});
+
 test('bit8 sets bit length to 8', () => {
     const gen = NumberGenerator.bit8();
     expect(gen.bitLength).to.be.equal(8);
