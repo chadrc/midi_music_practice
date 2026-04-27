@@ -135,6 +135,7 @@ export const ADD_9_CHORD_PATTERN = [1, 5, 8, 15]
 export const ADD_2_CHORD_PATTERN = [1, 3, 5, 8]
 export const FIVE_CHORD_PATTERN = [1, 8]
 
+// Diatonic mode degree patterns: Ionian → … → Locrian
 export const IONIAN_MODE_PATTERN = [1, 3, 5, 6, 8, 10, 12]
 export const DORIAN_MODE_PATTERN = [1, 3, 4, 6, 8, 10, 11]
 export const PHRYGIAN_MODE_PATTERN = [1, 2, 4, 6, 8, 9, 11]
@@ -151,6 +152,22 @@ export const MINOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 4, 6, 8, 11]
 // export const MAJOR_SCALE_CHORDS = [MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME];
 // export const MINOR_SCALE_CHORDS = [MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME]
 
+/** Twelve key roots with mixed sharp/flat spelling (same set as legacy IONIAN / Major registration). */
+const DIATONIC_KEY_ROOTS: BaseNotes[] = [
+    BaseNotes.A,
+    BaseNotes.AFlat,
+    BaseNotes.B,
+    BaseNotes.BFlat,
+    BaseNotes.C,
+    BaseNotes.D,
+    BaseNotes.DFlat,
+    BaseNotes.E,
+    BaseNotes.EFlat,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+];
+
 const SCALES_MAP: { [key: string]: { [key: string]: NoteScale } } = {}
 const CHORDS_MAP: { [key: string]: { [key: string]: Chord } } = {}
 
@@ -164,6 +181,7 @@ const registerScale = (baseNote: BaseNotes, pattern: number[], setName: string) 
     set[BaseNotes[baseNote]] = scale;
 }
 
+// ——— Chromatic (single registration, C only) ———
 export const CHROMATIC_SCALE_SET_NAME = "Chromatic"
 registerScale(
     BaseNotes.C,
@@ -171,22 +189,29 @@ registerScale(
     CHROMATIC_SCALE_SET_NAME
 );
 
+// ——— Diatonic modes: Ionian (Major) → Dorian → Phrygian → Lydian → Mixolydian → Aeolian (Minor) → Locrian ———
 export const MAJOR_SCALE_SET_NAME = "Major";
-[
-    BaseNotes.A,
-    BaseNotes.AFlat,
-    BaseNotes.B,
-    BaseNotes.BFlat,
-    BaseNotes.C,
-    BaseNotes.D,
-    BaseNotes.DFlat,
-    BaseNotes.E,
-    BaseNotes.EFlat,
-    BaseNotes.F,
-    BaseNotes.FSharp,
-    BaseNotes.G,
-].forEach((note) => registerScale(note, IONIAN_MODE_PATTERN, MAJOR_SCALE_SET_NAME));
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, IONIAN_MODE_PATTERN, MAJOR_SCALE_SET_NAME));
 
+export const DORIAN_SCALE_SET_NAME = "Dorian";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, DORIAN_MODE_PATTERN, DORIAN_SCALE_SET_NAME));
+
+export const PHRYGIAN_SCALE_SET_NAME = "Phrygian";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, PHRYGIAN_MODE_PATTERN, PHRYGIAN_SCALE_SET_NAME));
+
+export const LYDIAN_SCALE_SET_NAME = "Lydian";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, LYDIAN_MODE_PATTERN, LYDIAN_SCALE_SET_NAME));
+
+export const MIXOLYDIAN_SCALE_SET_NAME = "Mixolydian";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MIXOLYDIAN_MODE_PATTERN, MIXOLYDIAN_SCALE_SET_NAME));
+
+export const MINOR_SCALE_SET_NAME = "Minor";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, AEOLIAN_MODE_PATTERN, MINOR_SCALE_SET_NAME));
+
+export const LOCRIAN_SCALE_SET_NAME = "Locrian";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, LOCRIAN_MODE_PATTERN, LOCRIAN_SCALE_SET_NAME));
+
+// ——— Pentatonic ———
 export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
 [
     BaseNotes.C,
@@ -202,22 +227,6 @@ export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
     BaseNotes.ASharp,
     BaseNotes.B,
 ].forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREES, MAJOR_PENTATONIC_SCALE_SET_NAME));
-
-export const MINOR_SCALE_SET_NAME = "Minor";
-[
-    BaseNotes.A,
-    BaseNotes.B,
-    BaseNotes.BFlat,
-    BaseNotes.C,
-    BaseNotes.CSharp,
-    BaseNotes.D,
-    BaseNotes.DSharp,
-    BaseNotes.E,
-    BaseNotes.F,
-    BaseNotes.FSharp,
-    BaseNotes.G,
-    BaseNotes.GSharp,
-].forEach((note) => registerScale(note, AEOLIAN_MODE_PATTERN, MINOR_SCALE_SET_NAME));
 
 export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
 [
