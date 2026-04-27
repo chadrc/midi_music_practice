@@ -25,39 +25,46 @@ export enum BaseNotes {
     B = 11,
 }
 
+/**
+ * Each value `d` is interpreted as (d − 1) semitones above the root (1 = P1, 2 = m2, …, 12 = 11 semitones, i.e. M7 — e.g. in C major, 1 = C and 12 = B, not the root an octave up). Same encoding as IONIAN_MODE_PATTERN.
+ */
+export type ScaleDegreePattern = number[];
+
+function assertPitchClassDegree(baseNote: number, deg: number): void {
+    if (!Number.isInteger(baseNote) || baseNote < 0 || baseNote > 11) {
+        throw new RangeError(
+            `NoteScale: baseNote must be an integer 0–11, got ${String(baseNote)}`,
+        );
+    }
+    if (!Number.isInteger(deg) || deg < 1) {
+        throw new RangeError(
+            `NoteScale: each degree must be a positive integer (1 = unison, …), got ${String(deg)}`,
+        );
+    }
+}
+
+function pitchClassFromDegrees(baseNote: number, pattern: number[]): number[] {
+    return pattern.map((deg) => {
+        assertPitchClassDegree(baseNote, deg);
+        return (baseNote + (deg - 1)) % 12;
+    });
+}
+
 export class NoteScale {
     public readonly notes: number[];
-    private readonly _chords: string[];
 
+    /**
+     * @param pattern Each `d` encodes (d−1) semitones from the root (1 = root, 12 = M7, not P8). E.g. `IONIAN_MODE_PATTERN`.
+     */
     constructor(
         baseNote: BaseNotes,
-        intervals: number[],
-        chords: string[] = [],
+        pattern: ScaleDegreePattern,
     ) {
-        this.notes = [baseNote];
-        this._chords = chords;
-        let currentNote = baseNote;
-        for (const interval of intervals) {
-            currentNote += interval;
-            this.notes.push(currentNote % 12);
-        }
+        this.notes = pitchClassFromDegrees(baseNote, pattern);
     }
 
     public get fundamental(): BaseNotes {
         return this.notes[0]
-    }
-
-    public get chords(): Chord[] {
-        const c: Chord[] = []
-
-        for (let i = 0; i < this._chords.length; i++) {
-            const note = this.notes[i];
-            const chord = this._chords[i];
-
-            c.push(CHORDS_MAP[chord][BaseNotes[note]]);
-        }
-
-        return c;
     }
 
     public contains(note: number): boolean {
@@ -80,12 +87,15 @@ export class NoteScale {
 export class Chord extends NoteScale {
     public readonly type: string;
 
+    /**
+     * @param pattern Semitone degrees from root, same 1 = root, 12 = M7 (11 semitones) as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
+     */
     constructor(
         baseNote: BaseNotes,
-        intervals: number[],
+        pattern: ScaleDegreePattern,
         type: string,
     ) {
-        super(baseNote, intervals, []);
+        super(baseNote, pattern);
         this.type = type;
     }
 
@@ -93,9 +103,6 @@ export class Chord extends NoteScale {
         return exists(this.notes.find((n) => n === note));
     }
 }
-
-const WHOLE = 2;
-const HALF = 1;
 
 export const MINOR_CHORDS_SET_NAME = "MINOR";
 export const MAJOR_CHORDS_SET_NAME = "MAJOR";
@@ -128,19 +135,19 @@ export const MIXOLYDIAN_MODE_PATTERN = [1, 3, 5, 6, 8, 10, 11]
 export const AEOLIAN_MODE_PATTERN = [1, 3, 4, 6, 8, 9, 11]
 export const LOCRIAN_MODE_PATTERN = [1, 2, 4, 6, 7, 9, 11]
 
-export const MAJOR_SCALE_PATTERN = [WHOLE, WHOLE, HALF, WHOLE, WHOLE, WHOLE]
-export const MAJOR_PENTATONIC_SCALE_PATTERN = [WHOLE, WHOLE, WHOLE + HALF, WHOLE, WHOLE + HALF]
-export const MINOR_SCALE_PATTERN = [WHOLE, HALF, WHOLE, WHOLE, HALF, WHOLE]
-export const MINOR_PENTATONIC_SCALE_PATTERN = [WHOLE + HALF, WHOLE, WHOLE, WHOLE + HALF]
+export const CHROMATIC_DEGREES: ScaleDegreePattern = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+export const MAJOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 3, 5, 8, 10]
+export const MINOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 4, 6, 8, 11]
 
-export const MAJOR_SCALE_CHORDS = [MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME];
-export const MINOR_SCALE_CHORDS = [MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME]
+// When NoteScale held per-degree chord type labels, these paired with IONIAN / AEOLIAN for diatonic harmony.
+// export const MAJOR_SCALE_CHORDS = [MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME];
+// export const MINOR_SCALE_CHORDS = [MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME]
 
 const SCALES_MAP: { [key: string]: { [key: string]: NoteScale } } = {}
 const CHORDS_MAP: { [key: string]: { [key: string]: Chord } } = {}
 
-const registerScale = (baseNote: BaseNotes, pattern: number[], chords: string[], setName: string) => {
-    const scale = new NoteScale(baseNote, pattern, chords);
+const registerScale = (baseNote: BaseNotes, pattern: number[], setName: string) => {
+    const scale = new NoteScale(baseNote, pattern);
     if (!exists(SCALES_MAP[setName])) {
         SCALES_MAP[setName] = {};
     }
@@ -152,8 +159,7 @@ const registerScale = (baseNote: BaseNotes, pattern: number[], chords: string[],
 export const CHROMATIC_SCALE_SET_NAME = "Chromatic"
 registerScale(
     BaseNotes.C,
-    [HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF, HALF],
-    [],
+    CHROMATIC_DEGREES,
     CHROMATIC_SCALE_SET_NAME
 );
 
@@ -171,7 +177,7 @@ export const MAJOR_SCALE_SET_NAME = "Major";
     BaseNotes.F,
     BaseNotes.FSharp,
     BaseNotes.G,
-].forEach((note) => registerScale(note, MAJOR_SCALE_PATTERN, MAJOR_SCALE_CHORDS, MAJOR_SCALE_SET_NAME));
+].forEach((note) => registerScale(note, IONIAN_MODE_PATTERN, MAJOR_SCALE_SET_NAME));
 
 export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
 [
@@ -187,7 +193,7 @@ export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
     BaseNotes.A,
     BaseNotes.ASharp,
     BaseNotes.B,
-].forEach((note) => registerScale(note, MAJOR_PENTATONIC_SCALE_PATTERN, [], MAJOR_PENTATONIC_SCALE_SET_NAME));
+].forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREES, MAJOR_PENTATONIC_SCALE_SET_NAME));
 
 export const MINOR_SCALE_SET_NAME = "Minor";
 [
@@ -203,7 +209,7 @@ export const MINOR_SCALE_SET_NAME = "Minor";
     BaseNotes.FSharp,
     BaseNotes.G,
     BaseNotes.GSharp,
-].forEach((note) => registerScale(note, MINOR_SCALE_PATTERN, MINOR_SCALE_CHORDS, MINOR_SCALE_SET_NAME));
+].forEach((note) => registerScale(note, AEOLIAN_MODE_PATTERN, MINOR_SCALE_SET_NAME));
 
 export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
 [
@@ -219,9 +225,9 @@ export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
     BaseNotes.A,
     BaseNotes.BFlat,
     BaseNotes.B,
-].forEach((note) => registerScale(note, MINOR_PENTATONIC_SCALE_PATTERN, [], MINOR_PENTATONIC_SCALE_SET_NAME));
+].forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
 
-function makeChordsForPattern(pattern: number[], type: string) {
+function makeChordsForPattern(degreePattern: ScaleDegreePattern, type: string) {
     const chords: {[key: string]: Chord} = {};
 
     [BaseNotes.C,
@@ -242,14 +248,14 @@ function makeChordsForPattern(pattern: number[], type: string) {
         BaseNotes.BFlat,
         BaseNotes.B
     ].forEach((note) => {
-        chords[BaseNotes[note]] = new Chord(note, pattern, type)
+        chords[BaseNotes[note]] = new Chord(note, degreePattern, type)
     });
 
     return chords;
 }
 
-CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern([3, 4], MINOR_CHORDS_SET_NAME);
-CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern([4, 3], MAJOR_CHORDS_SET_NAME);
-CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern([3, 3], DIMINISHED_CHORDS_SET_NAME);
+CHORDS_MAP[MINOR_CHORDS_SET_NAME] = makeChordsForPattern(MINOR_CHORD_PATTERN, MINOR_CHORDS_SET_NAME);
+CHORDS_MAP[MAJOR_CHORDS_SET_NAME] = makeChordsForPattern(MAJOR_CHORD_PATTERN, MAJOR_CHORDS_SET_NAME);
+CHORDS_MAP[DIMINISHED_CHORDS_SET_NAME] = makeChordsForPattern(DIMINISHED_CHORD_PATTERN, DIMINISHED_CHORDS_SET_NAME);
 
 export const SCALES = SCALES_MAP

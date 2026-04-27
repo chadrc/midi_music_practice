@@ -7,7 +7,7 @@ import {
     RoutinePartSettings,
     RoutineSettings, Prompt
 } from "./types";
-import {formatChord, formatMidiNote} from "../notes";
+import {formatMidiNote} from "../notes";
 import {NoteScale, SCALES} from "../notes/scales";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
@@ -214,6 +214,7 @@ function generatePrompts(
     let count = 0;
     const prompts = []
 
+    /* Chord prompts (used NoteScale#chords) — re-enable with formatChord import when diatonic chords return.
     if (scale.chords.length > 0) {
         const chordRatio = Math.min(settings.chordRatio, settings.promptCount);
 
@@ -266,6 +267,7 @@ function generatePrompts(
             count++;
         }
     }
+    */
 
     for (let i = count; i < settings.promptCount; i++) {
         const noteRoll = generator.rangeExclusiveI(0, noteOptions.length);
