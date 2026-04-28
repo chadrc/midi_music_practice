@@ -20,7 +20,7 @@ const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
   hints: () => [],
   noteStyle: "box",
-  scale: () => SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes[BaseNotes.C]],
+  scale: () => SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey],
   headers: () => [],
   noteFormat: "number",
 });
@@ -58,7 +58,7 @@ function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
 }
 
-const BLACK_KEYS_ONLY_SCALE = SCALES[MINOR_PENTATONIC_SCALE_SET_NAME][BaseNotes[BaseNotes.DSharp]]
+const BLACK_KEYS_ONLY_SCALE = SCALES[MINOR_PENTATONIC_SCALE_SET_NAME][BaseNotes.DSharp.mapKey]
 
 function colorForNote(row: number, column: number) {
   let note = midiNoteAtRowColumn(row, column);

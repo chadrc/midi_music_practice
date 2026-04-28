@@ -39,25 +39,19 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits(['scaleSelected'])
 
 function makeScaleOptions() {
-  function transformScaleName(name: string) {
-    return name
-        .replace("Flat", "♭")
-        .replace("Sharp", "#")
-  }
-
   function makeScaleOption(
       name: string,
       scaleSetName: string,
-      nameFn: (k: string) => string
+      nameFn: (displayName: string) => string
   ) {
     let scales = SCALES[scaleSetName];
     return {
       name: name,
       setName: scaleSetName,
-      scales: Object.entries(scales).map(([k, v]) => ({
-        name: nameFn(transformScaleName(k)),
+      scales: Object.entries(scales).map(([, v]) => ({
+        name: nameFn(v.fundamental.getName()),
         setName: scaleSetName,
-        baseNote: BaseNotes[v.fundamental],
+        baseNote: v.fundamental.mapKey,
       })),
     }
   }
@@ -96,14 +90,14 @@ function updateScale(value: ScaleOption) {
       baseNote: value.baseNote,
     });
   } else {
-    let chromaticScale = SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes[BaseNotes.C]]
+    let chromaticScale = SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey]
     model.value = {
       setName: CHROMATIC_SCALE_SET_NAME,
-      baseNote: BaseNotes[chromaticScale.fundamental],
+      baseNote: chromaticScale.fundamental.mapKey,
     }
     emit("scaleSelected", {
       setName: CHROMATIC_SCALE_SET_NAME,
-      baseNote: BaseNotes[chromaticScale.fundamental],
+      baseNote: chromaticScale.fundamental.mapKey,
     });
   }
 }

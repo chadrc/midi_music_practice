@@ -64,7 +64,7 @@ export const useSettingsStore = defineStore('settings', {
             targetBPM: 120,
             scale: {
                 setName: CHROMATIC_SCALE_SET_NAME,
-                baseNote: BaseNotes[BaseNotes.C],
+                baseNote: BaseNotes.C.mapKey,
             },
             chordRatio: 0,
             requireOctave: true,

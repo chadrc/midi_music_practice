@@ -1,29 +1,77 @@
 import {exists} from "../utilities";
 
-export enum BaseNotes {
-    C = 0,
-    CSharp = 1,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-    DFlat = 1,
-    D = 2,
-    DSharp = 3,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-    EFlat = 3,
-    E = 4,
-    F = 5,
-    FSharp = 6,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-    GFlat = 6,
-    G = 7,
-    GSharp = 8,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-    AFlat = 8,
-    A = 9,
-    ASharp = 10,
-    // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
-    BFlat = 10,
-    B = 11,
+/** Map key spellings like `CSharp` / `BFlat` to display text (same rules as scale UI). */
+export function displayNameFromMapKey(mapKey: string): string {
+    return mapKey.replace("Flat", "♭").replace("Sharp", "#");
 }
+
+/**
+ * Pitch root for a scale or chord: MIDI pitch class 0–11 (C=0, …, B=11).
+ * Two concrete kinds: seven letter-only spellings and enharmonic spellings (each instance is one registry key).
+ */
+export abstract class BaseNote {
+    protected constructor(readonly pitchClass: number) {
+        if (!Number.isInteger(pitchClass) || pitchClass < 0 || pitchClass > 11) {
+            throw new RangeError(
+                `BaseNote: pitchClass must be an integer 0–11, got ${String(pitchClass)}`,
+            );
+        }
+    }
+
+    /** Stable key for {@link SCALES}, {@link CHORDS_MAP}, and persisted `scale.baseNote` (e.g. `CSharp`, `BFlat`). */
+    abstract readonly mapKey: string;
+
+    /** Readable name; enharmonic roots include both spellings separated by `/`. */
+    abstract getName(): string;
+}
+
+/** Natural letter roots C … B (one spelling per pitch class). */
+export class LetterBaseNote extends BaseNote {
+    constructor(pitchClass: number, readonly mapKey: string) {
+        super(pitchClass);
+    }
+
+    getName(): string {
+        return displayNameFromMapKey(this.mapKey);
+    }
+}
+
+/** One spelling of an enharmonic pair; same {@link pitchClass} as the alternate spelling, different {@link mapKey}. */
+export class EnharmonicBaseNote extends BaseNote {
+    constructor(
+        pitchClass: number,
+        readonly mapKey: string,
+        readonly alternateMapKey: string,
+    ) {
+        super(pitchClass);
+    }
+
+    getName(): string {
+        return `${displayNameFromMapKey(this.mapKey)}/${displayNameFromMapKey(this.alternateMapKey)}`;
+    }
+}
+
+export const BaseNotes = {
+    C: new LetterBaseNote(0, "C"),
+    CSharp: new EnharmonicBaseNote(1, "CSharp", "DFlat"),
+    DFlat: new EnharmonicBaseNote(1, "DFlat", "CSharp"),
+    D: new LetterBaseNote(2, "D"),
+    DSharp: new EnharmonicBaseNote(3, "DSharp", "EFlat"),
+    EFlat: new EnharmonicBaseNote(3, "EFlat", "DSharp"),
+    E: new LetterBaseNote(4, "E"),
+    F: new LetterBaseNote(5, "F"),
+    FSharp: new EnharmonicBaseNote(6, "FSharp", "GFlat"),
+    GFlat: new EnharmonicBaseNote(6, "GFlat", "FSharp"),
+    G: new LetterBaseNote(7, "G"),
+    GSharp: new EnharmonicBaseNote(8, "GSharp", "AFlat"),
+    AFlat: new EnharmonicBaseNote(8, "AFlat", "GSharp"),
+    A: new LetterBaseNote(9, "A"),
+    ASharp: new EnharmonicBaseNote(10, "ASharp", "BFlat"),
+    BFlat: new EnharmonicBaseNote(10, "BFlat", "ASharp"),
+    B: new LetterBaseNote(11, "B"),
+} as const;
+
+export type BaseNoteRef = (typeof BaseNotes)[keyof typeof BaseNotes];
 
 /**
  * Each value `d` is interpreted as (d − 1) semitones above the root (1 = P1, 2 = m2, …, 12 = 11 semitones, i.e. M7 — e.g. in C major, 1 = C and 12 = B, not the root an octave up). Same encoding as IONIAN_MODE_PATTERN.
@@ -51,37 +99,39 @@ function pitchClassFromDegrees(baseNote: number, pattern: number[]): number[] {
 }
 
 export class Chord {
-    public readonly baseNote: BaseNotes;
+    public readonly baseNote: BaseNoteRef;
     public readonly pattern: ScaleDegreePattern;
 
     /**
      * @param pattern Semitone degrees from root, same encoding as {@link NoteScale} (e.g. `MAJOR_CHORD_PATTERN`).
      */
-    constructor(baseNote: BaseNotes, pattern: ScaleDegreePattern) {
+    constructor(baseNote: BaseNoteRef, pattern: ScaleDegreePattern) {
         this.baseNote = baseNote;
         this.pattern = pattern;
     }
 
-    get fundamental(): BaseNotes {
+    get fundamental(): BaseNoteRef {
         return this.baseNote;
     }
 }
 
 export class NoteScale {
     public readonly notes: number[];
+    private readonly root: BaseNoteRef;
 
     /**
      * @param pattern Each `d` encodes (d−1) semitones from the root (1 = root, 12 = M7, not P8). E.g. `IONIAN_MODE_PATTERN`.
      */
     constructor(
-        baseNote: BaseNotes,
+        baseNote: BaseNoteRef,
         pattern: ScaleDegreePattern,
     ) {
-        this.notes = pitchClassFromDegrees(baseNote, pattern);
+        this.root = baseNote;
+        this.notes = pitchClassFromDegrees(baseNote.pitchClass, pattern);
     }
 
-    public get fundamental(): BaseNotes {
-        return this.notes[0]
+    public get fundamental(): BaseNoteRef {
+        return this.root;
     }
 
     public contains(note: number): boolean {
@@ -102,7 +152,7 @@ export class NoteScale {
 
     /** True if every pitch class of `chord` is a note of this scale. */
     public containsChord(chord: Chord): boolean {
-        const chordPcs = pitchClassFromDegrees(chord.baseNote, chord.pattern);
+        const chordPcs = pitchClassFromDegrees(chord.baseNote.pitchClass, chord.pattern);
         for (const pc of chordPcs) {
             if (!this.notes.includes(pc)) {
                 return false;
@@ -153,32 +203,32 @@ export const MINOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 4, 6, 8, 11]
 // export const MINOR_SCALE_CHORDS = [MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME]
 
 /** Twelve key roots with mixed sharp/flat spelling (same set as legacy IONIAN / Major registration). */
-const DIATONIC_KEY_ROOTS: BaseNotes[] = [
+const DIATONIC_KEY_ROOTS: BaseNoteRef[] = [
     BaseNotes.A,
-    BaseNotes.AFlat,
+    BaseNotes.ASharp,
     BaseNotes.B,
-    BaseNotes.BFlat,
     BaseNotes.C,
+    BaseNotes.CSharp,
     BaseNotes.D,
-    BaseNotes.DFlat,
+    BaseNotes.DSharp,
     BaseNotes.E,
-    BaseNotes.EFlat,
     BaseNotes.F,
     BaseNotes.FSharp,
     BaseNotes.G,
+    BaseNotes.GSharp,
 ];
 
 const SCALES_MAP: { [key: string]: { [key: string]: NoteScale } } = {}
 const CHORDS_MAP: { [key: string]: { [key: string]: Chord } } = {}
 
-const registerScale = (baseNote: BaseNotes, pattern: number[], setName: string) => {
+const registerScale = (baseNote: BaseNoteRef, pattern: number[], setName: string) => {
     const scale = new NoteScale(baseNote, pattern);
     if (!exists(SCALES_MAP[setName])) {
         SCALES_MAP[setName] = {};
     }
 
     const set = SCALES_MAP[setName];
-    set[BaseNotes[baseNote]] = scale;
+    set[baseNote.mapKey] = scale;
 }
 
 // ——— Chromatic (single registration, C only) ———
@@ -213,36 +263,10 @@ DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, LOCRIAN_MODE_PATTERN, L
 
 // ——— Pentatonic ———
 export const MAJOR_PENTATONIC_SCALE_SET_NAME = "MajorPentatonic";
-[
-    BaseNotes.C,
-    BaseNotes.CSharp,
-    BaseNotes.D,
-    BaseNotes.DSharp,
-    BaseNotes.E,
-    BaseNotes.F,
-    BaseNotes.FSharp,
-    BaseNotes.G,
-    BaseNotes.GSharp,
-    BaseNotes.A,
-    BaseNotes.ASharp,
-    BaseNotes.B,
-].forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREES, MAJOR_PENTATONIC_SCALE_SET_NAME));
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREES, MAJOR_PENTATONIC_SCALE_SET_NAME));
 
 export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
-[
-    BaseNotes.C,
-    BaseNotes.CSharp,
-    BaseNotes.D,
-    BaseNotes.DSharp,
-    BaseNotes.E,
-    BaseNotes.F,
-    BaseNotes.FSharp,
-    BaseNotes.G,
-    BaseNotes.GSharp,
-    BaseNotes.A,
-    BaseNotes.BFlat,
-    BaseNotes.B,
-].forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
 
 function makeChordsForPattern(degreePattern: ScaleDegreePattern) {
     const chords: {[key: string]: Chord} = {};
@@ -265,7 +289,7 @@ function makeChordsForPattern(degreePattern: ScaleDegreePattern) {
         BaseNotes.BFlat,
         BaseNotes.B
     ].forEach((note) => {
-        chords[BaseNotes[note]] = new Chord(note, degreePattern)
+        chords[note.mapKey] = new Chord(note, degreePattern)
     });
 
     return chords;

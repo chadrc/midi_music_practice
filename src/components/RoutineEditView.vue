@@ -15,7 +15,7 @@ import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
 
-const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes[BaseNotes.C]};
+const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes.C.mapKey};
 </script>
 
 <template>
