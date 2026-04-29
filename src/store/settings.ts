@@ -97,7 +97,7 @@ export const useSettingsStore = defineStore('settings', {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
-                userRoutine: Object.assign(defaultUserRoutine, stored.practice),
+                userRoutine: Object.assign(defaultUserRoutine, stored.userRoutine),
                 practice: Object.assign(defaultPractice, stored.practice),
             }
         }

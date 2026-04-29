@@ -44,12 +44,13 @@ app.use(PrimeVue, {
 app.use(pinia)
 app.mount('#app');
 
+/** Persist full settings store (note grid, audio, instruments, user routine editor, practice panel). */
 watch(
     pinia.state,
     (state) => {
         localStorage.setItem("settings", JSON.stringify(state.settings))
     },
-    { deep: true}
+    { deep: true},
 )
 
 navigator.permissions.query({
