@@ -1,4 +1,7 @@
-import {DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME} from "./scales";
+import {DIMINISHED_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME} from "./chords";
+
+export * from "./notes";
+export * from "./chords";
 
 export const LETTER_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const CHORD_TYPE_TO_NAME: {[key: string]: string} = {

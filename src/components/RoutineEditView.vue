@@ -3,19 +3,14 @@ import {Button, Stepper, StepList, Step, StepPanels, StepPanel, ToggleSwitch, In
 import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
-import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
 import {PracticeType} from "../routine/types";
-import {defaultUserRoutineNoteRange} from "../routine";
+import {defaultUserRoutineNoteRange, defaultPracticeForType} from "../routine";
 import BPMSelect from "../routine/components/BPMSelect.vue";
-import ScaleSelect from "../routine/components/ScaleSelect.vue";
-import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
 import RoutinePartNoteRangeEditor from "../routine/components/RoutinePartNoteRangeEditor.vue";
-import {CHROMATIC_SCALE_SET_NAME, BaseNotes} from "../notes/scales"
+import RoutinePartPracticeEditor from "../routine/components/RoutinePartPracticeEditor.vue";
 import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
-
-const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes.C.mapKey};
 </script>
 
 <template>
@@ -84,10 +79,10 @@ const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes.C.m
             :component-props="{min: 0, showButtons: true}"
           />
           <SettingsEditField
-            v-model="item.practiceType"
-            label="Type"
-            :set-value="PracticeType.Generated"
-            :component="PracticeTypeSelect"
+            v-model="item.practice"
+            label="Practice"
+            :set-value="defaultPracticeForType(PracticeType.Notes)"
+            :component="RoutinePartPracticeEditor"
           />
           <SettingsEditField
             v-model="item.repeatCount"
@@ -107,19 +102,6 @@ const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes.C.m
             label="BPM"
             :set-value="120"
             :component="BPMSelect"
-          />
-          <SettingsEditField
-            v-model="item.scale"
-            label="Scale"
-            :set-value="defaultScale"
-            :component="ScaleSelect"
-          />
-          <SettingsEditField
-            v-model="item.chordRatio"
-            label="Chords Per Set"
-            :set-value="0"
-            :component="ChordRatioSlider"
-            :component-props="{max: 8}"
           />
           <SettingsEditField
             v-model="item.requireOctave"

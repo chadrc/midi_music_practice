@@ -1,15 +1,26 @@
 import {
     BakedRoutinePartSettings,
     NoteRangeType, ParentType,
-    UserRoutinePartSettings, UserRoutineSettingsKeys,
+    PracticeType,
+    UserRoutinePartSettings,
+    UserRoutinePractice,
+    UserRoutineSettingsKeys,
     Routine,
     RoutinePart,
     RoutinePartSettings,
-    RoutineSettings, Prompt,
+    RoutineSettings,
+    Prompt,
     type UserRoutineNoteRange,
 } from "./types";
 import {formatMidiNote} from "../notes";
-import {NoteScale, SCALES} from "../notes/scales";
+import type {PracticeChordSpec, PracticeScaleSpec} from "./types";
+import {
+    BaseNotes,
+    CHROMATIC_SCALE_SET_NAME,
+    NoteScale,
+    SCALES,
+} from "../notes/scales";
+import {CHORDS, Chord, MAJOR_CHORDS_SET_NAME} from "../notes/chords";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
 import type {NumberRangeLike} from "../common/NumberRange";
@@ -68,6 +79,50 @@ export function defaultUserRoutineNoteRange(): UserRoutineNoteRange {
     };
 }
 
+export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
+    switch (t) {
+        case PracticeType.Notes:
+            return {type: PracticeType.Notes};
+        case PracticeType.Chords:
+            return {type: PracticeType.Chords, items: [{}]};
+        case PracticeType.Scales:
+            return {type: PracticeType.Scales, items: [{}]};
+    }
+}
+
+export function noteScaleFromSpec(spec: PracticeScaleSpec): NoteScale {
+    const setName = spec.scaleType ?? CHROMATIC_SCALE_SET_NAME;
+    const baseKey = spec.baseNote ?? BaseNotes.C.mapKey;
+    return SCALES[setName][baseKey];
+}
+
+export function noteScaleFromPractice(practice: UserRoutinePractice): NoteScale {
+    switch (practice.type) {
+        case PracticeType.Notes:
+            return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
+        case PracticeType.Chords:
+            return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
+        case PracticeType.Scales:
+            if (practice.items.length === 0) {
+                return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
+            }
+            return noteScaleFromSpec(practice.items[0]);
+    }
+}
+
+export function chordFromSpec(spec: PracticeChordSpec): Chord {
+    const kind = spec.chordType ?? MAJOR_CHORDS_SET_NAME;
+    const key = spec.baseNote ?? BaseNotes.C.mapKey;
+    return CHORDS[kind][key];
+}
+
+export function chordRatioFromSettings(settings: BakedRoutinePartSettings): number {
+    if (settings.practice.type !== PracticeType.Chords) {
+        return 0;
+    }
+    return Math.min(settings.practice.items.length, settings.promptCount);
+}
+
 const colorOptions = [
     "emerald",
     "green",
@@ -95,10 +150,8 @@ export const resolveValues = (
 ): BakedRoutinePartSettings => {
     const toClone: UserRoutineSettingsKeys = [
         "name",
-        "practiceType",
         "targetBPM",
-        "scale",
-        "chordRatio",
+        "practice",
         "requireOctave",
         "minSuccessVelocity",
         "noteRange",
@@ -167,7 +220,7 @@ export const generateRoutine = (
 export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
     const seed = settings.seed || Math.random();
     const generator = new NumberGenerator(seed);
-    const scale = SCALES[settings.scale.setName][settings.scale.baseNote];
+    const scale = noteScaleFromPractice(settings.practice);
     const notes = generateNotesForRange(settings);
     const noteOptions = notes.filter((note) => scale.contains(note));
 
@@ -267,7 +320,7 @@ function generatePrompts(
 
     /* Chord prompts (used NoteScale#chords) — re-enable with formatChord import when diatonic chords return.
     if (scale.chords.length > 0) {
-        const chordRatio = Math.min(settings.chordRatio, settings.promptCount);
+        const chordRatio = Math.min(chordRatioFromSettings(settings), settings.promptCount);
 
         for (let i = 0; i < chordRatio; i++) {
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);

@@ -1,7 +1,6 @@
 import {defineStore} from "pinia";
-import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {RNBOParameter} from "./types";
-import {defaultUserRoutineNoteRange, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {defaultUserRoutineNoteRange, defaultPracticeForType, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
@@ -60,13 +59,8 @@ export const useSettingsStore = defineStore('settings', {
         const defaultUserRoutine: UserRoutinePartSettings = {
             name: "",
             seed: null,
-            practiceType: PracticeType.Generated,
             targetBPM: 120,
-            scale: {
-                setName: CHROMATIC_SCALE_SET_NAME,
-                baseNote: BaseNotes.C.mapKey,
-            },
-            chordRatio: 0,
+            practice: defaultPracticeForType(PracticeType.Notes),
             requireOctave: true,
             minSuccessVelocity: 100,
             noteRange: defaultUserRoutineNoteRange(),
@@ -100,16 +94,13 @@ export const useSettingsStore = defineStore('settings', {
     },
     getters: {
         noteScale(state) {
-            return SCALES[state.userRoutine.scale.setName][state.userRoutine.scale.baseNote];
+            return noteScaleFromPractice(state.userRoutine.practice);
         },
         currentRange (state): NumberRangeLike {
             return state.userRoutine.noteRange.range;
         },
-        chordRatioMax(state) {
-            return state.userRoutine.promptCount;
-        },
         selectedNotes(state): number[] {
-            const notes = []
+            const notes: number[] = []
             const {start, end} = this.currentRange;
 
             switch (state.userRoutine.noteRange.type) {

@@ -5,15 +5,10 @@ import {PracticeType} from "../types";
 const model = defineModel<PracticeType>();
 
 const options = [
-  {
-    name: "Generated",
-    value: PracticeType.Generated,
-  },
-  {
-    name: "Composed",
-    value: PracticeType.Composed,
-  }
-]
+    {name: "Notes", value: PracticeType.Notes},
+    {name: "Chords", value: PracticeType.Chords},
+    {name: "Scales", value: PracticeType.Scales},
+];
 </script>
 
 <template>

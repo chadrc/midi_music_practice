@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {Select, Slider, Tab, TabList, TabPanel, TabPanels, Tabs, ToggleButton} from "primevue";
-import ScaleSelect from "../routine/components/ScaleSelect.vue";
+import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
+import PracticeItemsEditor from "../routine/components/PracticeItemsEditor.vue";
 import RNBOPatch from "./RNBOPatch.vue";
 import NoteGrid from "./NoteGrid.vue";
 import {useSettingsStore} from "../store/settings";
-import {NoteRangeType} from "../routine/types";
-import {maxForNoteRangeType, setNoteRangeType} from "../routine";
+import {NoteRangeType, PracticeType} from "../routine/types";
+import {maxForNoteRangeType, setNoteRangeType, noteScaleFromPractice, defaultPracticeForType} from "../routine";
 import {computed} from "vue";
-import {SCALES} from "../notes/scales";
 import {usePracticeStore} from "../store/practice";
 import {exists} from "../utilities";
 import {generateNotesForRange} from "../routine";
@@ -116,10 +116,21 @@ const gridNoteFormat = computed(() => {
   }
 })
 
-const selectedScale = computed(() => {
-  let {setName, baseNote} = currentSettings.value.scale;
-  return SCALES[setName][baseNote];
-})
+const selectedScale = computed(() =>
+    noteScaleFromPractice(currentSettings.value.practice),
+);
+
+const showPracticeItems = computed(() => {
+  const t = currentSettings.value.practice.type;
+  return t === PracticeType.Chords || t === PracticeType.Scales;
+});
+
+function onPracticeTypeChange(t: PracticeType) {
+  if (currentSettings.value.practice.type === t) {
+    return;
+  }
+  currentSettings.value.practice = defaultPracticeForType(t);
+}
 
 function updateNoteRange(range: number[]) {
   const r = currentSettings.value.noteRange.range;
@@ -148,34 +159,39 @@ function updateNoteRange(range: number[]) {
       >
         <div class="instrument-options">
           <div class="instrument-option">
+            <PracticeTypeSelect
+              :model-value="currentSettings.practice.type"
+              :disabled="editingDisabled"
+              @update:model-value="onPracticeTypeChange"
+            />
+          </div>
+          <div class="instrument-option">
             <ToggleButton
               v-model="settingsStore.practice.matchPracticeRoutine"
               on-label="Matching"
               off-label="Not Matching"
             />
           </div>
-          <div class="instrument-option">
-            <div class="chord-ratio-slider-wrapper">
-              <span>Chords Per Set: {{ currentSettings.chordRatio }}</span>
-              <Slider
-                v-model="currentSettings.chordRatio"
-                :max="settingsStore.chordRatioMax"
-                class="note-range-slider"
-                :disabled="editingDisabled"
-              />
-            </div>
+          <div
+            v-if="showPracticeItems"
+            class="instrument-option practice-items-panel"
+          >
+            <PracticeItemsEditor
+              v-if="currentSettings.practice.type === PracticeType.Chords"
+              kind="chords"
+              v-model="currentSettings.practice.items"
+            />
+            <PracticeItemsEditor
+              v-else-if="currentSettings.practice.type === PracticeType.Scales"
+              kind="scales"
+              v-model="currentSettings.practice.items"
+            />
           </div>
           <div class="instrument-option">
             <ToggleButton
               v-model="currentSettings.requireOctave"
               on-label="Octave On"
               off-label="Octave Off"
-              :disabled="editingDisabled"
-            />
-          </div>
-          <div class="instrument-option">
-            <ScaleSelect
-              v-model="currentSettings.scale"
               :disabled="editingDisabled"
             />
           </div>

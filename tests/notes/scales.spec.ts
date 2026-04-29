@@ -1,9 +1,8 @@
 import {expect, test} from "vitest";
+import {Chord, MAJOR_CHORD_PATTERN} from "../../src/notes/chords";
 import {
     BaseNotes,
-    Chord,
     IONIAN_MODE_PATTERN,
-    MAJOR_CHORD_PATTERN,
     MINOR_PENTATONIC_DEGREES,
     NoteScale,
 } from "../../src/notes/scales";
