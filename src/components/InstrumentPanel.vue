@@ -5,6 +5,7 @@ import RNBOPatch from "./RNBOPatch.vue";
 import NoteGrid from "./NoteGrid.vue";
 import {useSettingsStore} from "../store/settings";
 import {NoteRangeType} from "../routine/types";
+import {maxForNoteRangeType, setNoteRangeType} from "../routine";
 import {computed} from "vue";
 import {SCALES} from "../notes/scales";
 import {usePracticeStore} from "../store/practice";
@@ -48,34 +49,14 @@ const currentPromptHints = computed(() => {
 })
 
 const noteRangeValues = computed(() => {
-  const settings = currentSettings.value;
-  switch (currentSettings.value.noteRangeType) {
-    case NoteRangeType.Notes:
-      return [settings.noteRange.start, settings.noteRange.end];
-    case NoteRangeType.Frets:
-      return [settings.fretRange.start, settings.fretRange.end];
-    case NoteRangeType.Octaves:
-      return [settings.octaveRange.start, settings.octaveRange.end];
-    default:
-      return [0, 0];
-  }
+  const r = currentSettings.value.noteRange.range;
+  return [r.start, r.end];
 })
 
-const noteRangeMax = computed(() => {
-  switch (currentSettings.value.noteRangeType) {
-    case NoteRangeType.Notes:
-      return 127;
-    case NoteRangeType.Frets:
-      return 22;
-    case NoteRangeType.Octaves:
-      return 12;
-    default:
-      return 0;
-  }
-})
+const noteRangeMax = computed(() => maxForNoteRangeType(currentSettings.value.noteRange.type))
 
 const gridStyle = computed(() => {
-  switch (currentSettings.value.noteRangeType) {
+  switch (currentSettings.value.noteRange.type) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -88,11 +69,11 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (currentSettings.value.noteRangeType) {
+  switch (currentSettings.value.noteRange.type) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets: {
-      const {start, end} = currentSettings.value.fretRange;
+      const {start, end} = currentSettings.value.noteRange.range;
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -103,11 +84,11 @@ const gridColumns = computed(() => {
 })
 
 const gridHeaders = computed(() => {
-  switch (currentSettings.value.noteRangeType) {
+  switch (currentSettings.value.noteRange.type) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets: {
-      const {start, end} = currentSettings.value.fretRange;
+      const {start, end} = currentSettings.value.noteRange.range;
       const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -123,7 +104,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (currentSettings.value.noteRangeType) {
+  switch (currentSettings.value.noteRange.type) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -141,21 +122,9 @@ const selectedScale = computed(() => {
 })
 
 function updateNoteRange(range: number[]) {
-  let s = currentSettings.value;
-  switch (s.noteRangeType) {
-    case NoteRangeType.Notes:
-      s.noteRange.start = range[0]
-      s.noteRange.end = range[1]
-      break;
-    case NoteRangeType.Frets:
-      s.fretRange.start = range[0]
-      s.fretRange.end = range[1]
-      break;
-    case NoteRangeType.Octaves:
-      s.octaveRange.start = range[0]
-      s.octaveRange.end = range[1]
-      break;
-  }
+  const r = currentSettings.value.noteRange.range;
+  r.start = range[0];
+  r.end = range[1];
 }
 </script>
 
@@ -212,11 +181,12 @@ function updateNoteRange(range: number[]) {
           </div>
           <div class="instrument-option">
             <Select
-              v-model="currentSettings.noteRangeType"
+              :model-value="currentSettings.noteRange.type"
               :options="makeNoteRangeOptions()"
               option-value="value"
               option-label="name"
               :disabled="editingDisabled"
+              @update:model-value="(t: NoteRangeType) => setNoteRangeType(currentSettings.noteRange, t)"
             />
           </div>
           <div class="instrument-option">

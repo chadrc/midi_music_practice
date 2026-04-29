@@ -5,15 +5,68 @@ import {
     Routine,
     RoutinePart,
     RoutinePartSettings,
-    RoutineSettings, Prompt
+    RoutineSettings, Prompt,
+    type UserRoutineNoteRange,
 } from "./types";
 import {formatMidiNote} from "../notes";
 import {NoteScale, SCALES} from "../notes/scales";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
+import type {NumberRangeLike} from "../common/NumberRange";
 
 export const MAX_MIDI_NOTES = 127
 export const STANDARD_TUNING_OPEN_FRET_NOTES = [40, 45, 50, 55, 59, 64]
+
+export const NOTE_RANGE_MAX_MIDI = MAX_MIDI_NOTES;
+export const NOTE_RANGE_MAX_FRETS = 22;
+/** Inclusive high bound for octave *index* UI (0…8). */
+export const NOTE_RANGE_MAX_OCTAVES = 8;
+
+export function maxForNoteRangeType(t: NoteRangeType): number {
+    switch (t) {
+        case NoteRangeType.Notes:
+            return NOTE_RANGE_MAX_MIDI;
+        case NoteRangeType.Frets:
+            return NOTE_RANGE_MAX_FRETS;
+        case NoteRangeType.Octaves:
+            return NOTE_RANGE_MAX_OCTAVES;
+    }
+}
+
+/** Map a range from one mode’s scale onto another (proportional), then clamp and order start/end. */
+export function estimateRangeWhenChangingType(
+    fromType: NoteRangeType,
+    fromRange: NumberRangeLike,
+    toType: NoteRangeType,
+): NumberRangeLike {
+    const fromMax = maxForNoteRangeType(fromType);
+    const toMax = maxForNoteRangeType(toType);
+    const scale = (v: number) =>
+        fromMax <= 0 ? Math.min(toMax, Math.max(0, v)) : Math.round((v / fromMax) * toMax);
+    let start = scale(fromRange.start);
+    let end = scale(fromRange.end);
+    start = Math.max(0, Math.min(toMax, start));
+    end = Math.max(0, Math.min(toMax, end));
+    if (start > end) {
+        [start, end] = [end, start];
+    }
+    return {start, end};
+}
+
+export function setNoteRangeType(nr: UserRoutineNoteRange, newType: NoteRangeType): void {
+    if (nr.type === newType) {
+        return;
+    }
+    nr.range = estimateRangeWhenChangingType(nr.type, nr.range, newType);
+    nr.type = newType;
+}
+
+export function defaultUserRoutineNoteRange(): UserRoutineNoteRange {
+    return {
+        type: NoteRangeType.Notes,
+        range: {start: 0, end: NOTE_RANGE_MAX_MIDI},
+    };
+}
 
 const colorOptions = [
     "emerald",
@@ -48,9 +101,6 @@ export const resolveValues = (
         "chordRatio",
         "requireOctave",
         "minSuccessVelocity",
-        "noteRangeType",
-        "fretRange",
-        "octaveRange",
         "noteRange",
         "promptCount",
     ];
@@ -169,19 +219,21 @@ export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number
 export const generateNotesForRange = (
     settings: RoutinePartSettings,
 ) => {
-    const {noteRangeType} = settings;
-    const notes = []
+    const notes: number[] = [];
+    if (!exists(settings.noteRange)) {
+        return notes;
+    }
 
-    switch (noteRangeType) {
+    const {type, range} = settings.noteRange;
+    const {start, end} = range;
+    switch (type) {
         case NoteRangeType.Notes: {
-            const {start, end} = settings.noteRange;
             for (let i = start; i <= end; i++) {
                 notes.push(i)
             }
             break;
         }
         case NoteRangeType.Frets: {
-            const {start, end} = settings.fretRange;
             for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
                 for (let i = start; i <= end; i++) {
                     notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
@@ -190,7 +242,6 @@ export const generateNotesForRange = (
             break;
         }
         case NoteRangeType.Octaves: {
-            const {start, end} = settings.octaveRange;
             const startingC = start * 12
             const noteCount = (end - start) * 12;
             const lastNote = startingC + noteCount;
@@ -211,7 +262,7 @@ function generatePrompts(
     generator: NumberGenerator,
     noteOptions: number[],
 ): Prompt[] {
-    let count = 0;
+    const count = 0;
     const prompts = []
 
     /* Chord prompts (used NoteScale#chords) — re-enable with formatChord import when diatonic chords return.

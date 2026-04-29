@@ -1,10 +1,15 @@
-import {NumberRangeLike} from "../common/NumberRange";
-import {NumberGenerator} from "../common/NumberGenerator";
+import type {NumberRangeLike} from "../common/NumberRange";
+import type {NumberGenerator} from "../common/NumberGenerator";
 
 export enum NoteRangeType {
     Notes,
     Frets,
     Octaves,
+}
+
+export interface UserRoutineNoteRange {
+    type: NoteRangeType;
+    range: NumberRangeLike;
 }
 
 export enum PracticeType {
@@ -16,6 +21,12 @@ export enum ParentType {
     Settings,
     Previous,
     First,
+}
+
+export enum PartType {
+    Notes,
+    Chords,
+    Scales,
 }
 
 export interface UserRoutinePartSettings {
@@ -30,10 +41,7 @@ export interface UserRoutinePartSettings {
     chordRatio: number,
     requireOctave: boolean,
     minSuccessVelocity: number,
-    noteRangeType: NoteRangeType,
-    fretRange: NumberRangeLike,
-    octaveRange: NumberRangeLike,
-    noteRange: NumberRangeLike,
+    noteRange: UserRoutineNoteRange,
     promptCount: number,
 }
 

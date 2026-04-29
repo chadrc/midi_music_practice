@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
-import {ParentType, RoutinePartSettings, RoutineSettings} from "../routine/types";
+import {ParentType, type RoutinePartSettings, type RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
 import {exists} from "../utilities";
 import {NONE_VALUE, useSettingsStore} from "./settings";
@@ -20,9 +20,6 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         chordRatio: null,
         requireOctave: null,
         minSuccessVelocity: null,
-        noteRangeType: null,
-        fretRange: null,
-        octaveRange: null,
         noteRange: null,
         promptCount: null,
     }

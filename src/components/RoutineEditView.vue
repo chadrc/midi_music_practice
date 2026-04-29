@@ -4,12 +4,12 @@ import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import PracticeTypeSelect from "../routine/components/PracticeTypeSelect.vue";
-import {NoteRangeType, PracticeType} from "../routine/types";
+import {PracticeType} from "../routine/types";
+import {defaultUserRoutineNoteRange} from "../routine";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import ScaleSelect from "../routine/components/ScaleSelect.vue";
 import ChordRatioSlider from "../routine/components/ChordRatioSlider.vue";
-import NoteRangeSelect from "../routine/components/NoteRangeSelect.vue";
-import RangeSlider from "../routine/components/RangeSlider.vue";
+import RoutinePartNoteRangeEditor from "../routine/components/RoutinePartNoteRangeEditor.vue";
 import {CHROMATIC_SCALE_SET_NAME, BaseNotes} from "../notes/scales"
 import {exists} from "../utilities";
 
@@ -135,31 +135,10 @@ const defaultScale = {setName: CHROMATIC_SCALE_SET_NAME, baseNote: BaseNotes.C.m
             :component-props="{min: 0, max: 127, showButtons: true}"
           />
           <SettingsEditField
-            v-model="item.noteRangeType"
-            label="Note Range Type"
-            :set-value="NoteRangeType.Notes"
-            :component="NoteRangeSelect"
-          />
-          <SettingsEditField
-            v-model="item.fretRange"
-            label="Fret Range"
-            :set-value="{start: 0, end: 4}"
-            :component="RangeSlider"
-            :component-props="{min: 0, max: 22}"
-          />
-          <SettingsEditField
-            v-model="item.octaveRange"
-            label="Octave Range"
-            :set-value="{start: 4, end: 6}"
-            :component="RangeSlider"
-            :component-props="{min: 0, max: 12}"
-          />
-          <SettingsEditField
             v-model="item.noteRange"
-            label="Note Range"
-            :set-value="{start: 0, end: 127}"
-            :component="RangeSlider"
-            :component-props="{min: 0, max: 127}"
+            label="Note ranges"
+            :set-value="defaultUserRoutineNoteRange()"
+            :component="RoutinePartNoteRangeEditor"
           />
           <SettingsEditField
             v-model="item.promptCount"

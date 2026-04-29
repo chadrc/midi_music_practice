@@ -1,7 +1,7 @@
 import {defineStore} from "pinia";
 import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
 import {RNBOParameter} from "./types";
-import {MAX_MIDI_NOTES, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {defaultUserRoutineNoteRange, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
@@ -69,19 +69,7 @@ export const useSettingsStore = defineStore('settings', {
             chordRatio: 0,
             requireOctave: true,
             minSuccessVelocity: 100,
-            noteRangeType: NoteRangeType.Notes,
-            fretRange: {
-                start: 0,
-                end: 4,
-            },
-            octaveRange: {
-                start: 4,
-                end: 6,
-            },
-            noteRange: {
-                start: 0,
-                end: MAX_MIDI_NOTES,
-            },
+            noteRange: defaultUserRoutineNoteRange(),
             promptCount: 8,
         }
 
@@ -115,14 +103,7 @@ export const useSettingsStore = defineStore('settings', {
             return SCALES[state.userRoutine.scale.setName][state.userRoutine.scale.baseNote];
         },
         currentRange (state): NumberRangeLike {
-            switch (state.userRoutine.noteRangeType) {
-                case NoteRangeType.Notes:
-                    return state.userRoutine.noteRange;
-                case NoteRangeType.Frets:
-                    return state.userRoutine.fretRange;
-                case NoteRangeType.Octaves:
-                    return state.userRoutine.octaveRange;
-            }
+            return state.userRoutine.noteRange.range;
         },
         chordRatioMax(state) {
             return state.userRoutine.promptCount;
@@ -131,7 +112,7 @@ export const useSettingsStore = defineStore('settings', {
             const notes = []
             const {start, end} = this.currentRange;
 
-            switch (state.userRoutine.noteRangeType) {
+            switch (state.userRoutine.noteRange.type) {
                 case NoteRangeType.Notes:
                     for (let i = start; i <= end; i++) {
                         notes.push(i)
