@@ -6,7 +6,12 @@ import RNBOPatch from "./RNBOPatch.vue";
 import NoteGrid from "./NoteGrid.vue";
 import {useSettingsStore} from "../store/settings";
 import {NoteRangeType, PracticeType} from "../routine/types";
-import {maxForNoteRangeType, setNoteRangeType, noteScaleFromPractice, defaultPracticeForType} from "../routine";
+import {
+  maxForNoteRangeType,
+  setNoteRangeType,
+  practiceScaleMembership,
+  defaultPracticeForType,
+} from "../routine";
 import {computed} from "vue";
 import {usePracticeStore} from "../store/practice";
 import {exists} from "../utilities";
@@ -117,7 +122,7 @@ const gridNoteFormat = computed(() => {
 })
 
 const selectedScale = computed(() =>
-    noteScaleFromPractice(currentSettings.value.practice),
+    practiceScaleMembership(currentSettings.value.practice),
 );
 
 const showPracticeItems = computed(() => {
@@ -178,13 +183,13 @@ function updateNoteRange(range: number[]) {
           >
             <PracticeItemsEditor
               v-if="currentSettings.practice.type === PracticeType.Chords"
+              v-model="currentSettings.practice"
               kind="chords"
-              v-model="currentSettings.practice.items"
             />
             <PracticeItemsEditor
               v-else-if="currentSettings.practice.type === PracticeType.Scales"
+              v-model="currentSettings.practice"
               kind="scales"
-              v-model="currentSettings.practice.items"
             />
           </div>
           <div class="instrument-option">

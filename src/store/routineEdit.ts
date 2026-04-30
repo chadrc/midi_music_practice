@@ -1,5 +1,6 @@
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
+import {normalizeRoutineSettings} from "../routine";
 import {ParentType, type RoutinePartSettings, type RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
 import {exists} from "../utilities";
@@ -95,7 +96,9 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
         if (exists(stored)) {
             try {
-                return JSON.parse(stored);
+                return (JSON.parse(stored) as RoutineSettings[]).map((r) =>
+                    normalizeRoutineSettings(r),
+                );
             } catch (error) {
                 const uuid = window.crypto.randomUUID()
                 const errorKey = `error-${uuid}`

@@ -75,16 +75,20 @@ export interface RoutineNotesPractice {
     type: PracticeType.Notes;
 }
 
-/** Chord practice: pool of chord targets (optional root + quality). */
+/** Chord practice: one optional root and any number of chord qualities from the chord registry. */
 export interface RoutineChordsPractice {
     type: PracticeType.Chords;
-    items: PracticeChordSpec[];
+    baseNote?: string;
+    /** Empty means one implicit default target (major), matching legacy `[{}]`. */
+    chordTypes: ChordTypeId[];
 }
 
-/** Scale practice: pool of scale/key targets. */
+/** Scale practice: one optional root and any number of scale types from the scale registry. */
 export interface RoutineScalesPractice {
     type: PracticeType.Scales;
-    items: PracticeScaleSpec[];
+    baseNote?: string;
+    /** Empty means chromatic in the chosen (or default) root, matching legacy `[{}]`. */
+    scaleTypes: ScaleTypeId[];
 }
 
 export type UserRoutinePractice =

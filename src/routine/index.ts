@@ -13,10 +13,18 @@ import {
     type UserRoutineNoteRange,
 } from "./types";
 import {formatMidiNote} from "../notes";
-import type {PracticeChordSpec, PracticeScaleSpec} from "./types";
+import type {
+    ChordTypeId,
+    PracticeChordSpec,
+    PracticeScaleSpec,
+    RoutineChordsPractice,
+    RoutineScalesPractice,
+    ScaleTypeId,
+} from "./types";
 import {
     BaseNotes,
     CHROMATIC_SCALE_SET_NAME,
+    getRegisteredScale,
     NoteScale,
     SCALES,
 } from "../notes/scales";
@@ -84,17 +92,87 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
         case PracticeType.Notes:
             return {type: PracticeType.Notes};
         case PracticeType.Chords:
-            return {type: PracticeType.Chords, items: [{}]};
+            return {type: PracticeType.Chords, chordTypes: []};
         case PracticeType.Scales:
-            return {type: PracticeType.Scales, items: [{}]};
+            return {type: PracticeType.Scales, scaleTypes: []};
     }
+}
+
+function migrateChordsFromLegacyItems(items: PracticeChordSpec[]): RoutineChordsPractice {
+    const types = [
+        ...new Set(
+            items.map((i) => i.chordType).filter((t): t is ChordTypeId => t !== undefined),
+        ),
+    ];
+    const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
+    const baseNote =
+        bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
+    return {type: PracticeType.Chords, baseNote, chordTypes: types};
+}
+
+function migrateScalesFromLegacyItems(items: PracticeScaleSpec[]): RoutineScalesPractice {
+    const types = [
+        ...new Set(
+            items.map((i) => i.scaleType).filter((t): t is ScaleTypeId => t !== undefined),
+        ),
+    ];
+    const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
+    const baseNote =
+        bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
+    return {type: PracticeType.Scales, baseNote, scaleTypes: types};
+}
+
+/**
+ * Upgrade persisted practice data from the old `items[]` shape to `baseNote` + multi-select types.
+ */
+export function normalizeUserRoutinePractice(p: UserRoutinePractice): UserRoutinePractice {
+    switch (p.type) {
+        case PracticeType.Notes:
+            return p;
+        case PracticeType.Chords: {
+            const c = p as RoutineChordsPractice & {items?: PracticeChordSpec[]};
+            if (Array.isArray(c.items)) {
+                return migrateChordsFromLegacyItems(c.items);
+            }
+            return {
+                type: PracticeType.Chords,
+                baseNote: c.baseNote,
+                chordTypes: c.chordTypes ?? [],
+            };
+        }
+        case PracticeType.Scales: {
+            const s = p as RoutineScalesPractice & {items?: PracticeScaleSpec[]};
+            if (Array.isArray(s.items)) {
+                return migrateScalesFromLegacyItems(s.items);
+            }
+            return {
+                type: PracticeType.Scales,
+                baseNote: s.baseNote,
+                scaleTypes: s.scaleTypes ?? [],
+            };
+        }
+    }
+}
+
+export function normalizeRoutineSettings(settings: RoutineSettings): RoutineSettings {
+    return {
+        ...settings,
+        parts: settings.parts.map((part) => ({
+            ...part,
+            practice:
+                part.practice != null ? normalizeUserRoutinePractice(part.practice) : part.practice,
+        })),
+    };
 }
 
 export function noteScaleFromSpec(spec: PracticeScaleSpec): NoteScale {
     const setName = spec.scaleType ?? CHROMATIC_SCALE_SET_NAME;
     const baseKey = spec.baseNote ?? BaseNotes.C.mapKey;
-    return SCALES[setName][baseKey];
+    return getRegisteredScale(setName, baseKey);
 }
+
+/** Any value accepted where only {@link NoteScale.prototype.contains} is used (grid, prompt pools). */
+export type PracticeScaleContainment = Pick<NoteScale, "contains">;
 
 export function noteScaleFromPractice(practice: UserRoutinePractice): NoteScale {
     switch (practice.type) {
@@ -102,11 +180,36 @@ export function noteScaleFromPractice(practice: UserRoutinePractice): NoteScale 
             return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
         case PracticeType.Chords:
             return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
-        case PracticeType.Scales:
-            if (practice.items.length === 0) {
-                return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
+        case PracticeType.Scales: {
+            const p = practice;
+            if (p.scaleTypes.length === 0) {
+                return getRegisteredScale(CHROMATIC_SCALE_SET_NAME, p.baseNote ?? BaseNotes.C.mapKey);
             }
-            return noteScaleFromSpec(practice.items[0]);
+            return getRegisteredScale(p.scaleTypes[0], p.baseNote ?? BaseNotes.C.mapKey);
+        }
+    }
+}
+
+export function practiceScaleMembership(practice: UserRoutinePractice): PracticeScaleContainment {
+    switch (practice.type) {
+        case PracticeType.Notes:
+        case PracticeType.Chords:
+            return noteScaleFromPractice(practice);
+        case PracticeType.Scales: {
+            const p = practice;
+            const baseKey = p.baseNote ?? BaseNotes.C.mapKey;
+            const typeIds =
+                p.scaleTypes.length > 0 ? p.scaleTypes : [CHROMATIC_SCALE_SET_NAME];
+            const scales = typeIds.map((t) => getRegisteredScale(t, baseKey));
+            if (scales.length === 1) {
+                return scales[0];
+            }
+            return {
+                contains(n: number) {
+                    return scales.some((s) => s.contains(n));
+                },
+            };
+        }
     }
 }
 
@@ -116,11 +219,16 @@ export function chordFromSpec(spec: PracticeChordSpec): Chord {
     return CHORDS[kind][key];
 }
 
+function chordPoolSize(practice: RoutineChordsPractice): number {
+    const n = practice.chordTypes.length;
+    return n > 0 ? n : 1;
+}
+
 export function chordRatioFromSettings(settings: BakedRoutinePartSettings): number {
     if (settings.practice.type !== PracticeType.Chords) {
         return 0;
     }
-    return Math.min(settings.practice.items.length, settings.promptCount);
+    return Math.min(chordPoolSize(settings.practice), settings.promptCount);
 }
 
 const colorOptions = [
@@ -220,9 +328,9 @@ export const generateRoutine = (
 export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
     const seed = settings.seed || Math.random();
     const generator = new NumberGenerator(seed);
-    const scale = noteScaleFromPractice(settings.practice);
+    const scaleMembership = practiceScaleMembership(settings.practice);
     const notes = generateNotesForRange(settings);
-    const noteOptions = notes.filter((note) => scale.contains(note));
+    const noteOptions = notes.filter((note) => scaleMembership.contains(note));
 
     const repetitions = []
 
@@ -230,7 +338,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
     if (settings.cloneRepeat) {
         const rep = generatePrompts(
             settings,
-            scale,
+            scaleMembership,
             generator,
             noteOptions,
         );
@@ -242,7 +350,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
             repetitions.push({
                 prompts: generatePrompts(
                     settings,
-                    scale,
+                    scaleMembership,
                     generator,
                     noteOptions,
                 )
@@ -311,7 +419,7 @@ export const generateNotesForRange = (
 
 function generatePrompts(
     settings: BakedRoutinePartSettings,
-    scale: NoteScale,
+    _scale: PracticeScaleContainment,
     generator: NumberGenerator,
     noteOptions: number[],
 ): Prompt[] {

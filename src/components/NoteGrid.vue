@@ -6,12 +6,15 @@ import {computed} from "vue";
 import {NoteScale, SCALES, MINOR_PENTATONIC_SCALE_SET_NAME, BaseNotes, CHROMATIC_SCALE_SET_NAME} from "../notes/scales";
 import {exists} from "../utilities";
 
+/** Anything with {@link NoteScale.prototype.contains}; supports union scales from practice settings. */
+export type ScaleContainment = Pick<NoteScale, "contains">;
+
 interface NoteGridProps {
-  notes: Array<number>,
-  hints?: Array<number>,
-  columns: number,
-  noteStyle?: "box" | "circle" | "bar",
-  scale?: NoteScale,
+    notes: Array<number>,
+    hints?: Array<number>,
+    columns: number,
+    noteStyle?: "box" | "circle" | "bar",
+    scale?: ScaleContainment,
   headers?: string[],
   noteFormat?: "number" | "letter" | "letter-octave",
 }

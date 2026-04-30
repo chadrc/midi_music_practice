@@ -228,4 +228,21 @@ DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREE
 export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
 DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
 
-export const SCALES = SCALES_MAP
+export const SCALES = SCALES_MAP;
+
+/**
+ * Resolve a scale from {@link SCALES}. Chromatic is only registered at C; its pitch-class set is the same for any root.
+ * For diatonic sets, `baseNoteKey` must be a key present in that set (see {@link DIATONIC_KEY_ROOTS}).
+ */
+export function getRegisteredScale(setName: string, baseNoteKey: string): NoteScale {
+    if (setName === CHROMATIC_SCALE_SET_NAME) {
+        return SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey];
+    }
+    const sub = SCALES[setName];
+    const scale = sub[baseNoteKey];
+    if (exists(scale)) {
+        return scale;
+    }
+    const firstKey = Object.keys(sub)[0];
+    return sub[firstKey];
+}

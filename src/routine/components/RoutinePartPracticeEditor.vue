@@ -23,13 +23,13 @@ const practiceTypeChoice = computed({
     <PracticeTypeSelect v-model="practiceTypeChoice" />
     <PracticeItemsEditor
       v-if="model.type === PracticeType.Chords"
+      v-model="model"
       kind="chords"
-      v-model="model.items"
     />
     <PracticeItemsEditor
       v-else-if="model.type === PracticeType.Scales"
+      v-model="model"
       kind="scales"
-      v-model="model.items"
     />
   </div>
 </template>

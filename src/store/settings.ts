@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {RNBOParameter} from "./types";
-import {defaultUserRoutineNoteRange, defaultPracticeForType, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {defaultUserRoutineNoteRange, defaultPracticeForType, normalizeUserRoutinePractice, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
@@ -75,11 +75,14 @@ export const useSettingsStore = defineStore('settings', {
         if (localStorage.getItem('settings')) {
             const stored = JSON.parse(localStorage.getItem('settings'))
 
+            const userRoutine = Object.assign({}, defaultUserRoutine, stored.userRoutine);
+            userRoutine.practice = normalizeUserRoutinePractice(userRoutine.practice);
+
             return {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
-                userRoutine: Object.assign(defaultUserRoutine, stored.userRoutine),
+                userRoutine,
                 practice: Object.assign(defaultPractice, stored.practice),
             }
         }
