@@ -8,6 +8,7 @@ import {
 import {
     CHORD_TYPE_OPTIONS,
     SCALE_TYPE_OPTIONS,
+    PracticePoolMode,
     type ChordTypeId,
     type ScaleTypeId,
     type RoutineChordsPractice,
@@ -36,6 +37,12 @@ const scaleTypeOptions = SCALE_TYPE_OPTIONS.map((v) => ({
     value: v,
 }));
 
+const poolModeOptions = [
+    {label: "Up", value: PracticePoolMode.Up},
+    {label: "Down", value: PracticePoolMode.Down},
+    {label: "Random", value: PracticePoolMode.Random},
+];
+
 const chordFields = computed(() => practice.value as RoutineChordsPractice);
 const scaleFields = computed(() => practice.value as RoutineScalesPractice);
 </script>
@@ -50,6 +57,13 @@ const scaleFields = computed(() => practice.value as RoutineScalesPractice);
         option-value="value"
         placeholder="Root (default)"
         show-clear
+        class="practice-item-control"
+      />
+      <Select
+        v-model="chordFields.mode"
+        :options="poolModeOptions"
+        option-label="label"
+        option-value="value"
         class="practice-item-control"
       />
       <MultiSelect
@@ -71,6 +85,13 @@ const scaleFields = computed(() => practice.value as RoutineScalesPractice);
         option-value="value"
         placeholder="Root (default)"
         show-clear
+        class="practice-item-control"
+      />
+      <Select
+        v-model="scaleFields.mode"
+        :options="poolModeOptions"
+        option-label="label"
+        option-value="value"
         class="practice-item-control"
       />
       <MultiSelect

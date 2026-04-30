@@ -70,6 +70,13 @@ export enum PracticeType {
     Scales,
 }
 
+/** How ordered chord/scale targets advance (e.g. along the multi-select list). */
+export enum PracticePoolMode {
+    Up = "Up",
+    Down = "Down",
+    Random = "Random",
+}
+
 /** Single-note prompts; filtering uses chromatic (all pitch classes in range). */
 export interface RoutineNotesPractice {
     type: PracticeType.Notes;
@@ -81,6 +88,8 @@ export interface RoutineChordsPractice {
     baseNote?: string;
     /** Empty means one implicit default target (major), matching legacy `[{}]`. */
     chordTypes: ChordTypeId[];
+    /** Order / traversal of the chord-type pool; default Random. */
+    mode: PracticePoolMode;
 }
 
 /** Scale practice: one optional root and any number of scale types from the scale registry. */
@@ -89,6 +98,8 @@ export interface RoutineScalesPractice {
     baseNote?: string;
     /** Empty means chromatic in the chosen (or default) root, matching legacy `[{}]`. */
     scaleTypes: ScaleTypeId[];
+    /** Order / traversal of the scale-type pool; default Random. */
+    mode: PracticePoolMode;
 }
 
 export type UserRoutinePractice =

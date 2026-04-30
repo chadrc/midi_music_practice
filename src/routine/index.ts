@@ -1,6 +1,7 @@
 import {
     BakedRoutinePartSettings,
     NoteRangeType, ParentType,
+    PracticePoolMode,
     PracticeType,
     UserRoutinePartSettings,
     UserRoutinePractice,
@@ -92,10 +93,25 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
         case PracticeType.Notes:
             return {type: PracticeType.Notes};
         case PracticeType.Chords:
-            return {type: PracticeType.Chords, chordTypes: []};
+            return {
+                type: PracticeType.Chords,
+                chordTypes: [],
+                mode: PracticePoolMode.Random,
+            };
         case PracticeType.Scales:
-            return {type: PracticeType.Scales, scaleTypes: []};
+            return {
+                type: PracticeType.Scales,
+                scaleTypes: [],
+                mode: PracticePoolMode.Random,
+            };
     }
+}
+
+function coercePracticePoolMode(raw: unknown): PracticePoolMode {
+    if (raw === PracticePoolMode.Up || raw === PracticePoolMode.Down || raw === PracticePoolMode.Random) {
+        return raw;
+    }
+    return PracticePoolMode.Random;
 }
 
 function migrateChordsFromLegacyItems(items: PracticeChordSpec[]): RoutineChordsPractice {
@@ -107,7 +123,12 @@ function migrateChordsFromLegacyItems(items: PracticeChordSpec[]): RoutineChords
     const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
     const baseNote =
         bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
-    return {type: PracticeType.Chords, baseNote, chordTypes: types};
+    return {
+        type: PracticeType.Chords,
+        baseNote,
+        chordTypes: types,
+        mode: PracticePoolMode.Random,
+    };
 }
 
 function migrateScalesFromLegacyItems(items: PracticeScaleSpec[]): RoutineScalesPractice {
@@ -119,7 +140,12 @@ function migrateScalesFromLegacyItems(items: PracticeScaleSpec[]): RoutineScales
     const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
     const baseNote =
         bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
-    return {type: PracticeType.Scales, baseNote, scaleTypes: types};
+    return {
+        type: PracticeType.Scales,
+        baseNote,
+        scaleTypes: types,
+        mode: PracticePoolMode.Random,
+    };
 }
 
 /**
@@ -138,6 +164,7 @@ export function normalizeUserRoutinePractice(p: UserRoutinePractice): UserRoutin
                 type: PracticeType.Chords,
                 baseNote: c.baseNote,
                 chordTypes: c.chordTypes ?? [],
+                mode: coercePracticePoolMode(c.mode),
             };
         }
         case PracticeType.Scales: {
@@ -149,6 +176,7 @@ export function normalizeUserRoutinePractice(p: UserRoutinePractice): UserRoutin
                 type: PracticeType.Scales,
                 baseNote: s.baseNote,
                 scaleTypes: s.scaleTypes ?? [],
+                mode: coercePracticePoolMode(s.mode),
             };
         }
     }
