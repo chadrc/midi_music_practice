@@ -77,9 +77,10 @@ export enum PracticePoolMode {
     Random = "Random",
 }
 
-/** Single-note prompts; filtering uses chromatic (all pitch classes in range). */
+/** Single-note prompts; pitch range applies only to this practice mode. */
 export interface RoutineNotesPractice {
     type: PracticeType.Notes;
+    noteRange: UserRoutineNoteRange;
 }
 
 /** Chord practice: one optional root and any number of chord qualities from the chord registry. */
@@ -120,7 +121,6 @@ export interface UserRoutinePartSettings {
     practice: UserRoutinePractice;
     requireOctave: boolean;
     minSuccessVelocity: number;
-    noteRange: UserRoutineNoteRange;
     promptCount: number;
 }
 
@@ -148,10 +148,10 @@ export interface RoutineSettings {
     parts: RoutinePartSettings[];
 }
 
-export interface PromptDisplay {
-    note: string;
-    chordType: string;
-}
+export type PromptDisplay =
+    | {kind: "note"; note: string}
+    | {kind: "chord"; title: string; cells: string[]}
+    | {kind: "scale"; title: string; cells: string[]};
 
 export interface Prompt {
     index: number;

@@ -1,0 +1,104 @@
+import {expect, test} from "vitest";
+import {generateRoutine, defaultPracticeForType} from "../../src/routine";
+import {ParentType, PracticeType} from "../../src/routine/types";
+
+test("empty parts yields empty routine object", () => {
+    expect(
+        generateRoutine(
+            {id: "x", appVersion: "1", schemaVersion: "0", name: "n", parts: []},
+            {
+                name: "u",
+                seed: 1,
+                targetBPM: 120,
+                practice: defaultPracticeForType(PracticeType.Notes),
+                requireOctave: true,
+                minSuccessVelocity: 1,
+                promptCount: 1,
+            },
+        ),
+    ).to.deep.equal({parts: []});
+});
+
+test("bakes one part into full repetition + bakedSettings", () => {
+    const r = generateRoutine(
+        {
+            id: "x",
+            appVersion: "1",
+            schemaVersion: "0",
+            name: "n",
+            parts: [
+                {
+                    name: "p",
+                    seed: 99,
+                    parentSettings: ParentType.Settings,
+                    repeatCount: 0,
+                    cloneRepeat: false,
+                    targetBPM: 120,
+                    practice: defaultPracticeForType(PracticeType.Notes),
+                    requireOctave: true,
+                    minSuccessVelocity: 1,
+                    promptCount: 3,
+                },
+            ],
+        },
+        {
+            name: "u",
+            seed: 99,
+            targetBPM: 120,
+            practice: defaultPracticeForType(PracticeType.Notes),
+            requireOctave: true,
+            minSuccessVelocity: 1,
+            promptCount: 1,
+        },
+    );
+    const stripped = {
+        parts: r.parts.map((p) => ({
+            name: p.name,
+            repetitions: p.repetitions,
+            bakedSettings: p.bakedSettings,
+        })),
+    };
+    expect(stripped).to.deep.equal({
+        parts: [
+            {
+                name: "p",
+                repetitions: [
+                    {
+                        prompts: [
+                            {
+                                index: 0,
+                                notes: [1],
+                                color: "green",
+                                displays: [{kind: "note", note: "C#-1"}],
+                            },
+                            {
+                                index: 1,
+                                notes: [24],
+                                color: "amber",
+                                displays: [{kind: "note", note: "C1"}],
+                            },
+                            {
+                                index: 2,
+                                notes: [44],
+                                color: "orange",
+                                displays: [{kind: "note", note: "G#2"}],
+                            },
+                        ],
+                    },
+                ],
+                bakedSettings: {
+                    name: "p",
+                    repeatCount: 0,
+                    cloneRepeat: false,
+                    parentSettings: ParentType.Settings,
+                    seed: 99,
+                    targetBPM: 120,
+                    practice: defaultPracticeForType(PracticeType.Notes),
+                    requireOctave: true,
+                    minSuccessVelocity: 1,
+                    promptCount: 3,
+                },
+            },
+        ],
+    });
+});

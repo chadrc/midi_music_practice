@@ -9,6 +9,13 @@ function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
   return `var(--p-${prompt.prompt.color}-800`;
 }
+
+function promptCardClass(prompt: PromptData) {
+  const multi = prompt.prompt.displays.some(
+    (d) => d.kind === "chord" || d.kind === "scale",
+  );
+  return multi ? "prompt-card prompt-card--wide" : "prompt-card";
+}
 </script>
 
 <template>
@@ -43,17 +50,35 @@ function formatPromptColor(prompt: PromptData) {
         :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-          class="prompt-card"
+          :class="promptCardClass(prompt)"
           :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <span
-            v-for="note in prompt.prompt.displays"
-            :key="note.note"
-            class="prompt-text"
+          <template
+            v-for="(disp, di) in prompt.prompt.displays"
+            :key="di"
           >
-            <span>{{ note.note }}</span>
-            <span class="chord-text">{{ note.chordType }}</span>
-          </span>
+            <div
+              v-if="disp.kind === 'note'"
+              class="prompt-text"
+            >
+              <span>{{ disp.note }}</span>
+            </div>
+            <div
+              v-else
+              class="prompt-block"
+            >
+              <div class="prompt-title">
+                {{ disp.title }}
+              </div>
+              <div class="prompt-cells">
+                <span
+                  v-for="(cell, ci) in disp.cells"
+                  :key="ci"
+                  class="prompt-cell"
+                >{{ cell }}</span>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -127,6 +152,18 @@ function formatPromptColor(prompt: PromptData) {
   font-size: 2rem;
 }
 
+.prompt-card--wide {
+  aspect-ratio: unset;
+  min-height: 100px;
+  min-width: 180px;
+  max-width: 280px;
+  border-radius: 1rem;
+  padding: 0.75rem;
+  flex-direction: column;
+  font-size: 1rem;
+  gap: 0.35rem;
+}
+
 .prompt-text {
   display: flex;
   flex-direction: column;
@@ -136,8 +173,33 @@ function formatPromptColor(prompt: PromptData) {
   font-weight: bold;
 }
 
-.prompt-text > .chord-text {
-  font-size: 1rem;
+.prompt-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.prompt-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.prompt-cells {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35rem 0.5rem;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.prompt-cell {
+  line-height: 1.2;
 }
 
 .advance-step {

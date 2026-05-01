@@ -1,6 +1,9 @@
 # IDEs
 .idea/
 
+# Local
+local/
+
 # Logs
 logs
 *.log

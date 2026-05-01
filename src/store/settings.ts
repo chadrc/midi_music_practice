@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import {RNBOParameter} from "./types";
-import {defaultUserRoutineNoteRange, defaultPracticeForType, normalizeUserRoutinePractice, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
+import {defaultPracticeForType, noteRangeForPractice, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
 import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
@@ -63,7 +63,6 @@ export const useSettingsStore = defineStore('settings', {
             practice: defaultPracticeForType(PracticeType.Notes),
             requireOctave: true,
             minSuccessVelocity: 100,
-            noteRange: defaultUserRoutineNoteRange(),
             promptCount: 8,
         }
 
@@ -73,10 +72,17 @@ export const useSettingsStore = defineStore('settings', {
         }
 
         if (localStorage.getItem('settings')) {
-            const stored = JSON.parse(localStorage.getItem('settings'))
-
-            const userRoutine = Object.assign({}, defaultUserRoutine, stored.userRoutine);
-            userRoutine.practice = normalizeUserRoutinePractice(userRoutine.practice);
+            const stored = JSON.parse(localStorage.getItem('settings')!);
+            const rawUr = {...defaultUserRoutine, ...stored.userRoutine};
+            const userRoutine: UserRoutinePartSettings = {
+                name: rawUr.name,
+                seed: rawUr.seed,
+                targetBPM: rawUr.targetBPM,
+                practice: rawUr.practice,
+                requireOctave: rawUr.requireOctave,
+                minSuccessVelocity: rawUr.minSuccessVelocity,
+                promptCount: rawUr.promptCount,
+            };
 
             return {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
@@ -99,14 +105,15 @@ export const useSettingsStore = defineStore('settings', {
         noteScale(state) {
             return noteScaleFromPractice(state.userRoutine.practice);
         },
-        currentRange (state): NumberRangeLike {
-            return state.userRoutine.noteRange.range;
+        currentRange(state): NumberRangeLike {
+            return noteRangeForPractice(state.userRoutine.practice).range;
         },
         selectedNotes(state): number[] {
             const notes: number[] = []
-            const {start, end} = this.currentRange;
+            const nr = noteRangeForPractice(state.userRoutine.practice);
+            const {start, end} = nr.range;
 
-            switch (state.userRoutine.noteRange.type) {
+            switch (nr.type) {
                 case NoteRangeType.Notes:
                     for (let i = start; i <= end; i++) {
                         notes.push(i)

@@ -1,8 +1,11 @@
 import {
     BakedRoutinePartSettings,
-    NoteRangeType, ParentType,
+    CHORD_TYPE_OPTIONS,
+    NoteRangeType,
+    ParentType,
     PracticePoolMode,
     PracticeType,
+    SCALE_TYPE_OPTIONS,
     UserRoutinePartSettings,
     UserRoutinePractice,
     UserRoutineSettingsKeys,
@@ -13,7 +16,8 @@ import {
     Prompt,
     type UserRoutineNoteRange,
 } from "./types";
-import {formatMidiNote} from "../notes";
+import {formatMidiLetter, formatMidiNote} from "../notes";
+import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
 import type {
     ChordTypeId,
     PracticeChordSpec,
@@ -24,7 +28,9 @@ import type {
 } from "./types";
 import {
     BaseNotes,
+    CHORD_REGISTRY_PRIMARY_MAP_KEYS,
     CHROMATIC_SCALE_SET_NAME,
+    displayNameFromMapKey,
     getRegisteredScale,
     NoteScale,
     SCALES,
@@ -91,7 +97,7 @@ export function defaultUserRoutineNoteRange(): UserRoutineNoteRange {
 export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
     switch (t) {
         case PracticeType.Notes:
-            return {type: PracticeType.Notes};
+            return {type: PracticeType.Notes, noteRange: defaultUserRoutineNoteRange()};
         case PracticeType.Chords:
             return {
                 type: PracticeType.Chords,
@@ -107,90 +113,12 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
     }
 }
 
-function coercePracticePoolMode(raw: unknown): PracticePoolMode {
-    if (raw === PracticePoolMode.Up || raw === PracticePoolMode.Down || raw === PracticePoolMode.Random) {
-        return raw;
+/** Pitch span for prompts and grid: notes practice uses its own range; chords/scales use full span. */
+export function noteRangeForPractice(practice: UserRoutinePractice): UserRoutineNoteRange {
+    if (practice.type === PracticeType.Notes) {
+        return practice.noteRange;
     }
-    return PracticePoolMode.Random;
-}
-
-function migrateChordsFromLegacyItems(items: PracticeChordSpec[]): RoutineChordsPractice {
-    const types = [
-        ...new Set(
-            items.map((i) => i.chordType).filter((t): t is ChordTypeId => t !== undefined),
-        ),
-    ];
-    const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
-    const baseNote =
-        bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
-    return {
-        type: PracticeType.Chords,
-        baseNote,
-        chordTypes: types,
-        mode: PracticePoolMode.Random,
-    };
-}
-
-function migrateScalesFromLegacyItems(items: PracticeScaleSpec[]): RoutineScalesPractice {
-    const types = [
-        ...new Set(
-            items.map((i) => i.scaleType).filter((t): t is ScaleTypeId => t !== undefined),
-        ),
-    ];
-    const bases = items.map((i) => i.baseNote).filter((b): b is string => b !== undefined);
-    const baseNote =
-        bases.length > 0 ? (bases.every((b) => b === bases[0]) ? bases[0] : bases[0]) : undefined;
-    return {
-        type: PracticeType.Scales,
-        baseNote,
-        scaleTypes: types,
-        mode: PracticePoolMode.Random,
-    };
-}
-
-/**
- * Upgrade persisted practice data from the old `items[]` shape to `baseNote` + multi-select types.
- */
-export function normalizeUserRoutinePractice(p: UserRoutinePractice): UserRoutinePractice {
-    switch (p.type) {
-        case PracticeType.Notes:
-            return p;
-        case PracticeType.Chords: {
-            const c = p as RoutineChordsPractice & {items?: PracticeChordSpec[]};
-            if (Array.isArray(c.items)) {
-                return migrateChordsFromLegacyItems(c.items);
-            }
-            return {
-                type: PracticeType.Chords,
-                baseNote: c.baseNote,
-                chordTypes: c.chordTypes ?? [],
-                mode: coercePracticePoolMode(c.mode),
-            };
-        }
-        case PracticeType.Scales: {
-            const s = p as RoutineScalesPractice & {items?: PracticeScaleSpec[]};
-            if (Array.isArray(s.items)) {
-                return migrateScalesFromLegacyItems(s.items);
-            }
-            return {
-                type: PracticeType.Scales,
-                baseNote: s.baseNote,
-                scaleTypes: s.scaleTypes ?? [],
-                mode: coercePracticePoolMode(s.mode),
-            };
-        }
-    }
-}
-
-export function normalizeRoutineSettings(settings: RoutineSettings): RoutineSettings {
-    return {
-        ...settings,
-        parts: settings.parts.map((part) => ({
-            ...part,
-            practice:
-                part.practice != null ? normalizeUserRoutinePractice(part.practice) : part.practice,
-        })),
-    };
+    return defaultUserRoutineNoteRange();
 }
 
 export function noteScaleFromSpec(spec: PracticeScaleSpec): NoteScale {
@@ -247,18 +175,6 @@ export function chordFromSpec(spec: PracticeChordSpec): Chord {
     return CHORDS[kind][key];
 }
 
-function chordPoolSize(practice: RoutineChordsPractice): number {
-    const n = practice.chordTypes.length;
-    return n > 0 ? n : 1;
-}
-
-export function chordRatioFromSettings(settings: BakedRoutinePartSettings): number {
-    if (settings.practice.type !== PracticeType.Chords) {
-        return 0;
-    }
-    return Math.min(chordPoolSize(settings.practice), settings.promptCount);
-}
-
 const colorOptions = [
     "emerald",
     "green",
@@ -290,7 +206,6 @@ export const resolveValues = (
         "practice",
         "requireOctave",
         "minSuccessVelocity",
-        "noteRange",
         "promptCount",
     ];
 
@@ -356,32 +271,19 @@ export const generateRoutine = (
 export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutinePart => {
     const seed = settings.seed || Math.random();
     const generator = new NumberGenerator(seed);
-    const scaleMembership = practiceScaleMembership(settings.practice);
-    const notes = generateNotesForRange(settings);
-    const noteOptions = notes.filter((note) => scaleMembership.contains(note));
 
     const repetitions = []
 
     const totalReps = settings.repeatCount + 1;
     if (settings.cloneRepeat) {
-        const rep = generatePrompts(
-            settings,
-            scaleMembership,
-            generator,
-            noteOptions,
-        );
+        const rep = generatePrompts(settings, generator);
         for (let i=0; i<totalReps; i++) {
             repetitions.push({ prompts: clone(rep) });
         }
     } else {
         for (let i=0; i<totalReps; i++) {
             repetitions.push({
-                prompts: generatePrompts(
-                    settings,
-                    scaleMembership,
-                    generator,
-                    noteOptions,
-                )
+                prompts: generatePrompts(settings, generator)
             });
         }
     }
@@ -405,15 +307,9 @@ export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number
     }
 }
 
-export const generateNotesForRange = (
-    settings: RoutinePartSettings,
-) => {
+export function midiNotesForNoteRange(nr: UserRoutineNoteRange): number[] {
     const notes: number[] = [];
-    if (!exists(settings.noteRange)) {
-        return notes;
-    }
-
-    const {type, range} = settings.noteRange;
+    const {type, range} = nr;
     const {start, end} = range;
     switch (type) {
         case NoteRangeType.Notes: {
@@ -445,90 +341,216 @@ export const generateNotesForRange = (
     return notes;
 }
 
-function generatePrompts(
-    settings: BakedRoutinePartSettings,
-    _scale: PracticeScaleContainment,
+export const generateNotesForRange = (settings: {practice: UserRoutinePractice}) => {
+    return midiNotesForNoteRange(noteRangeForPractice(settings.practice));
+}
+
+export function formatDisplayNote(requireOctave: boolean, midi: number): string {
+    return requireOctave ? formatMidiNote(midi) : formatMidiLetter(midi);
+}
+
+export function resolveFundamentalMapKey(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
     generator: NumberGenerator,
-    noteOptions: number[],
-): Prompt[] {
-    const count = 0;
-    const prompts = []
+): string {
+    if (practice.baseNote) {
+        return practice.baseNote;
+    }
+    const keys = CHORD_REGISTRY_PRIMARY_MAP_KEYS;
+    return keys[generator.rangeExclusiveI(0, keys.length)]!;
+}
 
-    /* Chord prompts (used NoteScale#chords) — re-enable with formatChord import when diatonic chords return.
-    if (scale.chords.length > 0) {
-        const chordRatio = Math.min(chordRatioFromSettings(settings), settings.promptCount);
+export function pickPoolIndex(
+    mode: PracticePoolMode,
+    poolLength: number,
+    promptIndex: number,
+    generator: NumberGenerator,
+): number {
+    if (poolLength <= 0) {
+        return 0;
+    }
+    switch (mode) {
+        case PracticePoolMode.Up:
+            return promptIndex % poolLength;
+        case PracticePoolMode.Down:
+            return poolLength - 1 - (promptIndex % poolLength);
+        case PracticePoolMode.Random:
+            return generator.rangeExclusiveI(0, poolLength);
+    }
+}
 
-        for (let i = 0; i < chordRatio; i++) {
-            const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-            const chordRoll = generator.rangeExclusiveI(0, scale.chords.length);
-            const chord = scale.chords[chordRoll];
+export function midiVoicingForChordAtFundamental(chord: Chord, fundamentalMidi: number): number[] {
+    const relative = chord.pattern.map((deg) => fundamentalMidi + (deg - 1));
+    return relative;
+}
 
-            // find chord fundamentals in note options
-            const availableChordFundamentals = noteOptions.filter(
-                (n) => n === chord.fundamental || (n % 12) === chord.fundamental
-            );
-
-            // ensure entire chord can be played, i.e. remaining notes wouldn't go past MIDI max
-            const playableChordFundamentals = availableChordFundamentals.filter((chordFundamental) => {
-                for (const c of chord.notes) {
-                    const chordNote = chordFundamental + c;
-                    if (chordNote > 127) {
-                        return false;
-                    }
-                }
-
-                return true;
-            });
-
-            if (playableChordFundamentals.length <= 0) {
-                continue;
-            }
-
-            const fundamentalRoll = generator.rangeExclusiveI(0, playableChordFundamentals.length);
-            const fundamental = playableChordFundamentals[fundamentalRoll];
-            const notes = [];
-            const baseFundamental = chord.notes[0];
-
-            for (let chordNote of chord.notes) {
-                if (chordNote < baseFundamental) {
-                    chordNote += 12;
-                }
-                chordNote -= baseFundamental;
-                notes.push(fundamental + chordNote)
-            }
-
-            prompts.push({
-                index: i,
-                notes: notes,
-                color: colorOptions[colorRoll],
-                displays: [formatChord(chord.type, fundamental)],
-            })
-
-            count++;
+export function tryBuildChordPrompt(
+    chordType: ChordTypeId,
+    fundamentalMapKey: string,
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+    promptIndex: number,
+): Prompt | null {
+    const chord = CHORDS[chordType][fundamentalMapKey];
+    if (!chord) {
+        return null;
+    }
+    const rootPc = chord.baseNote.pitchClass;
+    const fundamentals: number[] = [];
+    for (let fund = rootPc; fund <= MAX_MIDI_NOTES; fund += 12) {
+        const voicing = midiVoicingForChordAtFundamental(chord, fund);
+        if (voicing.every((n) => n >= 0 && n <= MAX_MIDI_NOTES)) {
+            fundamentals.push(fund);
         }
     }
-    */
+    if (fundamentals.length === 0) {
+        return null;
+    }
+    const fundamental = fundamentals[generator.rangeExclusiveI(0, fundamentals.length)];
+    const notes = midiVoicingForChordAtFundamental(chord, fundamental);
+    const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+    const title = `${chord.baseNote.getName()} ${CHORD_TYPE_LABEL[chordType]}`;
+    const cells = notes.map((n) => formatDisplayNote(settings.requireOctave, n));
+    return {
+        index: promptIndex,
+        notes,
+        color: colorOptions[colorRoll],
+        displays: [{kind: "chord", title, cells}],
+    };
+}
 
-    for (let i = count; i < settings.promptCount; i++) {
-        const noteRoll = generator.rangeExclusiveI(0, noteOptions.length);
+export function tryBuildScalePrompt(
+    scaleType: ScaleTypeId,
+    fundamentalMapKey: string,
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+    promptIndex: number,
+): Prompt | null {
+    const scale = getRegisteredScale(scaleType, fundamentalMapKey);
+    const notes: number[] = [];
+    for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+        if (scale.contains(n)) {
+            notes.push(n);
+        }
+    }
+    if (notes.length === 0) {
+        return null;
+    }
+    const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+    const rootLabel = displayNameFromMapKey(fundamentalMapKey);
+    const title = `${rootLabel} ${SCALE_TYPE_LABEL[scaleType]}`;
+    const cells = notes.map((n) => formatDisplayNote(settings.requireOctave, n));
+    return {
+        index: promptIndex,
+        notes,
+        color: colorOptions[colorRoll],
+        displays: [{kind: "scale", title, cells}],
+    };
+}
+
+export function generateNotePrompts(
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+): Prompt[] {
+    const practiceUntyped = settings.practice;
+    if (practiceUntyped.type !== PracticeType.Notes) {
+        return [];
+    }
+    const notePool = midiNotesForNoteRange(practiceUntyped.noteRange);
+    if (notePool.length === 0) {
+        return [];
+    }
+    const prompts: Prompt[] = [];
+    for (let i = 0; i < settings.promptCount; i++) {
+        const noteRoll = generator.rangeExclusiveI(0, notePool.length);
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-
-        const note = noteOptions[noteRoll]
-
+        const note = notePool[noteRoll];
         prompts.push({
             index: i,
             notes: [note],
             color: colorOptions[colorRoll],
-            displays: [
-                {
-                    note: settings.requireOctave ? formatMidiNote(note) : formatMidiNote(note),
-                    chordType: ""
-                }
-            ],
-        })
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        });
     }
-
     shuffle(prompts, generator);
-
     return prompts;
+}
+
+export function generateChordPrompts(
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+): Prompt[] {
+    const practiceUntyped = settings.practice;
+    if (practiceUntyped.type !== PracticeType.Chords) {
+        return [];
+    }
+    const practice = practiceUntyped;
+    const fundKey = resolveFundamentalMapKey(practice, generator);
+    const pool =
+        practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
+    const prompts: Prompt[] = [];
+    let attempts = 0;
+    const maxAttempts = settings.promptCount * 24;
+    while (prompts.length < settings.promptCount && attempts < maxAttempts) {
+        attempts++;
+        const i = prompts.length;
+        const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+        const built = tryBuildChordPrompt(
+            chordType,
+            fundKey,
+            settings,
+            generator,
+            i,
+        );
+        if (built) {
+            prompts.push(built);
+        }
+    }
+    return prompts;
+}
+
+export function generateScalePrompts(
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+): Prompt[] {
+    const practiceUntyped = settings.practice;
+    if (practiceUntyped.type !== PracticeType.Scales) {
+        return [];
+    }
+    const practice = practiceUntyped;
+    const fundKey = resolveFundamentalMapKey(practice, generator);
+    const pool = practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [...SCALE_TYPE_OPTIONS];
+    const prompts: Prompt[] = [];
+    let attempts = 0;
+    const maxAttempts = settings.promptCount * 24;
+    while (prompts.length < settings.promptCount && attempts < maxAttempts) {
+        attempts++;
+        const i = prompts.length;
+        const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+        const built = tryBuildScalePrompt(
+            scaleType,
+            fundKey,
+            settings,
+            generator,
+            i,
+        );
+        if (built) {
+            prompts.push(built);
+        }
+    }
+    return prompts;
+}
+
+export function generatePrompts(
+    settings: BakedRoutinePartSettings,
+    generator: NumberGenerator,
+): Prompt[] {
+    switch (settings.practice.type) {
+        case PracticeType.Notes:
+            return generateNotePrompts(settings, generator);
+        case PracticeType.Chords:
+            return generateChordPrompts(settings, generator);
+        case PracticeType.Scales:
+            return generateScalePrompts(settings, generator);
+    }
 }

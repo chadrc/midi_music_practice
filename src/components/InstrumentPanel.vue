@@ -11,6 +11,7 @@ import {
   setNoteRangeType,
   practiceScaleMembership,
   defaultPracticeForType,
+  noteRangeForPractice,
 } from "../routine";
 import {computed} from "vue";
 import {usePracticeStore} from "../store/practice";
@@ -22,6 +23,11 @@ const practiceStore = usePracticeStore();
 
 const editingDisabled = computed(() => settingsStore.editingDisabled);
 const currentSettings = computed(() => settingsStore.currentSettings);
+
+/** Grid span and helpers: full MIDI range for chords/scales; notes practice uses its editor range. */
+const activeNoteRange = computed(() =>
+    noteRangeForPractice(currentSettings.value.practice),
+);
 
 function makeNoteRangeOptions() {
   return [
@@ -54,14 +60,14 @@ const currentPromptHints = computed(() => {
 })
 
 const noteRangeValues = computed(() => {
-  const r = currentSettings.value.noteRange.range;
+  const r = activeNoteRange.value.range;
   return [r.start, r.end];
 })
 
-const noteRangeMax = computed(() => maxForNoteRangeType(currentSettings.value.noteRange.type))
+const noteRangeMax = computed(() => maxForNoteRangeType(activeNoteRange.value.type))
 
 const gridStyle = computed(() => {
-  switch (currentSettings.value.noteRange.type) {
+  switch (activeNoteRange.value.type) {
     case NoteRangeType.Notes:
       return "box"
     case NoteRangeType.Frets:
@@ -74,11 +80,11 @@ const gridStyle = computed(() => {
 })
 
 const gridColumns = computed(() => {
-  switch (currentSettings.value.noteRange.type) {
+  switch (activeNoteRange.value.type) {
     case NoteRangeType.Notes:
       return 12
     case NoteRangeType.Frets: {
-      const {start, end} = currentSettings.value.noteRange.range;
+      const {start, end} = activeNoteRange.value.range;
       return end - start + 1
     }
     case NoteRangeType.Octaves:
@@ -89,11 +95,11 @@ const gridColumns = computed(() => {
 })
 
 const gridHeaders = computed(() => {
-  switch (currentSettings.value.noteRange.type) {
+  switch (activeNoteRange.value.type) {
     case NoteRangeType.Notes:
       return []
     case NoteRangeType.Frets: {
-      const {start, end} = currentSettings.value.noteRange.range;
+      const {start, end} = activeNoteRange.value.range;
       const headers = []
       for (let i = start; i <= end; ++i) {
         headers.push(i.toString())
@@ -109,7 +115,7 @@ const gridHeaders = computed(() => {
 })
 
 const gridNoteFormat = computed(() => {
-  switch (currentSettings.value.noteRange.type) {
+  switch (activeNoteRange.value.type) {
     case NoteRangeType.Notes:
       return "letter-octave"
     case NoteRangeType.Frets:
@@ -138,7 +144,10 @@ function onPracticeTypeChange(t: PracticeType) {
 }
 
 function updateNoteRange(range: number[]) {
-  const r = currentSettings.value.noteRange.range;
+  if (currentSettings.value.practice.type !== PracticeType.Notes) {
+    return;
+  }
+  const r = currentSettings.value.practice.noteRange.range;
   r.start = range[0];
   r.end = range[1];
 }
@@ -200,17 +209,23 @@ function updateNoteRange(range: number[]) {
               :disabled="editingDisabled"
             />
           </div>
-          <div class="instrument-option">
+          <div
+            v-if="currentSettings.practice.type === PracticeType.Notes"
+            class="instrument-option"
+          >
             <Select
-              :model-value="currentSettings.noteRange.type"
+              :model-value="currentSettings.practice.noteRange.type"
               :options="makeNoteRangeOptions()"
               option-value="value"
               option-label="name"
               :disabled="editingDisabled"
-              @update:model-value="(t: NoteRangeType) => setNoteRangeType(currentSettings.noteRange, t)"
+              @update:model-value="(t: NoteRangeType) => setNoteRangeType(currentSettings.practice.noteRange, t)"
             />
           </div>
-          <div class="instrument-option">
+          <div
+            v-if="currentSettings.practice.type === PracticeType.Notes"
+            class="instrument-option"
+          >
             <div class="note-range-slider-wrapper">
               <span>{{ noteRangeValues[0] }}</span>
               <Slider

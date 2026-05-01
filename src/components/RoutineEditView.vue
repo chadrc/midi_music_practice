@@ -4,9 +4,8 @@ import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import {PracticeType} from "../routine/types";
-import {defaultUserRoutineNoteRange, defaultPracticeForType} from "../routine";
+import {defaultPracticeForType} from "../routine";
 import BPMSelect from "../routine/components/BPMSelect.vue";
-import RoutinePartNoteRangeEditor from "../routine/components/RoutinePartNoteRangeEditor.vue";
 import RoutinePartPracticeEditor from "../routine/components/RoutinePartPracticeEditor.vue";
 import {exists} from "../utilities";
 
@@ -115,12 +114,6 @@ const routineEditStore = useRoutineStore();
             :set-value="32"
             :component="InputNumber"
             :component-props="{min: 0, max: 127, showButtons: true}"
-          />
-          <SettingsEditField
-            v-model="item.noteRange"
-            label="Note ranges"
-            :set-value="defaultUserRoutineNoteRange()"
-            :component="RoutinePartNoteRangeEditor"
           />
           <SettingsEditField
             v-model="item.promptCount"

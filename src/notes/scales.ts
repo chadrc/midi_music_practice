@@ -22,6 +22,12 @@ export abstract class BaseNote {
     /** Stable key for {@link SCALES} and chord registry in `./chords`, and persisted `baseNote` (e.g. `CSharp`, `BFlat`). */
     abstract readonly mapKey: string;
 
+    /**
+     * Canonical registry key for stable ordering. Same as {@link mapKey}; for enharmonic roots,
+     * pick the instance whose {@link mapKey} you want (e.g. {@link BaseNotes.CSharp} vs {@link BaseNotes.DFlat}).
+     */
+    abstract get primaryMapKey(): string;
+
     /** Readable name; enharmonic roots include both spellings separated by `/`. */
     abstract getName(): string;
 }
@@ -30,6 +36,10 @@ export abstract class BaseNote {
 export class LetterBaseNote extends BaseNote {
     constructor(pitchClass: number, readonly mapKey: string) {
         super(pitchClass);
+    }
+
+    get primaryMapKey(): string {
+        return this.mapKey;
     }
 
     getName(): string {
@@ -45,6 +55,10 @@ export class EnharmonicBaseNote extends BaseNote {
         readonly alternateMapKey: string,
     ) {
         super(pitchClass);
+    }
+
+    get primaryMapKey(): string {
+        return this.mapKey;
     }
 
     getName(): string {
@@ -73,6 +87,30 @@ export const BaseNotes = {
 } as const;
 
 export type BaseNoteRef = (typeof BaseNotes)[keyof typeof BaseNotes];
+
+/** Chromatic pitch-class order 0 (C) … 11 (B); one {@link BaseNoteRef} per class. */
+export const BASE_NOTES_CHROMATIC_ORDER: readonly BaseNoteRef[] = [
+    BaseNotes.C,
+    BaseNotes.CSharp,
+    BaseNotes.D,
+    BaseNotes.DSharp,
+    BaseNotes.E,
+    BaseNotes.F,
+    BaseNotes.FSharp,
+    BaseNotes.G,
+    BaseNotes.GSharp,
+    BaseNotes.A,
+    BaseNotes.ASharp,
+    BaseNotes.B,
+];
+
+/**
+ * One {@link BaseNote.primaryMapKey} per pitch class, same order as {@link BASE_NOTES_CHROMATIC_ORDER}.
+ * Each entry exists on every {@link CHORDS} quality map under that key.
+ */
+export const CHORD_REGISTRY_PRIMARY_MAP_KEYS: readonly string[] = BASE_NOTES_CHROMATIC_ORDER.map(
+    (n) => n.primaryMapKey,
+);
 
 /**
  * Each value `d` is interpreted as (d − 1) semitones above the root (1 = P1, 2 = m2, …, 12 = 11 semitones, i.e. M7 — e.g. in C major, 1 = C and 12 = B, not the root an octave up). Same encoding as IONIAN_MODE_PATTERN.
