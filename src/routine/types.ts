@@ -1,10 +1,6 @@
 import type {NumberRangeLike} from "../common/NumberRange";
 import type {NumberGenerator} from "../common/NumberGenerator";
-import {
-    DIMINISHED_CHORDS_SET_NAME,
-    MAJOR_CHORDS_SET_NAME,
-    MINOR_CHORDS_SET_NAME,
-} from "../notes/chords";
+import {CHORD_TYPE_OPTIONS} from "../notes/chords";
 import {
     CHROMATIC_SCALE_SET_NAME,
     DORIAN_SCALE_SET_NAME,
@@ -18,13 +14,9 @@ import {
     PHRYGIAN_SCALE_SET_NAME,
 } from "../notes/scales";
 
-export const CHORD_TYPE_OPTIONS = [
-    MAJOR_CHORDS_SET_NAME,
-    MINOR_CHORDS_SET_NAME,
-    DIMINISHED_CHORDS_SET_NAME,
-] as const;
-
 export type ChordTypeId = (typeof CHORD_TYPE_OPTIONS)[number];
+
+export {CHORD_TYPE_OPTIONS};
 
 export const SCALE_TYPE_OPTIONS = [
     CHROMATIC_SCALE_SET_NAME,
