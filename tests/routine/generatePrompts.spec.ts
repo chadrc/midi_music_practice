@@ -40,7 +40,7 @@ test("dispatches by practice type with full prompt payloads", () => {
         {
             index: 0,
             notes: [36],
-            color: "amber",
+            color: "orange",
             displays: [{kind: "note", note: "C2"}],
         },
     ]);
@@ -62,9 +62,9 @@ test("dispatches by practice type with full prompt payloads", () => {
     ).to.deep.equal([
         {
             index: 0,
-            notes: [38],
-            color: "yellow",
-            displays: [{kind: "note", note: "D2"}],
+            notes: [36],
+            color: "emerald",
+            displays: [{kind: "note", note: "C2"}],
         },
     ]);
 });

@@ -398,6 +398,93 @@ export function pickPoolIndex(
     }
 }
 
+function fundamentalMidiForChordInPartOctave(
+    chord: Chord,
+    partOctave: number,
+    octSpan: NumberRangeLike,
+): number | null {
+    const rootPc = chord.baseNote.pitchClass;
+    for (let fund = rootPc; fund <= MAX_MIDI_NOTES; fund += 12) {
+        if (scientificOctaveFromMidi(fund) !== partOctave) {
+            continue;
+        }
+        const voicing = midiVoicingForChordAtFundamental(chord, fund);
+        if (voicing.every((n) => n >= 0 && n <= MAX_MIDI_NOTES)) {
+            if (midiInPracticeOctaveSpan(fund, octSpan)) {
+                return fund;
+            }
+        }
+    }
+    return null;
+}
+
+function orderedPartOctaves(lo: number, hi: number, up: boolean): number[] {
+    const span = hi - lo + 1;
+    return Array.from({length: span}, (_, k) => (up ? lo + k : hi - k));
+}
+
+/** Chord tones in order: each part octave (low→high or high→low), each chord type in pool order, voicing low→high. */
+function chordToneMidiSequenceOrdered(
+    pool: ChordTypeId[],
+    fundamentalMapKey: string,
+    settings: BakedRoutinePartSettings,
+    up: boolean,
+): number[] {
+    const practice = settings.practice;
+    if (practice.type !== PracticeType.Chords) {
+        return [];
+    }
+    const octSpan = resolvedChordScaleOctaveRange(practice);
+    const lo = octSpan.start;
+    const hi = octSpan.end;
+    const out: number[] = [];
+    for (const partOct of orderedPartOctaves(lo, hi, up)) {
+        for (const chordType of pool) {
+            const chord = CHORDS[chordType][fundamentalMapKey];
+            if (!chord) {
+                continue;
+            }
+            const fund = fundamentalMidiForChordInPartOctave(chord, partOct, octSpan);
+            if (fund === null) {
+                continue;
+            }
+            out.push(...midiVoicingForChordAtFundamental(chord, fund));
+        }
+    }
+    return out;
+}
+
+/** Scale pitches in order: each part octave, each scale type in pool order, ascending within the octave. */
+function scaleToneMidiSequenceOrdered(
+    pool: ScaleTypeId[],
+    fundamentalMapKey: string,
+    settings: BakedRoutinePartSettings,
+    up: boolean,
+): number[] {
+    const practice = settings.practice;
+    if (practice.type !== PracticeType.Scales) {
+        return [];
+    }
+    const octSpan = resolvedChordScaleOctaveRange(practice);
+    const lo = octSpan.start;
+    const hi = octSpan.end;
+    const out: number[] = [];
+    for (const partOct of orderedPartOctaves(lo, hi, up)) {
+        for (const scaleType of pool) {
+            const scale = getRegisteredScale(scaleType, fundamentalMapKey);
+            const inOct: number[] = [];
+            for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+                if (scale.contains(n) && scientificOctaveFromMidi(n) === partOct) {
+                    inOct.push(n);
+                }
+            }
+            inOct.sort((a, b) => a - b);
+            out.push(...inOct);
+        }
+    }
+    return out;
+}
+
 export function midiVoicingForChordAtFundamental(chord: Chord, fundamentalMidi: number): number[] {
     const relative = chord.pattern.map((deg) => fundamentalMidi + (deg - 1));
     return relative;
@@ -415,21 +502,8 @@ export function tryBuildChordPrompt(
     if (!chord) {
         return null;
     }
-    const rootPc = chord.baseNote.pitchClass;
     const octSpan = resolvedChordScaleOctaveRange(settings.practice);
-    let fundamental: number | null = null;
-    for (let fund = rootPc; fund <= MAX_MIDI_NOTES; fund += 12) {
-        if (scientificOctaveFromMidi(fund) !== partOctave) {
-            continue;
-        }
-        const voicing = midiVoicingForChordAtFundamental(chord, fund);
-        if (voicing.every((n) => n >= 0 && n <= MAX_MIDI_NOTES)) {
-            if (midiInPracticeOctaveSpan(fund, octSpan)) {
-                fundamental = fund;
-                break;
-            }
-        }
-    }
+    const fundamental = fundamentalMidiForChordInPartOctave(chord, partOctave, octSpan);
     if (fundamental === null) {
         return null;
     }
@@ -512,30 +586,51 @@ export function generateChordPrompts(
     const fundKey = resolveFundamentalMapKey(practice, generator);
     const pool =
         practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
-    const octSpan = resolvedChordScaleOctaveRange(practice);
-    const lo = octSpan.start;
-    const hi = octSpan.end;
-    const partOctave = lo + generator.rangeExclusiveI(0, hi - lo + 1);
     const prompts: Prompt[] = [];
-    let attempts = 0;
-    const maxAttempts = settings.promptCount * 24;
-    while (prompts.length < settings.promptCount && attempts < maxAttempts) {
-        attempts++;
-        const i = prompts.length;
-        const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
-        const built = tryBuildChordPrompt(
-            chordType,
-            fundKey,
-            settings,
-            generator,
-            i,
-            partOctave,
-        );
-        if (built) {
-            prompts.push(built);
+
+    if (practice.mode === PracticePoolMode.Random) {
+        const octSpan = resolvedChordScaleOctaveRange(practice);
+        const lo = octSpan.start;
+        const hi = octSpan.end;
+        const span = hi - lo + 1;
+        const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+        let attempts = 0;
+        const maxAttempts = settings.promptCount * 24;
+        while (prompts.length < settings.promptCount && attempts < maxAttempts) {
+            attempts++;
+            const i = prompts.length;
+            const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+            const built = tryBuildChordPrompt(
+                chordType,
+                fundKey,
+                settings,
+                generator,
+                i,
+                randomPartOctave,
+            );
+            if (built) {
+                prompts.push(built);
+            }
         }
+        shuffle(prompts, generator);
+        return prompts;
     }
-    shuffle(prompts, generator);
+
+    const up = practice.mode === PracticePoolMode.Up;
+    const seq = chordToneMidiSequenceOrdered(pool, fundKey, settings, up);
+    if (seq.length === 0) {
+        return [];
+    }
+    for (let i = 0; i < settings.promptCount; i++) {
+        const note = seq[i % seq.length]!;
+        const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+        prompts.push({
+            index: i,
+            notes: [note],
+            color: colorOptions[colorRoll],
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        });
+    }
     return prompts;
 }
 
@@ -550,30 +645,51 @@ export function generateScalePrompts(
     const practice = practiceUntyped;
     const fundKey = resolveFundamentalMapKey(practice, generator);
     const pool = practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [...SCALE_TYPE_OPTIONS];
-    const octSpan = resolvedChordScaleOctaveRange(practice);
-    const lo = octSpan.start;
-    const hi = octSpan.end;
-    const partOctave = lo + generator.rangeExclusiveI(0, hi - lo + 1);
     const prompts: Prompt[] = [];
-    let attempts = 0;
-    const maxAttempts = settings.promptCount * 24;
-    while (prompts.length < settings.promptCount && attempts < maxAttempts) {
-        attempts++;
-        const i = prompts.length;
-        const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
-        const built = tryBuildScalePrompt(
-            scaleType,
-            fundKey,
-            settings,
-            generator,
-            i,
-            partOctave,
-        );
-        if (built) {
-            prompts.push(built);
+
+    if (practice.mode === PracticePoolMode.Random) {
+        const octSpan = resolvedChordScaleOctaveRange(practice);
+        const lo = octSpan.start;
+        const hi = octSpan.end;
+        const span = hi - lo + 1;
+        const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+        let attempts = 0;
+        const maxAttempts = settings.promptCount * 24;
+        while (prompts.length < settings.promptCount && attempts < maxAttempts) {
+            attempts++;
+            const i = prompts.length;
+            const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+            const built = tryBuildScalePrompt(
+                scaleType,
+                fundKey,
+                settings,
+                generator,
+                i,
+                randomPartOctave,
+            );
+            if (built) {
+                prompts.push(built);
+            }
         }
+        shuffle(prompts, generator);
+        return prompts;
     }
-    shuffle(prompts, generator);
+
+    const up = practice.mode === PracticePoolMode.Up;
+    const seq = scaleToneMidiSequenceOrdered(pool, fundKey, settings, up);
+    if (seq.length === 0) {
+        return [];
+    }
+    for (let i = 0; i < settings.promptCount; i++) {
+        const note = seq[i % seq.length]!;
+        const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+        prompts.push({
+            index: i,
+            notes: [note],
+            color: colorOptions[colorRoll],
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        });
+    }
     return prompts;
 }
 
