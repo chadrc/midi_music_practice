@@ -187,3 +187,57 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
         },
     ]);
 });
+
+test("Random mode arpeggiates each chord tone once before repeating", () => {
+    const prompts = generateChordPrompts(
+        minimalBakedPart({
+            promptCount: 6,
+            practice: {
+                type: PracticeType.Chords,
+                baseNote: "C",
+                chordTypes: [MAJOR_CHORDS_SET_NAME],
+                mode: PracticePoolMode.Random,
+                octaveRange: {start: 2, end: 4},
+            },
+        }),
+        new NumberGenerator(999),
+    );
+    expect(prompts).to.deep.equal([
+        {
+            index: 0,
+            notes: [36],
+            color: "yellow",
+            displays: [{kind: "note", note: "C2"}],
+        },
+        {
+            index: 1,
+            notes: [40],
+            color: "red",
+            displays: [{kind: "note", note: "E2"}],
+        },
+        {
+            index: 2,
+            notes: [43],
+            color: "yellow",
+            displays: [{kind: "note", note: "G2"}],
+        },
+        {
+            index: 3,
+            notes: [36],
+            color: "orange",
+            displays: [{kind: "note", note: "C2"}],
+        },
+        {
+            index: 4,
+            notes: [40],
+            color: "amber",
+            displays: [{kind: "note", note: "E2"}],
+        },
+        {
+            index: 5,
+            notes: [43],
+            color: "green",
+            displays: [{kind: "note", note: "G2"}],
+        },
+    ]);
+});

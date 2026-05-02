@@ -594,25 +594,39 @@ export function generateChordPrompts(
         const hi = octSpan.end;
         const span = hi - lo + 1;
         const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+        let cycleVoicing: number[] | null = null;
+        let cycleIndex = 0;
         let attempts = 0;
         const maxAttempts = settings.promptCount * 24;
         while (prompts.length < settings.promptCount && attempts < maxAttempts) {
             attempts++;
             const i = prompts.length;
-            const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
-            const built = tryBuildChordPrompt(
-                chordType,
-                fundKey,
-                settings,
-                generator,
-                i,
-                randomPartOctave,
-            );
-            if (built) {
-                prompts.push(built);
+            if (!cycleVoicing || cycleIndex >= cycleVoicing.length) {
+                const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+                const chord = CHORDS[chordType][fundKey];
+                if (!chord) {
+                    continue;
+                }
+                const fundamental = fundamentalMidiForChordInPartOctave(chord, randomPartOctave, octSpan);
+                if (fundamental === null) {
+                    continue;
+                }
+                cycleVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
+                if (cycleVoicing.length === 0) {
+                    continue;
+                }
+                cycleIndex = 0;
             }
+            const note = cycleVoicing[cycleIndex]!;
+            cycleIndex++;
+            const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+            prompts.push({
+                index: i,
+                notes: [note],
+                color: colorOptions[colorRoll],
+                displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+            });
         }
-        shuffle(prompts, generator);
         return prompts;
     }
 
