@@ -74,11 +74,15 @@ export const useSettingsStore = defineStore('settings', {
         if (localStorage.getItem('settings')) {
             const stored = JSON.parse(localStorage.getItem('settings')!);
             const rawUr = {...defaultUserRoutine, ...stored.userRoutine};
+            let practice = rawUr.practice as UserRoutinePractice;
+            if (practice && typeof practice.type !== "number") {
+                practice = {...practice, type: Number(practice.type) as PracticeType};
+            }
             const userRoutine: UserRoutinePartSettings = {
                 name: rawUr.name,
                 seed: rawUr.seed,
                 targetBPM: rawUr.targetBPM,
-                practice: rawUr.practice,
+                practice,
                 requireOctave: rawUr.requireOctave,
                 minSuccessVelocity: rawUr.minSuccessVelocity,
                 promptCount: rawUr.promptCount,

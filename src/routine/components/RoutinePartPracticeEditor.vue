@@ -8,10 +8,17 @@ import {defaultPracticeForType} from "..";
 
 const model = defineModel<UserRoutinePractice | null>();
 
+function coercePracticeType(t: PracticeType | string): PracticeType {
+    if (typeof t === "string") {
+        return Number.parseInt(t, 10) as PracticeType;
+    }
+    return t;
+}
+
 const practiceTypeChoice = computed({
     get: () => model.value?.type ?? PracticeType.Notes,
-    set(t: PracticeType) {
-        model.value = defaultPracticeForType(t);
+    set(t: PracticeType | string) {
+        model.value = defaultPracticeForType(coercePracticeType(t));
     },
 });
 </script>

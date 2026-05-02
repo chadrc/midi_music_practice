@@ -136,11 +136,19 @@ const showPracticeItems = computed(() => {
   return t === PracticeType.Chords || t === PracticeType.Scales;
 });
 
-function onPracticeTypeChange(t: PracticeType) {
-  if (currentSettings.value.practice.type === t) {
-    return;
-  }
-  currentSettings.value.practice = defaultPracticeForType(t);
+function coercePracticeType(t: PracticeType | string): PracticeType {
+    if (typeof t === "string") {
+        return Number.parseInt(t, 10) as PracticeType;
+    }
+    return t;
+}
+
+function onPracticeTypeChange(t: PracticeType | string) {
+    const type = coercePracticeType(t);
+    if (currentSettings.value.practice.type === type) {
+        return;
+    }
+    currentSettings.value.practice = defaultPracticeForType(type);
 }
 
 function updateNoteRange(range: number[]) {
