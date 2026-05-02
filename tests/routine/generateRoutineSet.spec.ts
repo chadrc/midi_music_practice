@@ -73,3 +73,14 @@ test("cloneRepeat reuses identical prompt arrays", () => {
     expect(part.repetitions[0].prompts).to.deep.equal(expectedPrompts);
     expect(part.repetitions[1].prompts).to.deep.equal(expectedPrompts);
 });
+
+test("coerces string repeatCount (e.g. from InputNumber) into repetition count", () => {
+    const part = generateRoutineSet(
+        minimalBakedPart({
+            repeatCount: "4" as unknown as number,
+            promptCount: 1,
+            seed: 0.5,
+        }),
+    );
+    expect(part.repetitions.length).toBe(5);
+});

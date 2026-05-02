@@ -39,11 +39,11 @@ export const usePracticeStore = defineStore('practice', () => {
     const routineStore = useRoutineStore();
 
     const startTime = ref(0);
-    const practiceSessionTimer = ref(null);
+    const practiceSessionTimer = ref<ReturnType<typeof setInterval> | null>(null);
     const practiceSessionTime = ref(0);
     const successCount = ref(0);
     const practicing = ref(false);
-    const midiSubscription = ref<Subscription>(null);
+    const midiSubscription = ref<Subscription | null>(null);
 
     const routine = ref<Routine | null>(null);
     const activePrompts = ref<PromptData[]>([]);
@@ -165,10 +165,10 @@ export const usePracticeStore = defineStore('practice', () => {
                     parts: [
                         {
                             name: "",
-                            repeatCount: 0,
                             cloneRepeat: false,
                             parentSettings: ParentType.Settings,
-                            ...settingsStore.userRoutine
+                            ...settingsStore.userRoutine,
+                            repeatCount: 0,
                         }
                     ]
                 },
@@ -178,7 +178,14 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function setupStep() {
+        if (!exists(routine.value) || routine.value.parts.length === 0) {
+            activePrompts.value = [];
+            complete.value = true;
+            return;
+        }
+
         if (currentPart.value >= routine.value.parts.length) {
+            activePrompts.value = [];
             complete.value = true;
             return;
         }
@@ -188,6 +195,7 @@ export const usePracticeStore = defineStore('practice', () => {
             currentPart.value += 1;
 
             if (currentPart.value >= routine.value.parts.length) {
+                activePrompts.value = [];
                 complete.value = true;
                 return;
             }
@@ -197,6 +205,11 @@ export const usePracticeStore = defineStore('practice', () => {
         }
 
         const rep = part.repetitions[currentRepetition.value];
+        if (!exists(rep)) {
+            activePrompts.value = [];
+            complete.value = true;
+            return;
+        }
 
         activePrompts.value = [];
         currentPrompt.value = 0;
@@ -216,14 +229,33 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function start() {
+        midiSubscription.value?.unsubscribe();
+        midiSubscription.value = null;
+        window.clearInterval(practiceSessionTimer.value);
+        practiceSessionTimer.value = null;
+
         complete.value = false;
-        practicing.value = true;
         successCount.value = 0;
         currentPart.value = 0;
         currentRepetition.value = 0;
+        currentPrompt.value = 0;
+        activePrompts.value = [];
+        practiceSessionTime.value = 0;
 
         generatePrompts();
+
+        if (!exists(routine.value) || routine.value.parts.length === 0) {
+            complete.value = true;
+            return;
+        }
+
         setupStep();
+
+        if (complete.value) {
+            return;
+        }
+
+        practicing.value = true;
 
         practiceSessionTimer.value = window.setInterval(() => {
             practiceSessionTime.value += 1
@@ -233,6 +265,15 @@ export const usePracticeStore = defineStore('practice', () => {
             .pipe(filter((v) => v.instruction === MIDIInstruction.NoteOn))
             .subscribe({
                 next: (data) => {
+                    if (!practicing.value) {
+                        return;
+                    }
+
+                    const activePrompt = activePrompts.value[currentPrompt.value];
+                    if (!exists(activePrompt) || !exists(activePrompt.prompt)) {
+                        return;
+                    }
+
                     const now = Date.now();
                     const frameTime = now - 50;
 
@@ -240,8 +281,6 @@ export const usePracticeStore = defineStore('practice', () => {
                         time: now,
                         data
                     });
-
-                    const activePrompt = activePrompts.value[currentPrompt.value];
 
                     let success = true;
                     for (const note of activePrompt.prompt.notes) {
@@ -285,9 +324,13 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function skipToNextStep() {
+        const part = currentRoutinePart.value;
+        if (!exists(part)) {
+            return;
+        }
         currentPrompt.value = 0;
 
-        currentRepetition.value = currentRoutinePart.value.repetitions.length;
+        currentRepetition.value = part.repetitions.length;
         setupStep();
 
         if (complete.value) {
@@ -296,17 +339,33 @@ export const usePracticeStore = defineStore('practice', () => {
     }
 
     function stop() {
-        window.clearInterval(practiceSessionTimer.value)
-        midiSubscription.value.unsubscribe()
-        activePrompts.value = []
-        currentPrompt.value = routine.value.parts.length;
+        window.clearInterval(practiceSessionTimer.value);
+        practiceSessionTimer.value = null;
+        midiSubscription.value?.unsubscribe();
+        midiSubscription.value = null;
+        activePrompts.value = [];
+        currentPrompt.value = exists(routine.value)
+            ? routine.value.parts.length
+            : 0;
         practicing.value = false;
     }
 
     function finalize() {
+        window.clearInterval(practiceSessionTimer.value);
+        practiceSessionTimer.value = null;
+        midiSubscription.value?.unsubscribe();
+        midiSubscription.value = null;
         attempts.value = [];
+        successes.value = [];
+        activePrompts.value = [];
         routine.value = null;
         complete.value = false;
+        practicing.value = false;
+        currentPart.value = 0;
+        currentRepetition.value = 0;
+        currentPrompt.value = 0;
+        practiceSessionTime.value = 0;
+        successCount.value = 0;
     }
 
     return {

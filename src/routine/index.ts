@@ -220,9 +220,30 @@ const colorOptions = [
     "slate"
 ]
 
+function resolvedPartRepeatCount(
+    base: RoutinePartSettings,
+    defaults: UserRoutinePartSettings | BakedRoutinePartSettings,
+): number {
+    const raw = base.repeatCount as unknown;
+    if (raw !== undefined && raw !== null) {
+        const baseN = Number(raw);
+        if (Number.isFinite(baseN)) {
+            return Math.max(0, Math.floor(baseN));
+        }
+    }
+    const d = (defaults as Partial<BakedRoutinePartSettings>).repeatCount;
+    if (d !== undefined && d !== null) {
+        const defN = Number(d as unknown);
+        if (Number.isFinite(defN)) {
+            return Math.max(0, Math.floor(defN));
+        }
+    }
+    return 1;
+}
+
 export const resolveValues = (
     base: RoutinePartSettings,
-    defaults: UserRoutinePartSettings,
+    defaults: UserRoutinePartSettings | BakedRoutinePartSettings,
 ): BakedRoutinePartSettings => {
     const toClone: UserRoutineSettingsKeys = [
         "name",
@@ -249,6 +270,12 @@ export const resolveValues = (
             baked[prop] = val;
         }
     }
+
+    /* Parent defaults can be a full {@link BakedRoutinePartSettings} (First/Previous).
+     * Its repeatCount / cloneRepeat / parentSettings must not override this part's. */
+    baked.repeatCount = resolvedPartRepeatCount(base, defaults);
+    baked.cloneRepeat = base.cloneRepeat;
+    baked.parentSettings = base.parentSettings;
 
     return baked;
 }
@@ -299,7 +326,9 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
 
     const repetitions: RoutinePart["repetitions"] = [];
 
-    const totalReps = settings.repeatCount + 1;
+    const raw = Number(settings.repeatCount as unknown);
+    const repeatN = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
+    const totalReps = repeatN + 1;
     if (settings.cloneRepeat) {
         const rep = generatePrompts(settings, generator);
         for (let i = 0; i < totalReps; i++) {

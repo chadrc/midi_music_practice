@@ -20,7 +20,7 @@ function promptCardClass(prompt: PromptData) {
 
 <template>
   <Stepper
-    v-if="exists(practiceStore.routine) && practiceStore.routine.parts.length > 0"
+    v-if="practiceStore.routine != null && (practiceStore.routine.parts?.length ?? 0) > 0"
     :value="practiceStore.currentPart + 1"
   >
     <StepList>
@@ -53,8 +53,8 @@ function promptCardClass(prompt: PromptData) {
     </div>
     <div class="prompt-cards">
       <div
-        v-for="prompt in practiceStore.activePrompts"
-        :key="prompt.prompt.index"
+        v-for="(prompt, pi) in practiceStore.activePrompts"
+        :key="`${pi}-${prompt.prompt.index}`"
         :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
