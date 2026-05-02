@@ -145,6 +145,37 @@ function playableMidiSet(settings: BakedRoutinePartSettings): Set<number> {
     return new Set(midiNotesForNoteRange(settings.noteRange));
 }
 
+/** Whole-octave shifts (prefer smallest |octaves|) until every chord tone lies in `allowed`; bounds 0…127. */
+export function transposeChordVoicingIntoAllowed(
+    voicing: number[],
+    allowed: Set<number>,
+): number[] | null {
+    if (voicing.length === 0) {
+        return [];
+    }
+    const maxOct = 11;
+    const fits = (octaves: number): boolean =>
+        voicing.every((n) => {
+            const t = n + octaves * 12;
+            return t >= 0 && t <= MAX_MIDI_NOTES && allowed.has(t);
+        });
+    for (let d = 0; d <= maxOct; d++) {
+        if (d === 0) {
+            if (fits(0)) {
+                return voicing.slice();
+            }
+            continue;
+        }
+        for (const sign of [-1, 1] as const) {
+            const k = sign * d;
+            if (fits(k)) {
+                return voicing.map((n) => n + k * 12);
+            }
+        }
+    }
+    return null;
+}
+
 export function noteScaleFromSpec(spec: PracticeScaleSpec): NoteScale {
     const setName = spec.scaleType ?? CHROMATIC_SCALE_SET_NAME;
     const baseKey = spec.baseNote ?? BaseNotes.C.mapKey;
@@ -518,6 +549,7 @@ function chordToneMidiSegmentsOrdered(
     if (practice.type !== PracticeType.Chords) {
         return [];
     }
+    const allowed = playableMidiSet(settings);
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
@@ -532,7 +564,12 @@ function chordToneMidiSegmentsOrdered(
             if (fund === null) {
                 continue;
             }
-            segments.push(midiVoicingForChordAtFundamental(chord, fund));
+            const raw = midiVoicingForChordAtFundamental(chord, fund);
+            const fitted = transposeChordVoicingIntoAllowed(raw, allowed);
+            if (fitted === null) {
+                continue;
+            }
+            segments.push(fitted);
         }
     }
     return segments;
@@ -591,20 +628,20 @@ export function tryBuildChordPrompt(
     if (fundamental === null) {
         return null;
     }
-    const voicing = midiVoicingForChordAtFundamental(chord, fundamental);
+    const rawVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
     const allowed = playableMidiSet(settings);
-    const choices = voicing.filter((n) => allowed.has(n));
-    if (choices.length === 0) {
+    const voicing = transposeChordVoicingIntoAllowed(rawVoicing, allowed);
+    if (voicing === null) {
         return null;
     }
-    const note = choices[generator.rangeExclusiveI(0, choices.length)]!;
+    const note = voicing[generator.rangeExclusiveI(0, voicing.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
     return {
         index: promptIndex,
         notes: [note],
         color: colorOptions[colorRoll],
         displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
-        ensembleMidi: choices,
+        ensembleMidi: voicing,
         ensemblePitchClasses: pitchClassesFromMidis(voicing),
     };
 }
@@ -732,15 +769,19 @@ export function generateChordPrompts(
                 if (cycleVoicing.length === 0) {
                     return {prompts, repeatFocusLabel};
                 }
+                const fitted = transposeChordVoicingIntoAllowed(cycleVoicing, allowed);
+                if (fitted === null) {
+                    cycleVoicing = null;
+                    cycleIndex = 0;
+                    continue;
+                }
+                cycleVoicing = fitted;
                 cycleIndex = 0;
             }
             const note = cycleVoicing[cycleIndex]!;
             cycleIndex++;
-            if (!allowed.has(note)) {
-                continue;
-            }
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-            const ensembleMidi = cycleVoicing.filter((n) => allowed.has(n));
+            const ensembleMidi = cycleVoicing.slice();
             const ensemblePitchClasses = pitchClassesFromMidis(cycleVoicing);
             prompts.push({
                 index: i,
@@ -760,12 +801,8 @@ export function generateChordPrompts(
     const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
     for (const seg of segments) {
         const ensemblePitchClasses = pitchClassesFromMidis(seg);
-        const ensemble = seg.filter((n) => allowed.has(n));
-        if (ensemble.length === 0) {
-            continue;
-        }
-        for (const target of ensemble) {
-            steps.push({target, ensemble, ensemblePitchClasses});
+        for (const target of seg) {
+            steps.push({target, ensemble: seg, ensemblePitchClasses});
         }
     }
     if (steps.length === 0) {

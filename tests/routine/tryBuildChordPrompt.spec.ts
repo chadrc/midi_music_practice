@@ -3,6 +3,7 @@ import {chordFromSpec, midiVoicingForChordAtFundamental, tryBuildChordPrompt} fr
 import {MAJOR_CHORDS_SET_NAME} from "../../src/notes/chords";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
+import {NoteRangeType} from "../../src/routine/types";
 
 test("builds single-note chord prompt for fixed seed", () => {
     const p = tryBuildChordPrompt(
@@ -21,6 +22,24 @@ test("builds single-note chord prompt for fixed seed", () => {
         ensembleMidi: [36, 40, 43],
         ensemblePitchClasses: [0, 4, 7],
     });
+});
+
+test("transposes voicing into note range when chord would sit outside span", () => {
+    const p = tryBuildChordPrompt(
+        MAJOR_CHORDS_SET_NAME,
+        "C",
+        minimalBakedPart({
+            seed: 1,
+            noteRange: {type: NoteRangeType.Notes, range: {start: 48, end: 58}},
+        }),
+        new NumberGenerator(12348),
+        0,
+        2,
+    );
+    expect(p).not.toEqual(null);
+    expect(p!.ensembleMidi).to.deep.equal([48, 52, 55]);
+    expect(p!.ensemblePitchClasses).to.deep.equal([0, 4, 7]);
+    expect(p!.notes[0] === 48 || p!.notes[0] === 52 || p!.notes[0] === 55).toBe(true);
 });
 
 test("returns null for invalid map key", () => {
