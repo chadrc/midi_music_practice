@@ -326,6 +326,16 @@ export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number
     }
 }
 
+/** Uniform random permutation (Fisher–Yates). */
+function shufflePermutationInPlace<T>(items: T[], generator: NumberGenerator): void {
+    for (let i = items.length - 1; i > 0; i--) {
+        const j = generator.rangeExclusiveI(0, i + 1);
+        const tmp = items[i]!;
+        items[i] = items[j]!;
+        items[j] = tmp;
+    }
+}
+
 export function midiNotesForNoteRange(nr: UserRoutineNoteRange): number[] {
     const notes: number[] = [];
     const {type, range} = nr;
@@ -667,25 +677,40 @@ export function generateScalePrompts(
         const hi = octSpan.end;
         const span = hi - lo + 1;
         const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+        let cycleNotes: number[] | null = null;
+        let cycleIndex = 0;
         let attempts = 0;
         const maxAttempts = settings.promptCount * 24;
         while (prompts.length < settings.promptCount && attempts < maxAttempts) {
             attempts++;
             const i = prompts.length;
-            const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
-            const built = tryBuildScalePrompt(
-                scaleType,
-                fundKey,
-                settings,
-                generator,
-                i,
-                randomPartOctave,
-            );
-            if (built) {
-                prompts.push(built);
+            if (!cycleNotes || cycleIndex >= cycleNotes.length) {
+                const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
+                const scale = getRegisteredScale(scaleType, fundKey);
+                const notes: number[] = [];
+                for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+                    if (scale.contains(n) && scientificOctaveFromMidi(n) === randomPartOctave) {
+                        notes.push(n);
+                    }
+                }
+                if (notes.length === 0) {
+                    continue;
+                }
+                notes.sort((a, b) => a - b);
+                shufflePermutationInPlace(notes, generator);
+                cycleNotes = notes;
+                cycleIndex = 0;
             }
+            const note = cycleNotes[cycleIndex]!;
+            cycleIndex++;
+            const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+            prompts.push({
+                index: i,
+                notes: [note],
+                color: colorOptions[colorRoll],
+                displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+            });
         }
-        shuffle(prompts, generator);
         return prompts;
     }
 
