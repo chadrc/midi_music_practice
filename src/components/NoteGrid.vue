@@ -12,6 +12,8 @@ export type ScaleContainment = Pick<NoteScale, "contains">;
 interface NoteGridProps {
     notes: Array<number>,
     hints?: Array<number>,
+    /** Secondary highlight: chord voicing / scale degrees (white border), e.g. while practicing. */
+    ensembleHints?: Array<number>,
     columns: number,
     noteStyle?: "box" | "circle" | "bar",
     scale?: ScaleContainment,
@@ -22,6 +24,7 @@ interface NoteGridProps {
 const props = withDefaults(defineProps<NoteGridProps>(), {
   notes: () => [],
   hints: () => [],
+  ensembleHints: () => [],
   noteStyle: "box",
   scale: () => SCALES[CHROMATIC_SCALE_SET_NAME][BaseNotes.C.mapKey],
   headers: () => [],
@@ -79,21 +82,29 @@ function colorForNote(row: number, column: number) {
   return `hsl(${hue}, ${saturation}%, 50%)`;
 }
 
-function makeStyleClass(
-    row: number | null = null,
-    column: number | null = null
-) {
-  let classes = [
+/** Inner cell shape (opacity applied here so ensemble ring stays fully opaque on the shell). */
+function innerCellClass(row: number, column: number) {
+  const classes = [
     "note-grid-cell",
-    `note-style-${props.noteStyle}`
-  ]
-  if (exists(row) && exists(column)) {
-    let note = midiNoteAtRowColumn(row, column);
-    if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
-      classes.push("black-key");
-    }
+    `note-style-${props.noteStyle}`,
+  ];
+  const note = midiNoteAtRowColumn(row, column);
+  if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
+    classes.push("black-key");
   }
-  return classes.join(' ')
+  return classes.join(" ");
+}
+
+function cellShellClass(row: number, column: number) {
+  const note = midiNoteAtRowColumn(row, column);
+  if (ensembleHintForNote(note)) {
+    return "note-grid-cell-shell ensemble-hint";
+  }
+  return "note-grid-cell-shell";
+}
+
+function ensembleHintForNote(note: number) {
+  return exists(props.ensembleHints.find((n) => n === note));
 }
 
 function midiNoteAtRowColumn(row: number, column: number) {
@@ -135,19 +146,27 @@ function makeNoteText(row: number, column: number) {
       >
         <div
           v-if="hasNote(r, c)"
-          :style="{
-            opacity: opacityForNote(r, c),
-            'background-color': colorForNote(r, c)
-          }"
-          :class="makeStyleClass(r, c)"
+          :class="cellShellClass(r, c)"
         >
-          <span>{{ makeNoteText(r, c) }}</span>
+          <div
+            :style="{
+              opacity: opacityForNote(r, c),
+              'background-color': colorForNote(r, c)
+            }"
+            :class="innerCellClass(r, c)"
+          >
+            <span>{{ makeNoteText(r, c) }}</span>
+          </div>
         </div>
         <div
           v-else
-          :style="{opacity: opacityForNote(r, c)}"
-          :class="`${makeStyleClass(r, c)} empty`"
-        />
+          :class="cellShellClass(r, c)"
+        >
+          <div
+            :style="{opacity: opacityForNote(r, c)}"
+            :class="`${innerCellClass(r, c)} empty`"
+          />
+        </div>
       </div>
     </div>
     <div
@@ -158,7 +177,7 @@ function makeNoteText(row: number, column: number) {
         v-for="header in props.headers"
         :key="header"
       >
-        <div :class="`${makeStyleClass()} header`">
+        <div :class="`note-grid-cell note-style-${props.noteStyle} header`">
           <span>{{ header }}</span>
         </div>
       </div>
@@ -177,6 +196,21 @@ function makeNoteText(row: number, column: number) {
   display: flex;
   flex-direction: row;
   height: 100%;
+}
+
+.note-grid-cell-shell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  /* Same 3px ring geometry as ensemble cells; transparent so the scene behind shows through. */
+  box-shadow: 0 0 0 3px transparent;
+}
+
+.note-grid-cell-shell.ensemble-hint {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 0 3px #fff;
 }
 
 .note-grid-cell {

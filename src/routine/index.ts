@@ -135,6 +135,11 @@ function midiInPracticeOctaveSpan(midi: number, span: NumberRangeLike): boolean 
     return o >= span.start && o <= span.end;
 }
 
+/** Unique pitch classes from MIDI numbers (0…11), sorted ascending. */
+export function pitchClassesFromMidis(midis: number[]): number[] {
+    return [...new Set(midis.map((n) => ((n % 12) + 12) % 12))].sort((a, b) => a - b);
+}
+
 /** MIDI values allowed for this part (notes pool + chord/scale filter). */
 function playableMidiSet(settings: BakedRoutinePartSettings): Set<number> {
     return new Set(midiNotesForNoteRange(settings.noteRange));
@@ -473,13 +478,13 @@ function orderedPartOctaves(lo: number, hi: number, up: boolean): number[] {
     return Array.from({length: span}, (_, k) => (up ? lo + k : hi - k));
 }
 
-/** Chord tones in order: each part octave (low→high or high→low), each chord type in pool order, voicing low→high. */
-function chordToneMidiSequenceOrdered(
+/** Each inner array is one chord voicing (low→high) in traversal order. */
+function chordToneMidiSegmentsOrdered(
     pool: ChordTypeId[],
     fundamentalMapKey: string,
     settings: BakedRoutinePartSettings,
     up: boolean,
-): number[] {
+): number[][] {
     const practice = settings.practice;
     if (practice.type !== PracticeType.Chords) {
         return [];
@@ -487,7 +492,7 @@ function chordToneMidiSequenceOrdered(
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
-    const out: number[] = [];
+    const segments: number[][] = [];
     for (const partOct of orderedPartOctaves(lo, hi, up)) {
         for (const chordType of pool) {
             const chord = CHORDS[chordType][fundamentalMapKey];
@@ -498,19 +503,19 @@ function chordToneMidiSequenceOrdered(
             if (fund === null) {
                 continue;
             }
-            out.push(...midiVoicingForChordAtFundamental(chord, fund));
+            segments.push(midiVoicingForChordAtFundamental(chord, fund));
         }
     }
-    return out;
+    return segments;
 }
 
-/** Scale pitches in order: each part octave, each scale type in pool order, ascending within the octave. */
-function scaleToneMidiSequenceOrdered(
+/** Each inner array is one scale’s pitches in a single part octave (sorted low→high). */
+function scaleToneMidiSegmentsOrdered(
     pool: ScaleTypeId[],
     fundamentalMapKey: string,
     settings: BakedRoutinePartSettings,
     up: boolean,
-): number[] {
+): number[][] {
     const practice = settings.practice;
     if (practice.type !== PracticeType.Scales) {
         return [];
@@ -518,7 +523,7 @@ function scaleToneMidiSequenceOrdered(
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
-    const out: number[] = [];
+    const segments: number[][] = [];
     for (const partOct of orderedPartOctaves(lo, hi, up)) {
         for (const scaleType of pool) {
             const scale = getRegisteredScale(scaleType, fundamentalMapKey);
@@ -529,10 +534,10 @@ function scaleToneMidiSequenceOrdered(
                 }
             }
             inOct.sort((a, b) => a - b);
-            out.push(...inOct);
+            segments.push(inOct);
         }
     }
-    return out;
+    return segments;
 }
 
 export function midiVoicingForChordAtFundamental(chord: Chord, fundamentalMidi: number): number[] {
@@ -570,6 +575,8 @@ export function tryBuildChordPrompt(
         notes: [note],
         color: colorOptions[colorRoll],
         displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        ensembleMidi: choices,
+        ensemblePitchClasses: pitchClassesFromMidis(voicing),
     };
 }
 
@@ -603,6 +610,8 @@ export function tryBuildScalePrompt(
         notes: [note],
         color: colorOptions[colorRoll],
         displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        ensembleMidi: choices,
+        ensemblePitchClasses: pitchClassesFromMidis(notes),
     };
 }
 
@@ -702,11 +711,15 @@ export function generateChordPrompts(
                 continue;
             }
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
+            const ensembleMidi = cycleVoicing.filter((n) => allowed.has(n));
+            const ensemblePitchClasses = pitchClassesFromMidis(cycleVoicing);
             prompts.push({
                 index: i,
                 notes: [note],
                 color: colorOptions[colorRoll],
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+                ensembleMidi,
+                ensemblePitchClasses,
             });
         }
         return {prompts, repeatFocusLabel};
@@ -714,20 +727,31 @@ export function generateChordPrompts(
 
     const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
-    const seq = chordToneMidiSequenceOrdered(pool, fundKey, settings, up).filter((n) =>
-        allowed.has(n),
-    );
-    if (seq.length === 0) {
+    const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, up);
+    const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
+    for (const seg of segments) {
+        const ensemblePitchClasses = pitchClassesFromMidis(seg);
+        const ensemble = seg.filter((n) => allowed.has(n));
+        if (ensemble.length === 0) {
+            continue;
+        }
+        for (const target of ensemble) {
+            steps.push({target, ensemble, ensemblePitchClasses});
+        }
+    }
+    if (steps.length === 0) {
         return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
-        const note = seq[i % seq.length]!;
+        const {target, ensemble, ensemblePitchClasses} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
         prompts.push({
             index: i,
-            notes: [note],
+            notes: [target],
             color: colorOptions[colorRoll],
-            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
+            ensembleMidi: ensemble,
+            ensemblePitchClasses,
         });
     }
     return {prompts, repeatFocusLabel};
@@ -780,6 +804,26 @@ export function generateScalePrompts(
 
         const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, scaleType);
 
+        const scale = getRegisteredScale(scaleType, fundKey);
+        const ensembleMidi: number[] = [];
+        for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+            if (scale.contains(n) && scientificOctaveFromMidi(n) === randomPartOctave && allowed.has(n)) {
+                ensembleMidi.push(n);
+            }
+        }
+        ensembleMidi.sort((a, b) => a - b);
+        if (ensembleMidi.length === 0) {
+            return {prompts: []};
+        }
+
+        const fullOctMidis: number[] = [];
+        for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+            if (scale.contains(n) && scientificOctaveFromMidi(n) === randomPartOctave) {
+                fullOctMidis.push(n);
+            }
+        }
+        const ensemblePitchClasses = pitchClassesFromMidis(fullOctMidis);
+
         let cycleNotes: number[] | null = null;
         let cycleIndex = 0;
         let attempts = 0;
@@ -814,6 +858,8 @@ export function generateScalePrompts(
                 notes: [note],
                 color: colorOptions[colorRoll],
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+                ensembleMidi,
+                ensemblePitchClasses,
             });
         }
         return {prompts, repeatFocusLabel};
@@ -821,20 +867,31 @@ export function generateScalePrompts(
 
     const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
-    const seq = scaleToneMidiSequenceOrdered(pool, fundKey, settings, up).filter((n) =>
-        allowed.has(n),
-    );
-    if (seq.length === 0) {
+    const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, settings, up);
+    const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
+    for (const seg of segments) {
+        const ensemblePitchClasses = pitchClassesFromMidis(seg);
+        const ensemble = seg.filter((n) => allowed.has(n));
+        if (ensemble.length === 0) {
+            continue;
+        }
+        for (const target of ensemble) {
+            steps.push({target, ensemble, ensemblePitchClasses});
+        }
+    }
+    if (steps.length === 0) {
         return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
-        const note = seq[i % seq.length]!;
+        const {target, ensemble, ensemblePitchClasses} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
         prompts.push({
             index: i,
-            notes: [note],
+            notes: [target],
             color: colorOptions[colorRoll],
-            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
+            ensembleMidi: ensemble,
+            ensemblePitchClasses,
         });
     }
     return {prompts, repeatFocusLabel};

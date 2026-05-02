@@ -169,6 +169,10 @@ export interface Prompt {
     notes: number[];
     color: string;
     displays: PromptDisplay[];
+    /** Chord voicing or scale degrees (playable-range) when {@link BakedRoutinePartSettings.requireOctave} is true. */
+    ensembleMidi?: number[];
+    /** Pitch classes (0–11) for this chord or scale; used to highlight all matching MIDIs when requireOctave is false. */
+    ensemblePitchClasses?: number[];
 }
 
 /** One batch of prompts from {@link generatePrompts} plus optional chord/scale context for the repeat. */

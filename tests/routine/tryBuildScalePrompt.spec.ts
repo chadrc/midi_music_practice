@@ -19,6 +19,8 @@ test("builds single-note scale prompt for fixed seed", () => {
         notes: [55],
         color: "teal",
         displays: [{kind: "note", note: "G3"}],
+        ensembleMidi: [48, 50, 52, 53, 55, 57, 59],
+        ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
     });
 });
 
@@ -55,24 +57,32 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
             notes: [43],
             color: "cyan",
             displays: [{kind: "note", note: "G2"}],
+            ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
+            ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
         },
         {
             index: 1,
             notes: [45],
             color: "yellow",
             displays: [{kind: "note", note: "A2"}],
+            ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
+            ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
         },
         {
             index: 2,
             notes: [36],
             color: "blue",
             displays: [{kind: "note", note: "C2"}],
+            ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
+            ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
         },
         {
             index: 3,
             notes: [43],
             color: "red",
             displays: [{kind: "note", note: "G2"}],
+            ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
+            ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
         },
     ]);
 });

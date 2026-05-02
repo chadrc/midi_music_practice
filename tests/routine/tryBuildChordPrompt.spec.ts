@@ -18,6 +18,8 @@ test("builds single-note chord prompt for fixed seed", () => {
         notes: [36],
         color: "sky",
         displays: [{kind: "note", note: "C2"}],
+        ensembleMidi: [36, 40, 43],
+        ensemblePitchClasses: [0, 4, 7],
     });
 });
 
@@ -71,24 +73,32 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
             notes: [36],
             color: "cyan",
             displays: [{kind: "note", note: "C2"}],
+            ensembleMidi: [36, 40, 43],
+            ensemblePitchClasses: [0, 4, 7],
         },
         {
             index: 1,
             notes: [40],
             color: "rose",
             displays: [{kind: "note", note: "E2"}],
+            ensembleMidi: [36, 40, 43],
+            ensemblePitchClasses: [0, 4, 7],
         },
         {
             index: 2,
             notes: [40],
             color: "amber",
             displays: [{kind: "note", note: "E2"}],
+            ensembleMidi: [36, 40, 43],
+            ensemblePitchClasses: [0, 4, 7],
         },
         {
             index: 3,
             notes: [43],
             color: "slate",
             displays: [{kind: "note", note: "G2"}],
+            ensembleMidi: [36, 40, 43],
+            ensemblePitchClasses: [0, 4, 7],
         },
     ]);
 });

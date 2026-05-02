@@ -54,7 +54,29 @@ const currentPromptHints = computed(() => {
   }
 
   return [];
-})
+});
+
+/** Chord voicing / scale degrees for the active prompt (white outline on the grid). */
+const currentEnsembleHints = computed(() => {
+  if (!practiceStore.practicing) {
+    return [];
+  }
+  const pd = practiceStore.activePrompts[practiceStore.currentPrompt];
+  if (!exists(pd)) {
+    return [];
+  }
+  const p = pd.prompt;
+  const pcs = p.ensemblePitchClasses;
+  const midis = p.ensembleMidi ?? [];
+  if (!pcs?.length) {
+    return midis;
+  }
+  if (settingsStore.currentSettings.requireOctave) {
+    return midis;
+  }
+  const pcSet = new Set(pcs);
+  return currentNotes.value.filter((n) => pcSet.has(((n % 12) + 12) % 12));
+});
 
 const noteRangeValues = computed(() => {
   const r = activeNoteRange.value.range;
@@ -245,6 +267,7 @@ function updateNoteRange(range: number[]) {
             :columns="gridColumns"
             :note-format="gridNoteFormat"
             :hints="currentPromptHints"
+            :ensemble-hints="currentEnsembleHints"
           />
         </div>
       </TabPanel>
