@@ -4,9 +4,10 @@ import {useRoutineStore} from "../store/routineEdit";
 import ParentTypeSelect from "../routine/components/ParentTypeSelect.vue";
 import SettingsEditField from "../routine/components/SettingsEditField.vue";
 import {PracticeType} from "../routine/types";
-import {defaultPracticeForType} from "../routine";
+import {defaultPracticeForType, defaultUserRoutineNoteRange} from "../routine";
 import BPMSelect from "../routine/components/BPMSelect.vue";
 import RoutinePartPracticeEditor from "../routine/components/RoutinePartPracticeEditor.vue";
+import RoutinePartNoteRangeEditor from "../routine/components/RoutinePartNoteRangeEditor.vue";
 import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
@@ -82,6 +83,12 @@ const routineEditStore = useRoutineStore();
             label="Practice"
             :set-value="defaultPracticeForType(PracticeType.Notes)"
             :component="RoutinePartPracticeEditor"
+          />
+          <SettingsEditField
+            v-model="item.noteRange"
+            label="Note / fret span"
+            :set-value="defaultUserRoutineNoteRange()"
+            :component="RoutinePartNoteRangeEditor"
           />
           <SettingsEditField
             v-model="item.repeatCount"

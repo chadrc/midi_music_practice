@@ -99,7 +99,7 @@ export function defaultUserRoutineNoteRange(): UserRoutineNoteRange {
 export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
     switch (t) {
         case PracticeType.Notes:
-            return {type: PracticeType.Notes, noteRange: defaultUserRoutineNoteRange()};
+            return {type: PracticeType.Notes};
         case PracticeType.Chords:
             return {
                 type: PracticeType.Chords,
@@ -135,12 +135,9 @@ function midiInPracticeOctaveSpan(midi: number, span: NumberRangeLike): boolean 
     return o >= span.start && o <= span.end;
 }
 
-/** Pitch span for prompts and grid: notes practice uses its own range; chords/scales use full span. */
-export function noteRangeForPractice(practice: UserRoutinePractice): UserRoutineNoteRange {
-    if (practice.type === PracticeType.Notes) {
-        return practice.noteRange;
-    }
-    return defaultUserRoutineNoteRange();
+/** MIDI values allowed for this part (notes pool + chord/scale filter). */
+function playableMidiSet(settings: BakedRoutinePartSettings): Set<number> {
+    return new Set(midiNotesForNoteRange(settings.noteRange));
 }
 
 export function noteScaleFromSpec(spec: PracticeScaleSpec): NoteScale {
@@ -225,6 +222,7 @@ export const resolveValues = (
     const toClone: UserRoutineSettingsKeys = [
         "name",
         "targetBPM",
+        "noteRange",
         "practice",
         "requireOctave",
         "minSuccessVelocity",
@@ -412,9 +410,9 @@ export function midiNotesForNoteRange(nr: UserRoutineNoteRange): number[] {
     return notes;
 }
 
-export const generateNotesForRange = (settings: {practice: UserRoutinePractice}) => {
-    return midiNotesForNoteRange(noteRangeForPractice(settings.practice));
-}
+export const generateNotesForRange = (settings: Pick<BakedRoutinePartSettings, "noteRange">) => {
+    return midiNotesForNoteRange(settings.noteRange);
+};
 
 export function formatDisplayNote(requireOctave: boolean, midi: number): string {
     return requireOctave ? formatMidiNote(midi) : formatMidiLetter(midi);
@@ -560,7 +558,12 @@ export function tryBuildChordPrompt(
         return null;
     }
     const voicing = midiVoicingForChordAtFundamental(chord, fundamental);
-    const note = voicing[generator.rangeExclusiveI(0, voicing.length)]!;
+    const allowed = playableMidiSet(settings);
+    const choices = voicing.filter((n) => allowed.has(n));
+    if (choices.length === 0) {
+        return null;
+    }
+    const note = choices[generator.rangeExclusiveI(0, choices.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
     return {
         index: promptIndex,
@@ -588,7 +591,12 @@ export function tryBuildScalePrompt(
     if (notes.length === 0) {
         return null;
     }
-    const note = notes[generator.rangeExclusiveI(0, notes.length)]!;
+    const allowed = playableMidiSet(settings);
+    const choices = notes.filter((n) => allowed.has(n));
+    if (choices.length === 0) {
+        return null;
+    }
+    const note = choices[generator.rangeExclusiveI(0, choices.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
     return {
         index: promptIndex,
@@ -606,7 +614,7 @@ export function generateNotePrompts(
     if (practiceUntyped.type !== PracticeType.Notes) {
         return {prompts: []};
     }
-    const notePool = midiNotesForNoteRange(practiceUntyped.noteRange);
+    const notePool = midiNotesForNoteRange(settings.noteRange);
     if (notePool.length === 0) {
         return {prompts: []};
     }
@@ -639,6 +647,10 @@ export function generateChordPrompts(
     const pool =
         practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
     const prompts: Prompt[] = [];
+    const allowed = playableMidiSet(settings);
+    if (allowed.size === 0) {
+        return {prompts: []};
+    }
 
     if (practice.mode === PracticePoolMode.Random) {
         const octSpan = resolvedChordScaleOctaveRange(practice);
@@ -686,6 +698,9 @@ export function generateChordPrompts(
             }
             const note = cycleVoicing[cycleIndex]!;
             cycleIndex++;
+            if (!allowed.has(note)) {
+                continue;
+            }
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
             prompts.push({
                 index: i,
@@ -699,7 +714,9 @@ export function generateChordPrompts(
 
     const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
-    const seq = chordToneMidiSequenceOrdered(pool, fundKey, settings, up);
+    const seq = chordToneMidiSequenceOrdered(pool, fundKey, settings, up).filter((n) =>
+        allowed.has(n),
+    );
     if (seq.length === 0) {
         return {prompts: []};
     }
@@ -728,6 +745,10 @@ export function generateScalePrompts(
     const fundKey = resolveFundamentalMapKey(practice, generator);
     const pool = practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [...SCALE_TYPE_OPTIONS];
     const prompts: Prompt[] = [];
+    const allowed = playableMidiSet(settings);
+    if (allowed.size === 0) {
+        return {prompts: []};
+    }
 
     if (practice.mode === PracticePoolMode.Random) {
         const octSpan = resolvedChordScaleOctaveRange(practice);
@@ -784,6 +805,9 @@ export function generateScalePrompts(
             }
             const note = cycleNotes[cycleIndex]!;
             cycleIndex++;
+            if (!allowed.has(note)) {
+                continue;
+            }
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
             prompts.push({
                 index: i,
@@ -797,7 +821,9 @@ export function generateScalePrompts(
 
     const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
-    const seq = scaleToneMidiSequenceOrdered(pool, fundKey, settings, up);
+    const seq = scaleToneMidiSequenceOrdered(pool, fundKey, settings, up).filter((n) =>
+        allowed.has(n),
+    );
     if (seq.length === 0) {
         return {prompts: []};
     }

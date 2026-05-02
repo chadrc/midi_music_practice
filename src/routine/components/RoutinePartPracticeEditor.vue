@@ -3,7 +3,6 @@ import {computed} from "vue";
 import {PracticeType, type UserRoutinePractice} from "../types";
 import PracticeTypeSelect from "./PracticeTypeSelect.vue";
 import PracticeItemsEditor from "./PracticeItemsEditor.vue";
-import RoutinePartNoteRangeEditor from "./RoutinePartNoteRangeEditor.vue";
 import {defaultPracticeForType} from "..";
 
 const model = defineModel<UserRoutinePractice | null>();
@@ -29,10 +28,6 @@ const practiceTypeChoice = computed({
     class="routine-part-practice-editor"
   >
     <PracticeTypeSelect v-model="practiceTypeChoice" />
-    <RoutinePartNoteRangeEditor
-      v-if="model.type === PracticeType.Notes"
-      v-model="model.noteRange"
-    />
     <PracticeItemsEditor
       v-if="model.type === PracticeType.Chords"
       v-model="model"

@@ -11,7 +11,6 @@ import {
   setNoteRangeType,
   practiceScaleMembership,
   defaultPracticeForType,
-  noteRangeForPractice,
 } from "../routine";
 import {computed} from "vue";
 import {usePracticeStore} from "../store/practice";
@@ -24,10 +23,8 @@ const practiceStore = usePracticeStore();
 const editingDisabled = computed(() => settingsStore.editingDisabled);
 const currentSettings = computed(() => settingsStore.currentSettings);
 
-/** Grid span and helpers: full MIDI range for chords/scales; notes practice uses its editor range. */
-const activeNoteRange = computed(() =>
-    noteRangeForPractice(currentSettings.value.practice),
-);
+/** Grid span matches part note/fret range (all practice types). */
+const activeNoteRange = computed(() => currentSettings.value.noteRange);
 
 function makeNoteRangeOptions() {
   return [
@@ -88,7 +85,7 @@ const gridColumns = computed(() => {
       return end - start + 1
     }
     case NoteRangeType.Octaves:
-      return settingsStore.selectedNotes.length
+      return currentNotes.value.length
     default:
       return 1;
   }
@@ -152,10 +149,7 @@ function onPracticeTypeChange(t: PracticeType | string) {
 }
 
 function updateNoteRange(range: number[]) {
-  if (currentSettings.value.practice.type !== PracticeType.Notes) {
-    return;
-  }
-  const r = currentSettings.value.practice.noteRange.range;
+  const r = currentSettings.value.noteRange.range;
   r.start = range[0];
   r.end = range[1];
 }
@@ -217,23 +211,17 @@ function updateNoteRange(range: number[]) {
               :disabled="editingDisabled"
             />
           </div>
-          <div
-            v-if="currentSettings.practice.type === PracticeType.Notes"
-            class="instrument-option"
-          >
+          <div class="instrument-option">
             <Select
-              :model-value="currentSettings.practice.noteRange.type"
+              :model-value="currentSettings.noteRange.type"
               :options="makeNoteRangeOptions()"
               option-value="value"
               option-label="name"
               :disabled="editingDisabled"
-              @update:model-value="(t: NoteRangeType) => setNoteRangeType(currentSettings.practice.noteRange, t)"
+              @update:model-value="(t: NoteRangeType) => setNoteRangeType(currentSettings.noteRange, t)"
             />
           </div>
-          <div
-            v-if="currentSettings.practice.type === PracticeType.Notes"
-            class="instrument-option"
-          >
+          <div class="instrument-option">
             <div class="note-range-slider-wrapper">
               <span>{{ noteRangeValues[0] }}</span>
               <Slider

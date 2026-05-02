@@ -1,5 +1,5 @@
 import {expect, test} from "vitest";
-import {generateRoutine, defaultPracticeForType} from "../../src/routine";
+import {generateRoutine, defaultPracticeForType, defaultUserRoutineNoteRange} from "../../src/routine";
 import {ParentType, PracticeType} from "../../src/routine/types";
 
 test("empty parts yields empty routine object", () => {
@@ -10,6 +10,7 @@ test("empty parts yields empty routine object", () => {
                 name: "u",
                 seed: 1,
                 targetBPM: 120,
+                noteRange: defaultUserRoutineNoteRange(),
                 practice: defaultPracticeForType(PracticeType.Notes),
                 requireOctave: true,
                 minSuccessVelocity: 1,
@@ -34,6 +35,7 @@ test("bakes one part into full repetition + bakedSettings", () => {
                     repeatCount: 0,
                     cloneRepeat: false,
                     targetBPM: 120,
+                    noteRange: defaultUserRoutineNoteRange(),
                     practice: defaultPracticeForType(PracticeType.Notes),
                     requireOctave: true,
                     minSuccessVelocity: 1,
@@ -45,6 +47,7 @@ test("bakes one part into full repetition + bakedSettings", () => {
             name: "u",
             seed: 99,
             targetBPM: 120,
+            noteRange: defaultUserRoutineNoteRange(),
             practice: defaultPracticeForType(PracticeType.Notes),
             requireOctave: true,
             minSuccessVelocity: 1,
@@ -93,6 +96,7 @@ test("bakes one part into full repetition + bakedSettings", () => {
                     parentSettings: ParentType.Settings,
                     seed: 99,
                     targetBPM: 120,
+                    noteRange: defaultUserRoutineNoteRange(),
                     practice: defaultPracticeForType(PracticeType.Notes),
                     requireOctave: true,
                     minSuccessVelocity: 1,

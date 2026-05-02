@@ -1,6 +1,6 @@
 import type {BakedRoutinePartSettings} from "../../src/routine/types";
 import {ParentType, PracticeType} from "../../src/routine/types";
-import {defaultPracticeForType} from "../../src/routine";
+import {defaultPracticeForType, defaultUserRoutineNoteRange} from "../../src/routine";
 
 export function minimalBakedPart(
     overrides: Partial<BakedRoutinePartSettings> = {},
@@ -9,6 +9,7 @@ export function minimalBakedPart(
         name: "part",
         seed: 42,
         targetBPM: 120,
+        noteRange: defaultUserRoutineNoteRange(),
         practice: defaultPracticeForType(PracticeType.Notes),
         requireOctave: true,
         minSuccessVelocity: 64,

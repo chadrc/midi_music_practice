@@ -15,6 +15,7 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         repeatCount: 1,
         cloneRepeat: false,
         targetBPM: null,
+        noteRange: null,
         practice: null,
         requireOctave: null,
         minSuccessVelocity: null,

@@ -1,11 +1,10 @@
 import {expect, test} from "vitest";
-import {defaultPracticeForType, defaultUserRoutineNoteRange} from "../../src/routine";
+import {defaultPracticeForType} from "../../src/routine";
 import {DEFAULT_PRACTICE_OCTAVE_RANGE, PracticePoolMode, PracticeType} from "../../src/routine/types";
 
-test("Notes default includes full default note range", () => {
+test("Notes default has no embedded settings beyond type", () => {
     expect(defaultPracticeForType(PracticeType.Notes)).to.deep.equal({
         type: PracticeType.Notes,
-        noteRange: defaultUserRoutineNoteRange(),
     });
 });
 

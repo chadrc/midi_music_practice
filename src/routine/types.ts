@@ -1,4 +1,5 @@
 import type {NumberRangeLike} from "../common/NumberRange";
+import type {NumberGenerator} from "../common/NumberGenerator";
 import {
     DIMINISHED_CHORDS_SET_NAME,
     MAJOR_CHORDS_SET_NAME,
@@ -79,10 +80,9 @@ export enum PracticePoolMode {
 /** Default scientific octave span for chord/scale roots (see {@link formatMidiNote} octaves). */
 export const DEFAULT_PRACTICE_OCTAVE_RANGE: NumberRangeLike = {start: 2, end: 4};
 
-/** Single-note prompts; pitch range applies only to this practice mode. */
+/** Single-note prompts; pitch range lives on {@link UserRoutinePartSettings.noteRange}. */
 export interface RoutineNotesPractice {
     type: PracticeType.Notes;
-    noteRange: UserRoutineNoteRange;
 }
 
 /** Chord practice: one optional root and any number of chord qualities from the chord registry. */
@@ -115,10 +115,7 @@ export interface RoutineScalesPractice {
     octaveRange?: NumberRangeLike;
 }
 
-export type UserRoutinePractice =
-    | RoutineNotesPractice
-    | RoutineChordsPractice
-    | RoutineScalesPractice;
+export type UserRoutinePractice = RoutineNotesPractice | RoutineChordsPractice | RoutineScalesPractice;
 
 export enum ParentType {
     Settings,
@@ -130,6 +127,8 @@ export interface UserRoutinePartSettings {
     name: string;
     seed: number | null;
     targetBPM: number;
+    /** Playable MIDI (or frets/octaves) span: drives Notes pool; chords/scales prompts are filtered to this set. */
+    noteRange: UserRoutineNoteRange;
     practice: UserRoutinePractice;
     requireOctave: boolean;
     minSuccessVelocity: number;

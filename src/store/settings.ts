@@ -1,7 +1,12 @@
 import {defineStore} from "pinia";
 import {RNBOParameter} from "./types";
-import {defaultPracticeForType, noteRangeForPractice, noteScaleFromPractice, STANDARD_TUNING_OPEN_FRET_NOTES} from "../routine";
-import {UserRoutinePartSettings, PracticeType, NoteRangeType} from "../routine/types";
+import {
+    defaultPracticeForType,
+    defaultUserRoutineNoteRange,
+    midiNotesForNoteRange,
+    noteScaleFromPractice,
+} from "../routine";
+import {UserRoutinePartSettings, PracticeType, UserRoutinePractice, UserRoutineNoteRange} from "../routine/types";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
 import {usePracticeStore} from "./practice";
@@ -60,6 +65,7 @@ export const useSettingsStore = defineStore('settings', {
             name: "",
             seed: null,
             targetBPM: 120,
+            noteRange: defaultUserRoutineNoteRange(),
             practice: defaultPracticeForType(PracticeType.Notes),
             requireOctave: true,
             minSuccessVelocity: 100,
@@ -74,14 +80,30 @@ export const useSettingsStore = defineStore('settings', {
         if (localStorage.getItem('settings')) {
             const stored = JSON.parse(localStorage.getItem('settings')!);
             const rawUr = {...defaultUserRoutine, ...stored.userRoutine};
-            let practice = rawUr.practice as UserRoutinePractice;
-            if (practice && typeof practice.type !== "number") {
-                practice = {...practice, type: Number(practice.type) as PracticeType};
+            let practice = rawUr.practice as UserRoutinePractice | undefined;
+            if (practice != null) {
+                const rawType = practice.type as PracticeType | string;
+                if (typeof rawType === "string") {
+                    practice = {
+                        ...practice,
+                        type: Number.parseInt(rawType, 10) as PracticeType,
+                    } as UserRoutinePractice;
+                }
+            }
+            let hoistedNoteRange: UserRoutineNoteRange | undefined;
+            if (practice && practice.type === PracticeType.Notes && "noteRange" in practice) {
+                const nr = (practice as UserRoutinePractice & {noteRange?: UserRoutineNoteRange}).noteRange;
+                if (nr !== undefined) {
+                    hoistedNoteRange = nr;
+                }
+                practice = {type: PracticeType.Notes} as UserRoutinePractice;
             }
             const userRoutine: UserRoutinePartSettings = {
                 name: rawUr.name,
                 seed: rawUr.seed,
                 targetBPM: rawUr.targetBPM,
+                noteRange:
+                    rawUr.noteRange ?? hoistedNoteRange ?? defaultUserRoutineNoteRange(),
                 practice,
                 requireOctave: rawUr.requireOctave,
                 minSuccessVelocity: rawUr.minSuccessVelocity,
@@ -110,39 +132,10 @@ export const useSettingsStore = defineStore('settings', {
             return noteScaleFromPractice(state.userRoutine.practice);
         },
         currentRange(state): NumberRangeLike {
-            return noteRangeForPractice(state.userRoutine.practice).range;
+            return state.userRoutine.noteRange.range;
         },
         selectedNotes(state): number[] {
-            const notes: number[] = []
-            const nr = noteRangeForPractice(state.userRoutine.practice);
-            const {start, end} = nr.range;
-
-            switch (nr.type) {
-                case NoteRangeType.Notes:
-                    for (let i = start; i <= end; i++) {
-                        notes.push(i)
-                    }
-                    break;
-                case NoteRangeType.Frets:
-                    for (const note in STANDARD_TUNING_OPEN_FRET_NOTES) {
-                        for (let i = start; i <= end; i++) {
-                            notes.push(STANDARD_TUNING_OPEN_FRET_NOTES[note] + i)
-                        }
-                    }
-                    break;
-                case NoteRangeType.Octaves: {
-                    const startingC = start * 12
-                    const noteCount = (end - start) * 12;
-                    const lastNote = startingC + noteCount;
-
-                    for (let i = startingC; i <= lastNote; i++) {
-                        notes.push(i)
-                    }
-                    break;
-                }
-            }
-
-            return notes
+            return midiNotesForNoteRange(state.userRoutine.noteRange);
         },
         currentSettings() {
             if (this.practice.matchPracticeRoutine) {

@@ -1,5 +1,5 @@
 import {expect, test} from "vitest";
-import {resolveValues, defaultPracticeForType} from "../../src/routine";
+import {resolveValues, defaultPracticeForType, defaultUserRoutineNoteRange} from "../../src/routine";
 import {ParentType, PracticeType} from "../../src/routine/types";
 
 test("fills nulls from defaults (full baked object)", () => {
@@ -12,6 +12,7 @@ test("fills nulls from defaults (full baked object)", () => {
                 repeatCount: 2,
                 cloneRepeat: true,
                 targetBPM: null,
+                noteRange: null,
                 practice: null,
                 requireOctave: null,
                 minSuccessVelocity: null,
@@ -21,6 +22,7 @@ test("fills nulls from defaults (full baked object)", () => {
                 name: "defaults",
                 seed: null,
                 targetBPM: 100,
+                noteRange: defaultUserRoutineNoteRange(),
                 practice: defaultPracticeForType(PracticeType.Notes),
                 requireOctave: false,
                 minSuccessVelocity: 10,
@@ -34,6 +36,7 @@ test("fills nulls from defaults (full baked object)", () => {
         parentSettings: ParentType.First,
         seed: null,
         targetBPM: 100,
+        noteRange: defaultUserRoutineNoteRange(),
         practice: defaultPracticeForType(PracticeType.Notes),
         requireOctave: false,
         minSuccessVelocity: 10,
