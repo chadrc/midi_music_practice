@@ -1,6 +1,7 @@
 import {
     BakedRoutinePartSettings,
     CHORD_TYPE_OPTIONS,
+    DEFAULT_PRACTICE_OCTAVE_RANGE,
     NoteRangeType,
     ParentType,
     PracticePoolMode,
@@ -16,8 +17,7 @@ import {
     Prompt,
     type UserRoutineNoteRange,
 } from "./types";
-import {formatMidiLetter, formatMidiNote} from "../notes";
-import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
+import {formatMidiLetter, formatMidiNote, scientificOctaveFromMidi} from "../notes";
 import type {
     ChordTypeId,
     PracticeChordSpec,
@@ -30,7 +30,6 @@ import {
     BaseNotes,
     CHORD_REGISTRY_PRIMARY_MAP_KEYS,
     CHROMATIC_SCALE_SET_NAME,
-    displayNameFromMapKey,
     getRegisteredScale,
     NoteScale,
     SCALES,
@@ -103,14 +102,34 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
                 type: PracticeType.Chords,
                 chordTypes: [],
                 mode: PracticePoolMode.Random,
+                octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
             };
         case PracticeType.Scales:
             return {
                 type: PracticeType.Scales,
                 scaleTypes: [],
                 mode: PracticePoolMode.Random,
+                octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
             };
     }
+}
+
+function orderedOctaveRange(range: NumberRangeLike): NumberRangeLike {
+    const lo = Math.min(range.start, range.end);
+    const hi = Math.max(range.start, range.end);
+    return {start: lo, end: hi};
+}
+
+function resolvedChordScaleOctaveRange(practice: UserRoutinePractice): NumberRangeLike {
+    if (practice.type === PracticeType.Chords || practice.type === PracticeType.Scales) {
+        return orderedOctaveRange(practice.octaveRange ?? DEFAULT_PRACTICE_OCTAVE_RANGE);
+    }
+    return orderedOctaveRange(DEFAULT_PRACTICE_OCTAVE_RANGE);
+}
+
+function midiInPracticeOctaveSpan(midi: number, span: NumberRangeLike): boolean {
+    const o = scientificOctaveFromMidi(midi);
+    return o >= span.start && o <= span.end;
 }
 
 /** Pitch span for prompts and grid: notes practice uses its own range; chords/scales use full span. */
@@ -390,32 +409,38 @@ export function tryBuildChordPrompt(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
     promptIndex: number,
+    partOctave: number,
 ): Prompt | null {
     const chord = CHORDS[chordType][fundamentalMapKey];
     if (!chord) {
         return null;
     }
     const rootPc = chord.baseNote.pitchClass;
-    const fundamentals: number[] = [];
+    const octSpan = resolvedChordScaleOctaveRange(settings.practice);
+    let fundamental: number | null = null;
     for (let fund = rootPc; fund <= MAX_MIDI_NOTES; fund += 12) {
+        if (scientificOctaveFromMidi(fund) !== partOctave) {
+            continue;
+        }
         const voicing = midiVoicingForChordAtFundamental(chord, fund);
         if (voicing.every((n) => n >= 0 && n <= MAX_MIDI_NOTES)) {
-            fundamentals.push(fund);
+            if (midiInPracticeOctaveSpan(fund, octSpan)) {
+                fundamental = fund;
+                break;
+            }
         }
     }
-    if (fundamentals.length === 0) {
+    if (fundamental === null) {
         return null;
     }
-    const fundamental = fundamentals[generator.rangeExclusiveI(0, fundamentals.length)];
-    const notes = midiVoicingForChordAtFundamental(chord, fundamental);
+    const voicing = midiVoicingForChordAtFundamental(chord, fundamental);
+    const note = voicing[generator.rangeExclusiveI(0, voicing.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-    const title = `${chord.baseNote.getName()} ${CHORD_TYPE_LABEL[chordType]}`;
-    const cells = notes.map((n) => formatDisplayNote(settings.requireOctave, n));
     return {
         index: promptIndex,
-        notes,
+        notes: [note],
         color: colorOptions[colorRoll],
-        displays: [{kind: "chord", title, cells}],
+        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
     };
 }
 
@@ -425,26 +450,25 @@ export function tryBuildScalePrompt(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
     promptIndex: number,
+    partOctave: number,
 ): Prompt | null {
     const scale = getRegisteredScale(scaleType, fundamentalMapKey);
     const notes: number[] = [];
     for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
-        if (scale.contains(n)) {
+        if (scale.contains(n) && scientificOctaveFromMidi(n) === partOctave) {
             notes.push(n);
         }
     }
     if (notes.length === 0) {
         return null;
     }
+    const note = notes[generator.rangeExclusiveI(0, notes.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-    const rootLabel = displayNameFromMapKey(fundamentalMapKey);
-    const title = `${rootLabel} ${SCALE_TYPE_LABEL[scaleType]}`;
-    const cells = notes.map((n) => formatDisplayNote(settings.requireOctave, n));
     return {
         index: promptIndex,
-        notes,
+        notes: [note],
         color: colorOptions[colorRoll],
-        displays: [{kind: "scale", title, cells}],
+        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
     };
 }
 
@@ -488,6 +512,10 @@ export function generateChordPrompts(
     const fundKey = resolveFundamentalMapKey(practice, generator);
     const pool =
         practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
+    const octSpan = resolvedChordScaleOctaveRange(practice);
+    const lo = octSpan.start;
+    const hi = octSpan.end;
+    const partOctave = lo + generator.rangeExclusiveI(0, hi - lo + 1);
     const prompts: Prompt[] = [];
     let attempts = 0;
     const maxAttempts = settings.promptCount * 24;
@@ -501,11 +529,13 @@ export function generateChordPrompts(
             settings,
             generator,
             i,
+            partOctave,
         );
         if (built) {
             prompts.push(built);
         }
     }
+    shuffle(prompts, generator);
     return prompts;
 }
 
@@ -520,6 +550,10 @@ export function generateScalePrompts(
     const practice = practiceUntyped;
     const fundKey = resolveFundamentalMapKey(practice, generator);
     const pool = practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [...SCALE_TYPE_OPTIONS];
+    const octSpan = resolvedChordScaleOctaveRange(practice);
+    const lo = octSpan.start;
+    const hi = octSpan.end;
+    const partOctave = lo + generator.rangeExclusiveI(0, hi - lo + 1);
     const prompts: Prompt[] = [];
     let attempts = 0;
     const maxAttempts = settings.promptCount * 24;
@@ -533,11 +567,13 @@ export function generateScalePrompts(
             settings,
             generator,
             i,
+            partOctave,
         );
         if (built) {
             prompts.push(built);
         }
     }
+    shuffle(prompts, generator);
     return prompts;
 }
 

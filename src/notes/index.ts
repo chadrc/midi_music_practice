@@ -13,9 +13,14 @@ const CHORD_TYPE_TO_NAME: {[key: string]: string} = {
 export const formatMidiNote = (midiNote: number) => {
     // 0 is C-1
     const letterNo = midiNote % 12;
-    const octave = Math.floor(midiNote / 12) - 1;
+    const octave = scientificOctaveFromMidi(midiNote);
 
     return `${LETTER_NOTES[letterNo]}${octave}`;
+}
+
+/** Scientific octave used in {@link formatMidiNote} (e.g. MIDI 60 → 4 for “C4”). */
+export function scientificOctaveFromMidi(midiNote: number): number {
+    return Math.floor(midiNote / 12) - 1;
 }
 
 export const formatMidiLetter = (midiNote: number) => {

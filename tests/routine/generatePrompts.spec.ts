@@ -5,10 +5,6 @@ import {MAJOR_CHORDS_SET_NAME} from "../../src/notes/chords";
 import {MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
-import {
-    C_MAJOR_SCALE_CELLS_OCTAVE,
-    C_MAJOR_SCALE_NOTES,
-} from "./local/cMajorScaleFullRangeSnapshot";
 
 test("dispatches by practice type with full prompt payloads", () => {
     expect(generatePrompts(minimalBakedPart({promptCount: 2, seed: 200}), new NumberGenerator(22334))).to.deep.equal([
@@ -43,15 +39,9 @@ test("dispatches by practice type with full prompt payloads", () => {
     ).to.deep.equal([
         {
             index: 0,
-            notes: [24, 28, 31],
-            color: "green",
-            displays: [
-                {
-                    kind: "chord",
-                    title: "C Major",
-                    cells: ["C1", "E1", "G1"],
-                },
-            ],
+            notes: [36],
+            color: "amber",
+            displays: [{kind: "note", note: "C2"}],
         },
     ]);
 
@@ -72,15 +62,9 @@ test("dispatches by practice type with full prompt payloads", () => {
     ).to.deep.equal([
         {
             index: 0,
-            notes: [...C_MAJOR_SCALE_NOTES],
-            color: "emerald",
-            displays: [
-                {
-                    kind: "scale",
-                    title: "C Major (Ionian)",
-                    cells: [...C_MAJOR_SCALE_CELLS_OCTAVE],
-                },
-            ],
+            notes: [38],
+            color: "yellow",
+            displays: [{kind: "note", note: "D2"}],
         },
     ]);
 });

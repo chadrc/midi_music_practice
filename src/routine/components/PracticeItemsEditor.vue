@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed} from "vue";
+import {watchEffect} from "vue";
 import {MultiSelect, Select} from "primevue";
 import {
     CHORD_TYPE_LABEL,
@@ -7,14 +7,17 @@ import {
 } from "../../notes/notes";
 import {
     CHORD_TYPE_OPTIONS,
+    DEFAULT_PRACTICE_OCTAVE_RANGE,
     SCALE_TYPE_OPTIONS,
     PracticePoolMode,
+    PracticeType,
     type ChordTypeId,
     type ScaleTypeId,
     type RoutineChordsPractice,
     type RoutineScalesPractice,
 } from "../types";
 import {BaseNotes} from "../../notes/scales";
+import RangeSlider from "./RangeSlider.vue";
 
 const props = defineProps<{
     kind: "chords" | "scales",
@@ -45,6 +48,20 @@ const poolModeOptions = [
 
 const chordFields = computed(() => practice.value as RoutineChordsPractice);
 const scaleFields = computed(() => practice.value as RoutineScalesPractice);
+
+watchEffect(() => {
+    if (props.kind === "chords" && practice.value.type === PracticeType.Chords) {
+        const p = practice.value;
+        if (!p.octaveRange) {
+            p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+        }
+    } else if (props.kind === "scales" && practice.value.type === PracticeType.Scales) {
+        const p = practice.value;
+        if (!p.octaveRange) {
+            p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+        }
+    }
+});
 </script>
 
 <template>
@@ -76,6 +93,14 @@ const scaleFields = computed(() => practice.value as RoutineScalesPractice);
         placeholder="Chord types (defaults when empty)"
         class="practice-item-control practice-item-multiselect"
       />
+      <div class="octave-range-block">
+        <span class="octave-range-label">Chord root octaves</span>
+        <RangeSlider
+          v-model="chordFields.octaveRange"
+          :min="-1"
+          :max="9"
+        />
+      </div>
     </template>
     <template v-else>
       <Select
@@ -104,6 +129,14 @@ const scaleFields = computed(() => practice.value as RoutineScalesPractice);
         placeholder="Scales (chromatic default when empty)"
         class="practice-item-control practice-item-multiselect"
       />
+      <div class="octave-range-block">
+        <span class="octave-range-label">Scale octaves (one random octave per prompt)</span>
+        <RangeSlider
+          v-model="scaleFields.octaveRange"
+          :min="-1"
+          :max="9"
+        />
+      </div>
     </template>
   </div>
 </template>
@@ -123,5 +156,16 @@ const scaleFields = computed(() => practice.value as RoutineScalesPractice);
   min-width: 14rem;
   width: 100%;
   max-width: 28rem;
+}
+
+.octave-range-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.octave-range-label {
+  font-size: 0.875rem;
+  opacity: 0.9;
 }
 </style>

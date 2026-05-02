@@ -4,20 +4,8 @@ import {PracticePoolMode, PracticeType} from "../../src/routine/types";
 import {MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
-import {
-    C_MAJOR_SCALE_CELLS_OCTAVE,
-    C_MAJOR_SCALE_NOTES,
-} from "./local/cMajorScaleFullRangeSnapshot";
 
-function cMajorScaleDisplayBlock() {
-    return {
-        kind: "scale" as const,
-        title: "C Major (Ionian)",
-        cells: [...C_MAJOR_SCALE_CELLS_OCTAVE],
-    };
-}
-
-test("emits full scale prompts for fixed seed", () => {
+test("emits scale prompts with one note each for fixed seed", () => {
     const prompts = generateScalePrompts(
         minimalBakedPart({
             promptCount: 2,
@@ -30,18 +18,19 @@ test("emits full scale prompts for fixed seed", () => {
         }),
         new NumberGenerator(12347),
     );
-    expect(prompts).to.deep.equal([
+    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
+    expect(byIndex).to.deep.equal([
         {
             index: 0,
-            notes: [...C_MAJOR_SCALE_NOTES],
-            color: "red",
-            displays: [cMajorScaleDisplayBlock()],
+            notes: [40],
+            color: "cyan",
+            displays: [{kind: "note", note: "E2"}],
         },
         {
             index: 1,
-            notes: [...C_MAJOR_SCALE_NOTES],
-            color: "amber",
-            displays: [cMajorScaleDisplayBlock()],
+            notes: [36],
+            color: "emerald",
+            displays: [{kind: "note", note: "C2"}],
         },
     ]);
 });

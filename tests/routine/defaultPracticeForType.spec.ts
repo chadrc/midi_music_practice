@@ -1,6 +1,6 @@
 import {expect, test} from "vitest";
 import {defaultPracticeForType, defaultUserRoutineNoteRange} from "../../src/routine";
-import {PracticePoolMode, PracticeType} from "../../src/routine/types";
+import {DEFAULT_PRACTICE_OCTAVE_RANGE, PracticePoolMode, PracticeType} from "../../src/routine/types";
 
 test("Notes default includes full default note range", () => {
     expect(defaultPracticeForType(PracticeType.Notes)).to.deep.equal({
@@ -14,6 +14,7 @@ test("Chords default uses empty type pool and Random mode", () => {
         type: PracticeType.Chords,
         chordTypes: [],
         mode: PracticePoolMode.Random,
+        octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
     });
 });
 
@@ -22,5 +23,6 @@ test("Scales default uses empty type pool and Random mode", () => {
         type: PracticeType.Scales,
         scaleTypes: [],
         mode: PracticePoolMode.Random,
+        octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
     });
 });

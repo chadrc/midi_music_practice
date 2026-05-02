@@ -1,5 +1,4 @@
 import type {NumberRangeLike} from "../common/NumberRange";
-import type {NumberGenerator} from "../common/NumberGenerator";
 import {
     DIMINISHED_CHORDS_SET_NAME,
     MAJOR_CHORDS_SET_NAME,
@@ -77,6 +76,9 @@ export enum PracticePoolMode {
     Random = "Random",
 }
 
+/** Default scientific octave span for chord/scale roots (see {@link formatMidiNote} octaves). */
+export const DEFAULT_PRACTICE_OCTAVE_RANGE: NumberRangeLike = {start: 2, end: 4};
+
 /** Single-note prompts; pitch range applies only to this practice mode. */
 export interface RoutineNotesPractice {
     type: PracticeType.Notes;
@@ -91,6 +93,11 @@ export interface RoutineChordsPractice {
     chordTypes: ChordTypeId[];
     /** Order / traversal of the chord-type pool; default Random. */
     mode: PracticePoolMode;
+    /**
+     * Scientific octave bounds for chord roots (same numbering as note labels, e.g. “C4” → 4).
+     * Defaults to {@link DEFAULT_PRACTICE_OCTAVE_RANGE} when missing.
+     */
+    octaveRange?: NumberRangeLike;
 }
 
 /** Scale practice: one optional root and any number of scale types from the scale registry. */
@@ -101,6 +108,11 @@ export interface RoutineScalesPractice {
     scaleTypes: ScaleTypeId[];
     /** Order / traversal of the scale-type pool; default Random. */
     mode: PracticePoolMode;
+    /**
+     * Scientific octaves allowed for scale prompts; one octave is chosen at random per prompt
+     * (uniform over inclusive start…end).
+     */
+    octaveRange?: NumberRangeLike;
 }
 
 export type UserRoutinePractice =
