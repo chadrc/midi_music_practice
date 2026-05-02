@@ -1,0 +1,8 @@
+---
+description: Follow project agent notes in AGENTS.md on every session
+alwaysApply: true
+---
+
+# AGENTS.md
+
+Read and follow **[AGENTS.md](AGENTS.md)** at the repository root for project conventions that apply to the AI agent (e.g. testing expectations). If that file is updated, treat it as authoritative.
