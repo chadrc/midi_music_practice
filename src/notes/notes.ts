@@ -54,7 +54,7 @@ export const CHORD_TYPE_LABEL: Record<ChordTypeId, string> = {
     [ADD_9_CHORDS_SET_NAME]: "Add9",
     [ADD_2_CHORDS_SET_NAME]: "Add2",
     [POWER_CHORDS_SET_NAME]: "Power (5)",
-    [SHELL_CHORDS_SET_NAME]: "Shell (major R-3-7)",
+    [SHELL_CHORDS_SET_NAME]: "Major 7th Shell",
 };
 
 export const SCALE_TYPE_LABEL: Record<ScaleTypeId, string> = {
