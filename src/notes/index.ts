@@ -45,7 +45,7 @@ const CHORD_TYPE_TO_NAME: {[key: string]: string} = {
     [ADD_9_CHORDS_SET_NAME]: "add9",
     [ADD_2_CHORDS_SET_NAME]: "add2",
     [POWER_CHORDS_SET_NAME]: "5",
-    [SHELL_CHORDS_SET_NAME]: "maj7(no5)",
+    [SHELL_CHORDS_SET_NAME]: "maj7 shell",
 };
 
 export const formatMidiNote = (midiNote: number) => {
