@@ -604,6 +604,20 @@ export function generateChordPrompts(
         const hi = octSpan.end;
         const span = hi - lo + 1;
         const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+
+        let chordType: ChordTypeId | null = null;
+        const maxTypePicks = Math.max(32, pool.length * 8);
+        for (let pick = 0; pick < maxTypePicks; pick++) {
+            const t = pool[pickPoolIndex(practice.mode, pool.length, 0, generator)]!;
+            if (CHORDS[t][fundKey]) {
+                chordType = t;
+                break;
+            }
+        }
+        if (chordType === null) {
+            return [];
+        }
+
         let cycleVoicing: number[] | null = null;
         let cycleIndex = 0;
         let attempts = 0;
@@ -612,18 +626,17 @@ export function generateChordPrompts(
             attempts++;
             const i = prompts.length;
             if (!cycleVoicing || cycleIndex >= cycleVoicing.length) {
-                const chordType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
                 const chord = CHORDS[chordType][fundKey];
                 if (!chord) {
-                    continue;
+                    return prompts;
                 }
                 const fundamental = fundamentalMidiForChordInPartOctave(chord, randomPartOctave, octSpan);
                 if (fundamental === null) {
-                    continue;
+                    return prompts;
                 }
                 cycleVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
                 if (cycleVoicing.length === 0) {
-                    continue;
+                    return prompts;
                 }
                 cycleIndex = 0;
             }
@@ -677,6 +690,28 @@ export function generateScalePrompts(
         const hi = octSpan.end;
         const span = hi - lo + 1;
         const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
+
+        let scaleType: ScaleTypeId | null = null;
+        const maxTypePicks = Math.max(32, pool.length * 8);
+        for (let pick = 0; pick < maxTypePicks; pick++) {
+            const t = pool[pickPoolIndex(practice.mode, pool.length, 0, generator)]!;
+            const scale = getRegisteredScale(t, fundKey);
+            let hasInOctave = false;
+            for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+                if (scale.contains(n) && scientificOctaveFromMidi(n) === randomPartOctave) {
+                    hasInOctave = true;
+                    break;
+                }
+            }
+            if (hasInOctave) {
+                scaleType = t;
+                break;
+            }
+        }
+        if (scaleType === null) {
+            return [];
+        }
+
         let cycleNotes: number[] | null = null;
         let cycleIndex = 0;
         let attempts = 0;
@@ -685,7 +720,6 @@ export function generateScalePrompts(
             attempts++;
             const i = prompts.length;
             if (!cycleNotes || cycleIndex >= cycleNotes.length) {
-                const scaleType = pool[pickPoolIndex(practice.mode, pool.length, i, generator)];
                 const scale = getRegisteredScale(scaleType, fundKey);
                 const notes: number[] = [];
                 for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
@@ -694,7 +728,7 @@ export function generateScalePrompts(
                     }
                 }
                 if (notes.length === 0) {
-                    continue;
+                    return prompts;
                 }
                 notes.sort((a, b) => a - b);
                 shufflePermutationInPlace(notes, generator);

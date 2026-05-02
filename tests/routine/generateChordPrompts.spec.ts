@@ -224,19 +224,19 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
         {
             index: 3,
             notes: [60],
-            color: "purple",
+            color: "indigo",
             displays: [{kind: "note", note: "C4"}],
         },
         {
             index: 4,
             notes: [64],
-            color: "amber",
+            color: "purple",
             displays: [{kind: "note", note: "E4"}],
         },
         {
             index: 5,
             notes: [67],
-            color: "rose",
+            color: "amber",
             displays: [{kind: "note", note: "G4"}],
         },
     ]);

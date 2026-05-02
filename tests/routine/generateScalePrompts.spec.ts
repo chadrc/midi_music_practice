@@ -191,15 +191,15 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
         },
         {
             index: 7,
-            notes: [67],
-            color: "red",
-            displays: [{kind: "note", note: "G4"}],
+            notes: [65],
+            color: "purple",
+            displays: [{kind: "note", note: "F4"}],
         },
         {
             index: 8,
-            notes: [64],
-            color: "amber",
-            displays: [{kind: "note", note: "E4"}],
+            notes: [71],
+            color: "red",
+            displays: [{kind: "note", note: "B4"}],
         },
     ]);
 });
