@@ -172,8 +172,16 @@ export interface Prompt {
     displays: PromptDisplay[];
 }
 
+/** One batch of prompts from {@link generatePrompts} plus optional chord/scale context for the repeat. */
+export interface GeneratedRepetitionPrompts {
+    prompts: Prompt[];
+    /** e.g. "C Major" or "D Major (Ionian), Dorian" — root plus type name(s), space-separated. */
+    repeatFocusLabel?: string;
+}
+
 export interface RoutinePartRepetition {
     prompts: Prompt[];
+    repeatFocusLabel?: string;
 }
 
 export interface RoutinePart {

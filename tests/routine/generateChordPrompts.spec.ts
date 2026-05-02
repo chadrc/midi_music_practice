@@ -6,7 +6,7 @@ import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
 test("emits chord prompts with one note each for fixed seed and practice", () => {
-    const prompts = generateChordPrompts(
+    const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 3,
             practice: {
@@ -19,31 +19,33 @@ test("emits chord prompts with one note each for fixed seed and practice", () =>
         new NumberGenerator(12345),
     );
 
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "blue",
-            displays: [{kind: "note", note: "C2"}],
-        },
-        {
-            index: 1,
-            notes: [40],
-            color: "slate",
-            displays: [{kind: "note", note: "E2"}],
-        },
-        {
-            index: 2,
-            notes: [43],
-            color: "teal",
-            displays: [{kind: "note", note: "G2"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "blue",
+                displays: [{kind: "note", note: "C2"}],
+            },
+            {
+                index: 1,
+                notes: [40],
+                color: "slate",
+                displays: [{kind: "note", note: "E2"}],
+            },
+            {
+                index: 2,
+                notes: [43],
+                color: "teal",
+                displays: [{kind: "note", note: "G2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 });
 
 test("Up mode walks C E G per octave then next octave", () => {
-    const prompts = generateChordPrompts(
+    const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 3,
             practice: {
@@ -56,31 +58,33 @@ test("Up mode walks C E G per octave then next octave", () => {
         }),
         new NumberGenerator(1),
     );
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "sky",
-            displays: [{kind: "note", note: "C2"}],
-        },
-        {
-            index: 1,
-            notes: [40],
-            color: "purple",
-            displays: [{kind: "note", note: "E2"}],
-        },
-        {
-            index: 2,
-            notes: [43],
-            color: "purple",
-            displays: [{kind: "note", note: "G2"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "sky",
+                displays: [{kind: "note", note: "C2"}],
+            },
+            {
+                index: 1,
+                notes: [40],
+                color: "purple",
+                displays: [{kind: "note", note: "E2"}],
+            },
+            {
+                index: 2,
+                notes: [43],
+                color: "purple",
+                displays: [{kind: "note", note: "G2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 });
 
 test("Down mode walks from highest octave C E G downward", () => {
-    const prompts = generateChordPrompts(
+    const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 3,
             practice: {
@@ -93,31 +97,33 @@ test("Down mode walks from highest octave C E G downward", () => {
         }),
         new NumberGenerator(1),
     );
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [60],
-            color: "sky",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 1,
-            notes: [64],
-            color: "purple",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 2,
-            notes: [67],
-            color: "purple",
-            displays: [{kind: "note", note: "G4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [60],
+                color: "sky",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 1,
+                notes: [64],
+                color: "purple",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 2,
+                notes: [67],
+                color: "purple",
+                displays: [{kind: "note", note: "G4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 });
 
 test("Up mode covers full C major arpeggio across three part octaves for nine prompts", () => {
-    const prompts = generateChordPrompts(
+    const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 9,
             practice: {
@@ -130,66 +136,69 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
         }),
         new NumberGenerator(0),
     );
-    expect(prompts).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "sky",
-            displays: [{kind: "note", note: "C2"}],
-        },
-        {
-            index: 1,
-            notes: [40],
-            color: "purple",
-            displays: [{kind: "note", note: "E2"}],
-        },
-        {
-            index: 2,
-            notes: [43],
-            color: "purple",
-            displays: [{kind: "note", note: "G2"}],
-        },
-        {
-            index: 3,
-            notes: [48],
-            color: "sky",
-            displays: [{kind: "note", note: "C3"}],
-        },
-        {
-            index: 4,
-            notes: [52],
-            color: "purple",
-            displays: [{kind: "note", note: "E3"}],
-        },
-        {
-            index: 5,
-            notes: [55],
-            color: "purple",
-            displays: [{kind: "note", note: "G3"}],
-        },
-        {
-            index: 6,
-            notes: [60],
-            color: "indigo",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 7,
-            notes: [64],
-            color: "pink",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 8,
-            notes: [67],
-            color: "cyan",
-            displays: [{kind: "note", note: "G4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "sky",
+                displays: [{kind: "note", note: "C2"}],
+            },
+            {
+                index: 1,
+                notes: [40],
+                color: "purple",
+                displays: [{kind: "note", note: "E2"}],
+            },
+            {
+                index: 2,
+                notes: [43],
+                color: "purple",
+                displays: [{kind: "note", note: "G2"}],
+            },
+            {
+                index: 3,
+                notes: [48],
+                color: "sky",
+                displays: [{kind: "note", note: "C3"}],
+            },
+            {
+                index: 4,
+                notes: [52],
+                color: "purple",
+                displays: [{kind: "note", note: "E3"}],
+            },
+            {
+                index: 5,
+                notes: [55],
+                color: "purple",
+                displays: [{kind: "note", note: "G3"}],
+            },
+            {
+                index: 6,
+                notes: [60],
+                color: "indigo",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 7,
+                notes: [64],
+                color: "pink",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 8,
+                notes: [67],
+                color: "cyan",
+                displays: [{kind: "note", note: "G4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 });
 
 test("Random mode arpeggiates each chord tone once before repeating", () => {
-    const prompts = generateChordPrompts(
+    const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 6,
             practice: {
@@ -202,42 +211,45 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
         }),
         new NumberGenerator(999),
     );
-    expect(prompts).to.deep.equal([
-        {
-            index: 0,
-            notes: [60],
-            color: "yellow",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 1,
-            notes: [64],
-            color: "red",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 2,
-            notes: [67],
-            color: "yellow",
-            displays: [{kind: "note", note: "G4"}],
-        },
-        {
-            index: 3,
-            notes: [60],
-            color: "indigo",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 4,
-            notes: [64],
-            color: "purple",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 5,
-            notes: [67],
-            color: "amber",
-            displays: [{kind: "note", note: "G4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [60],
+                color: "yellow",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 1,
+                notes: [64],
+                color: "red",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 2,
+                notes: [67],
+                color: "yellow",
+                displays: [{kind: "note", note: "G4"}],
+            },
+            {
+                index: 3,
+                notes: [60],
+                color: "indigo",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 4,
+                notes: [64],
+                color: "purple",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 5,
+                notes: [67],
+                color: "amber",
+                displays: [{kind: "note", note: "G4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 });

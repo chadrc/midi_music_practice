@@ -64,7 +64,18 @@ export const usePracticeStore = defineStore('practice', () => {
         }
 
         return 0;
-    })
+    });
+
+    const currentRepetitionFocusLabel = computed(() => {
+        const part = currentRoutinePart.value;
+        if (!exists(part) || !exists(routine.value)) {
+            return null;
+        }
+        if (currentRepetition.value < 0 || currentRepetition.value >= part.repetitions.length) {
+            return null;
+        }
+        return part.repetitions[currentRepetition.value]!.repeatFocusLabel ?? null;
+    });
 
     const firstNoteTime = computed(() => {
         if (successes.value.length > 0) {
@@ -287,6 +298,7 @@ export const usePracticeStore = defineStore('practice', () => {
         currentPart,
         currentRoutinePart,
         currentRepetition,
+        currentRepetitionFocusLabel,
         targetRepetitions,
         routine,
         startTime,

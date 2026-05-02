@@ -6,43 +6,45 @@ import {minimalBakedPart} from "./fixtures";
 
 test("returns single-note prompts for fixed seed (full objects)", () => {
     const settings = minimalBakedPart({promptCount: 5, seed: 100});
-    const prompts = generateNotePrompts(settings, new NumberGenerator(12346));
-    expect(prompts).to.deep.equal([
-        {
-            index: 1,
-            notes: [65],
-            color: "pink",
-            displays: [{kind: "note", note: "F4"}],
-        },
-        {
-            index: 0,
-            notes: [61],
-            color: "blue",
-            displays: [{kind: "note", note: "C#4"}],
-        },
-        {
-            index: 4,
-            notes: [105],
-            color: "blue",
-            displays: [{kind: "note", note: "A7"}],
-        },
-        {
-            index: 3,
-            notes: [125],
-            color: "yellow",
-            displays: [{kind: "note", note: "F9"}],
-        },
-        {
-            index: 2,
-            notes: [5],
-            color: "blue",
-            displays: [{kind: "note", note: "F-1"}],
-        },
-    ]);
+    const generated = generateNotePrompts(settings, new NumberGenerator(12346));
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 1,
+                notes: [65],
+                color: "pink",
+                displays: [{kind: "note", note: "F4"}],
+            },
+            {
+                index: 0,
+                notes: [61],
+                color: "blue",
+                displays: [{kind: "note", note: "C#4"}],
+            },
+            {
+                index: 4,
+                notes: [105],
+                color: "blue",
+                displays: [{kind: "note", note: "A7"}],
+            },
+            {
+                index: 3,
+                notes: [125],
+                color: "yellow",
+                displays: [{kind: "note", note: "F9"}],
+            },
+            {
+                index: 2,
+                notes: [5],
+                color: "blue",
+                displays: [{kind: "note", note: "F-1"}],
+            },
+        ],
+    });
 });
 
 test("non-notes practice yields empty array", () => {
-    const prompts = generateNotePrompts(
+    const generated = generateNotePrompts(
         minimalBakedPart({
             practice: {
                 type: PracticeType.Chords,
@@ -52,5 +54,5 @@ test("non-notes practice yields empty array", () => {
         }),
         new NumberGenerator(0.1),
     );
-    expect(prompts).to.deep.equal([]);
+    expect(generated).to.deep.equal({prompts: []});
 });

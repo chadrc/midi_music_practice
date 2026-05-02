@@ -15,6 +15,7 @@ import {
     RoutinePartSettings,
     RoutineSettings,
     Prompt,
+    GeneratedRepetitionPrompts,
     type UserRoutineNoteRange,
 } from "./types";
 import {formatMidiLetter, formatMidiNote, scientificOctaveFromMidi} from "../notes";
@@ -30,10 +31,12 @@ import {
     BaseNotes,
     CHORD_REGISTRY_PRIMARY_MAP_KEYS,
     CHROMATIC_SCALE_SET_NAME,
+    displayNameFromMapKey,
     getRegisteredScale,
     NoteScale,
     SCALES,
 } from "../notes/scales";
+import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
 import {CHORDS, Chord, MAJOR_CHORDS_SET_NAME} from "../notes/chords";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
@@ -291,18 +294,23 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
     const seed = settings.seed || Math.random();
     const generator = new NumberGenerator(seed);
 
-    const repetitions = []
+    const repetitions: RoutinePart["repetitions"] = [];
 
     const totalReps = settings.repeatCount + 1;
     if (settings.cloneRepeat) {
         const rep = generatePrompts(settings, generator);
-        for (let i=0; i<totalReps; i++) {
-            repetitions.push({ prompts: clone(rep) });
+        for (let i = 0; i < totalReps; i++) {
+            repetitions.push({
+                prompts: clone(rep.prompts),
+                ...packRepeatFocus(rep),
+            });
         }
     } else {
-        for (let i=0; i<totalReps; i++) {
+        for (let i = 0; i < totalReps; i++) {
+            const rep = generatePrompts(settings, generator);
             repetitions.push({
-                prompts: generatePrompts(settings, generator)
+                prompts: rep.prompts,
+                ...packRepeatFocus(rep),
             });
         }
     }
@@ -312,7 +320,13 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
         generator,
         repetitions,
         bakedSettings: settings,
-    }
+    };
+};
+
+function packRepeatFocus(rep: GeneratedRepetitionPrompts): {repeatFocusLabel?: string} {
+    return rep.repeatFocusLabel !== undefined
+        ? {repeatFocusLabel: rep.repeatFocusLabel}
+        : {};
 }
 
 export const shuffle = <T>(input: T[], generator: NumberGenerator, count: number = 2) => {
@@ -334,6 +348,34 @@ function shufflePermutationInPlace<T>(items: T[], generator: NumberGenerator): v
         items[i] = items[j]!;
         items[j] = tmp;
     }
+}
+
+function chordRepeatFocusLabel(
+    fundKey: string,
+    practice: RoutineChordsPractice,
+    pool: ChordTypeId[],
+    randomChordType: ChordTypeId | undefined,
+): string {
+    const root = displayNameFromMapKey(fundKey);
+    const typesLegend = pool.map((t) => CHORD_TYPE_LABEL[t]).join(", ");
+    if (practice.mode === PracticePoolMode.Random && randomChordType !== undefined) {
+        return `${root} ${CHORD_TYPE_LABEL[randomChordType]}`;
+    }
+    return `${root} ${typesLegend}`;
+}
+
+function scaleRepeatFocusLabel(
+    fundKey: string,
+    practice: RoutineScalesPractice,
+    pool: ScaleTypeId[],
+    randomScaleType: ScaleTypeId | undefined,
+): string {
+    const root = displayNameFromMapKey(fundKey);
+    const typesLegend = pool.map((t) => SCALE_TYPE_LABEL[t]).join(", ");
+    if (practice.mode === PracticePoolMode.Random && randomScaleType !== undefined) {
+        return `${root} ${SCALE_TYPE_LABEL[randomScaleType]}`;
+    }
+    return `${root} ${typesLegend}`;
 }
 
 export function midiNotesForNoteRange(nr: UserRoutineNoteRange): number[] {
@@ -559,14 +601,14 @@ export function tryBuildScalePrompt(
 export function generateNotePrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
-): Prompt[] {
+): GeneratedRepetitionPrompts {
     const practiceUntyped = settings.practice;
     if (practiceUntyped.type !== PracticeType.Notes) {
-        return [];
+        return {prompts: []};
     }
     const notePool = midiNotesForNoteRange(practiceUntyped.noteRange);
     if (notePool.length === 0) {
-        return [];
+        return {prompts: []};
     }
     const prompts: Prompt[] = [];
     for (let i = 0; i < settings.promptCount; i++) {
@@ -581,16 +623,16 @@ export function generateNotePrompts(
         });
     }
     shuffle(prompts, generator);
-    return prompts;
+    return {prompts};
 }
 
 export function generateChordPrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
-): Prompt[] {
+): GeneratedRepetitionPrompts {
     const practiceUntyped = settings.practice;
     if (practiceUntyped.type !== PracticeType.Chords) {
-        return [];
+        return {prompts: []};
     }
     const practice = practiceUntyped;
     const fundKey = resolveFundamentalMapKey(practice, generator);
@@ -615,8 +657,10 @@ export function generateChordPrompts(
             }
         }
         if (chordType === null) {
-            return [];
+            return {prompts: []};
         }
+
+        const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, chordType);
 
         let cycleVoicing: number[] | null = null;
         let cycleIndex = 0;
@@ -628,15 +672,15 @@ export function generateChordPrompts(
             if (!cycleVoicing || cycleIndex >= cycleVoicing.length) {
                 const chord = CHORDS[chordType][fundKey];
                 if (!chord) {
-                    return prompts;
+                    return {prompts, repeatFocusLabel};
                 }
                 const fundamental = fundamentalMidiForChordInPartOctave(chord, randomPartOctave, octSpan);
                 if (fundamental === null) {
-                    return prompts;
+                    return {prompts, repeatFocusLabel};
                 }
                 cycleVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
                 if (cycleVoicing.length === 0) {
-                    return prompts;
+                    return {prompts, repeatFocusLabel};
                 }
                 cycleIndex = 0;
             }
@@ -650,13 +694,14 @@ export function generateChordPrompts(
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
             });
         }
-        return prompts;
+        return {prompts, repeatFocusLabel};
     }
 
+    const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
     const seq = chordToneMidiSequenceOrdered(pool, fundKey, settings, up);
     if (seq.length === 0) {
-        return [];
+        return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
         const note = seq[i % seq.length]!;
@@ -668,16 +713,16 @@ export function generateChordPrompts(
             displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
         });
     }
-    return prompts;
+    return {prompts, repeatFocusLabel};
 }
 
 export function generateScalePrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
-): Prompt[] {
+): GeneratedRepetitionPrompts {
     const practiceUntyped = settings.practice;
     if (practiceUntyped.type !== PracticeType.Scales) {
-        return [];
+        return {prompts: []};
     }
     const practice = practiceUntyped;
     const fundKey = resolveFundamentalMapKey(practice, generator);
@@ -709,8 +754,10 @@ export function generateScalePrompts(
             }
         }
         if (scaleType === null) {
-            return [];
+            return {prompts: []};
         }
+
+        const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, scaleType);
 
         let cycleNotes: number[] | null = null;
         let cycleIndex = 0;
@@ -728,7 +775,7 @@ export function generateScalePrompts(
                     }
                 }
                 if (notes.length === 0) {
-                    return prompts;
+                    return {prompts, repeatFocusLabel};
                 }
                 notes.sort((a, b) => a - b);
                 shufflePermutationInPlace(notes, generator);
@@ -745,13 +792,14 @@ export function generateScalePrompts(
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
             });
         }
-        return prompts;
+        return {prompts, repeatFocusLabel};
     }
 
+    const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined);
     const up = practice.mode === PracticePoolMode.Up;
     const seq = scaleToneMidiSequenceOrdered(pool, fundKey, settings, up);
     if (seq.length === 0) {
-        return [];
+        return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
         const note = seq[i % seq.length]!;
@@ -763,13 +811,13 @@ export function generateScalePrompts(
             displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
         });
     }
-    return prompts;
+    return {prompts, repeatFocusLabel};
 }
 
 export function generatePrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
-): Prompt[] {
+): GeneratedRepetitionPrompts {
     switch (settings.practice.type) {
         case PracticeType.Notes:
             return generateNotePrompts(settings, generator);

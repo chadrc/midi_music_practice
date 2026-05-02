@@ -7,20 +7,22 @@ import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
 test("dispatches by practice type with full prompt payloads", () => {
-    expect(generatePrompts(minimalBakedPart({promptCount: 2, seed: 200}), new NumberGenerator(22334))).to.deep.equal([
-        {
-            index: 1,
-            notes: [20],
-            color: "emerald",
-            displays: [{kind: "note", note: "G#0"}],
-        },
-        {
-            index: 0,
-            notes: [63],
-            color: "green",
-            displays: [{kind: "note", note: "D#4"}],
-        },
-    ]);
+    expect(generatePrompts(minimalBakedPart({promptCount: 2, seed: 200}), new NumberGenerator(22334))).to.deep.equal({
+        prompts: [
+            {
+                index: 1,
+                notes: [20],
+                color: "emerald",
+                displays: [{kind: "note", note: "G#0"}],
+            },
+            {
+                index: 0,
+                notes: [63],
+                color: "green",
+                displays: [{kind: "note", note: "D#4"}],
+            },
+        ],
+    });
 
     expect(
         generatePrompts(
@@ -36,14 +38,17 @@ test("dispatches by practice type with full prompt payloads", () => {
             }),
             new NumberGenerator(22335),
         ),
-    ).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "purple",
-            displays: [{kind: "note", note: "C2"}],
-        },
-    ]);
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "purple",
+                displays: [{kind: "note", note: "C2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
 
     expect(
         generatePrompts(
@@ -59,12 +64,15 @@ test("dispatches by practice type with full prompt payloads", () => {
             }),
             new NumberGenerator(22336),
         ),
-    ).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "emerald",
-            displays: [{kind: "note", note: "C2"}],
-        },
-    ]);
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "emerald",
+                displays: [{kind: "note", note: "C2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });

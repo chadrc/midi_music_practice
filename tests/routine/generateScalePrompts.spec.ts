@@ -6,7 +6,7 @@ import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
 test("emits scale prompts with one note each for fixed seed", () => {
-    const prompts = generateScalePrompts(
+    const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 2,
             practice: {
@@ -18,25 +18,27 @@ test("emits scale prompts with one note each for fixed seed", () => {
         }),
         new NumberGenerator(12347),
     );
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "fuchsia",
-            displays: [{kind: "note", note: "C2"}],
-        },
-        {
-            index: 1,
-            notes: [38],
-            color: "amber",
-            displays: [{kind: "note", note: "D2"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "C2"}],
+            },
+            {
+                index: 1,
+                notes: [38],
+                color: "amber",
+                displays: [{kind: "note", note: "D2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });
 
 test("Up mode walks scale degrees in order from lowest part octave upward", () => {
-    const prompts = generateScalePrompts(
+    const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 3,
             practice: {
@@ -49,31 +51,33 @@ test("Up mode walks scale degrees in order from lowest part octave upward", () =
         }),
         new NumberGenerator(1),
     );
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [36],
-            color: "sky",
-            displays: [{kind: "note", note: "C2"}],
-        },
-        {
-            index: 1,
-            notes: [38],
-            color: "purple",
-            displays: [{kind: "note", note: "D2"}],
-        },
-        {
-            index: 2,
-            notes: [40],
-            color: "purple",
-            displays: [{kind: "note", note: "E2"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [36],
+                color: "sky",
+                displays: [{kind: "note", note: "C2"}],
+            },
+            {
+                index: 1,
+                notes: [38],
+                color: "purple",
+                displays: [{kind: "note", note: "D2"}],
+            },
+            {
+                index: 2,
+                notes: [40],
+                color: "purple",
+                displays: [{kind: "note", note: "E2"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });
 
 test("Random mode visits each scale degree once per cycle before repeating", () => {
-    const prompts = generateScalePrompts(
+    const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 7,
             practice: {
@@ -86,54 +90,57 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
         }),
         new NumberGenerator(1),
     );
-    expect(prompts).to.deep.equal([
-        {
-            index: 0,
-            notes: [60],
-            color: "cyan",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 1,
-            notes: [64],
-            color: "orange",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 2,
-            notes: [62],
-            color: "purple",
-            displays: [{kind: "note", note: "D4"}],
-        },
-        {
-            index: 3,
-            notes: [67],
-            color: "red",
-            displays: [{kind: "note", note: "G4"}],
-        },
-        {
-            index: 4,
-            notes: [71],
-            color: "indigo",
-            displays: [{kind: "note", note: "B4"}],
-        },
-        {
-            index: 5,
-            notes: [65],
-            color: "blue",
-            displays: [{kind: "note", note: "F4"}],
-        },
-        {
-            index: 6,
-            notes: [69],
-            color: "yellow",
-            displays: [{kind: "note", note: "A4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [60],
+                color: "cyan",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 1,
+                notes: [64],
+                color: "orange",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 2,
+                notes: [62],
+                color: "purple",
+                displays: [{kind: "note", note: "D4"}],
+            },
+            {
+                index: 3,
+                notes: [67],
+                color: "red",
+                displays: [{kind: "note", note: "G4"}],
+            },
+            {
+                index: 4,
+                notes: [71],
+                color: "indigo",
+                displays: [{kind: "note", note: "B4"}],
+            },
+            {
+                index: 5,
+                notes: [65],
+                color: "blue",
+                displays: [{kind: "note", note: "F4"}],
+            },
+            {
+                index: 6,
+                notes: [69],
+                color: "yellow",
+                displays: [{kind: "note", note: "A4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });
 
 test("Random mode starts a fresh cycle after exhausting degrees (partial second cycle)", () => {
-    const prompts = generateScalePrompts(
+    const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 9,
             practice: {
@@ -146,66 +153,69 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
         }),
         new NumberGenerator(2),
     );
-    expect(prompts).to.deep.equal([
-        {
-            index: 0,
-            notes: [69],
-            color: "slate",
-            displays: [{kind: "note", note: "A4"}],
-        },
-        {
-            index: 1,
-            notes: [71],
-            color: "sky",
-            displays: [{kind: "note", note: "B4"}],
-        },
-        {
-            index: 2,
-            notes: [62],
-            color: "purple",
-            displays: [{kind: "note", note: "D4"}],
-        },
-        {
-            index: 3,
-            notes: [67],
-            color: "purple",
-            displays: [{kind: "note", note: "G4"}],
-        },
-        {
-            index: 4,
-            notes: [64],
-            color: "indigo",
-            displays: [{kind: "note", note: "E4"}],
-        },
-        {
-            index: 5,
-            notes: [60],
-            color: "purple",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 6,
-            notes: [65],
-            color: "orange",
-            displays: [{kind: "note", note: "F4"}],
-        },
-        {
-            index: 7,
-            notes: [65],
-            color: "purple",
-            displays: [{kind: "note", note: "F4"}],
-        },
-        {
-            index: 8,
-            notes: [71],
-            color: "red",
-            displays: [{kind: "note", note: "B4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [69],
+                color: "slate",
+                displays: [{kind: "note", note: "A4"}],
+            },
+            {
+                index: 1,
+                notes: [71],
+                color: "sky",
+                displays: [{kind: "note", note: "B4"}],
+            },
+            {
+                index: 2,
+                notes: [62],
+                color: "purple",
+                displays: [{kind: "note", note: "D4"}],
+            },
+            {
+                index: 3,
+                notes: [67],
+                color: "purple",
+                displays: [{kind: "note", note: "G4"}],
+            },
+            {
+                index: 4,
+                notes: [64],
+                color: "indigo",
+                displays: [{kind: "note", note: "E4"}],
+            },
+            {
+                index: 5,
+                notes: [60],
+                color: "purple",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 6,
+                notes: [65],
+                color: "orange",
+                displays: [{kind: "note", note: "F4"}],
+            },
+            {
+                index: 7,
+                notes: [65],
+                color: "purple",
+                displays: [{kind: "note", note: "F4"}],
+            },
+            {
+                index: 8,
+                notes: [71],
+                color: "red",
+                displays: [{kind: "note", note: "B4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });
 
 test("Down mode walks from highest part octave through scale degrees downward", () => {
-    const prompts = generateScalePrompts(
+    const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 3,
             practice: {
@@ -218,25 +228,27 @@ test("Down mode walks from highest part octave through scale degrees downward", 
         }),
         new NumberGenerator(1),
     );
-    const byIndex = [...prompts].sort((a, b) => a.index - b.index);
-    expect(byIndex).to.deep.equal([
-        {
-            index: 0,
-            notes: [60],
-            color: "sky",
-            displays: [{kind: "note", note: "C4"}],
-        },
-        {
-            index: 1,
-            notes: [62],
-            color: "purple",
-            displays: [{kind: "note", note: "D4"}],
-        },
-        {
-            index: 2,
-            notes: [64],
-            color: "purple",
-            displays: [{kind: "note", note: "E4"}],
-        },
-    ]);
+    expect(generated).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [60],
+                color: "sky",
+                displays: [{kind: "note", note: "C4"}],
+            },
+            {
+                index: 1,
+                notes: [62],
+                color: "purple",
+                displays: [{kind: "note", note: "D4"}],
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "purple",
+                displays: [{kind: "note", note: "E4"}],
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
 });

@@ -41,7 +41,15 @@ function promptCardClass(prompt: PromptData) {
     <div
       class="repetition-display"
     >
-      {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
+      <div
+        v-if="practiceStore.currentRepetitionFocusLabel"
+        class="repeat-focus-label"
+      >
+        {{ practiceStore.currentRepetitionFocusLabel }}
+      </div>
+      <div class="repetition-count">
+        {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
+      </div>
     </div>
     <div class="prompt-cards">
       <div
@@ -121,8 +129,25 @@ function promptCardClass(prompt: PromptData) {
 
 .repetition-display {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  gap: 0.5rem;
+}
+
+.repetition-count {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--p-zinc-500);
+}
+
+.repeat-focus-label {
+  font-size: clamp(1.25rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  text-align: center;
+  color: var(--p-zinc-200);
+  line-height: 1.3;
+  max-width: 36rem;
 }
 
 .prompt-cards {
