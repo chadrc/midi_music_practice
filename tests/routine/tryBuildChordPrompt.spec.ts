@@ -16,7 +16,7 @@ test("builds single-note chord prompt for fixed seed", () => {
     expect(p).to.deep.equal({
         index: 0,
         notes: [36],
-        color: "cyan",
+        color: "sky",
         displays: [{kind: "note", note: "C2"}],
     });
 });
@@ -75,7 +75,7 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
         {
             index: 1,
             notes: [40],
-            color: "green",
+            color: "rose",
             displays: [{kind: "note", note: "E2"}],
         },
         {
@@ -86,9 +86,9 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
         },
         {
             index: 3,
-            notes: [36],
-            color: "emerald",
-            displays: [{kind: "note", note: "C2"}],
+            notes: [43],
+            color: "slate",
+            displays: [{kind: "note", note: "G2"}],
         },
     ]);
 });

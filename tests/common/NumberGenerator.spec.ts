@@ -113,6 +113,18 @@ test('rangeExclusiveI(0, 0) is invalid', () => {
     expect(() => gen.rangeExclusiveI(0, 0)).toThrow(RangeError);
 });
 
+test('rangeExclusiveI(0, 12) can return every index across seeds (uniform u01)', () => {
+    const seen = new Set<number>();
+    for (let seed = 1; seed <= 50_000 && seen.size < 12; seed++) {
+        const gen = new NumberGenerator(seed);
+        seen.add(gen.rangeExclusiveI(0, 12));
+    }
+    expect(seen.size).toBe(12);
+    for (let i = 0; i < 12; i++) {
+        expect(seen.has(i)).toBe(true);
+    }
+});
+
 test('bit8 sets bit length to 8', () => {
     const gen = NumberGenerator.bit8();
     expect(gen.bitLength).to.be.equal(8);

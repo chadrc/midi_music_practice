@@ -16,9 +16,9 @@ test("builds single-note scale prompt for fixed seed", () => {
     );
     expect(p).to.deep.equal({
         index: 0,
-        notes: [52],
+        notes: [55],
         color: "teal",
-        displays: [{kind: "note", note: "E3"}],
+        displays: [{kind: "note", note: "G3"}],
     });
 });
 
@@ -52,27 +52,27 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
     expect(prompts).to.deep.equal([
         {
             index: 0,
-            notes: [40],
+            notes: [43],
             color: "cyan",
-            displays: [{kind: "note", note: "E2"}],
+            displays: [{kind: "note", note: "G2"}],
         },
         {
             index: 1,
-            notes: [38],
+            notes: [45],
             color: "yellow",
-            displays: [{kind: "note", note: "D2"}],
+            displays: [{kind: "note", note: "A2"}],
         },
         {
             index: 2,
             notes: [36],
-            color: "teal",
+            color: "blue",
             displays: [{kind: "note", note: "C2"}],
         },
         {
             index: 3,
-            notes: [40],
+            notes: [43],
             color: "red",
-            displays: [{kind: "note", note: "E2"}],
+            displays: [{kind: "note", note: "G2"}],
         },
     ]);
 });

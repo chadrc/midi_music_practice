@@ -17,9 +17,9 @@ test("creates repetitions from repeatCount + 1 (full shape)", () => {
                 prompts: [
                     {
                         index: 0,
-                        notes: [41],
-                        color: "emerald",
-                        displays: [{kind: "note", note: "F2"}],
+                        notes: [86],
+                        color: "slate",
+                        displays: [{kind: "note", note: "D6"}],
                     },
                 ],
             },
@@ -37,9 +37,9 @@ test("creates repetitions from repeatCount + 1 (full shape)", () => {
                 prompts: [
                     {
                         index: 0,
-                        notes: [35],
+                        notes: [92],
                         color: "lime",
-                        displays: [{kind: "note", note: "B1"}],
+                        displays: [{kind: "note", note: "G#6"}],
                     },
                 ],
             },
@@ -58,13 +58,13 @@ test("cloneRepeat reuses identical prompt arrays", () => {
     );
     const expectedPrompts = [
         {
-            index: 0,
+            index: 1,
             notes: [0],
             color: "emerald",
             displays: [{kind: "note", note: "C-1"}],
         },
         {
-            index: 1,
+            index: 0,
             notes: [0],
             color: "emerald",
             displays: [{kind: "note", note: "C-1"}],

@@ -67,21 +67,21 @@ test("bakes one part into full repetition + bakedSettings", () => {
                         prompts: [
                             {
                                 index: 0,
-                                notes: [1],
-                                color: "green",
-                                displays: [{kind: "note", note: "C#-1"}],
+                                notes: [126],
+                                color: "rose",
+                                displays: [{kind: "note", note: "F#9"}],
+                            },
+                            {
+                                index: 2,
+                                notes: [44],
+                                color: "purple",
+                                displays: [{kind: "note", note: "G#2"}],
                             },
                             {
                                 index: 1,
                                 notes: [24],
                                 color: "amber",
                                 displays: [{kind: "note", note: "C1"}],
-                            },
-                            {
-                                index: 2,
-                                notes: [44],
-                                color: "orange",
-                                displays: [{kind: "note", note: "G#2"}],
                             },
                         ],
                     },

@@ -24,13 +24,13 @@ test("emits chord prompts with one note each for fixed seed and practice", () =>
         {
             index: 0,
             notes: [36],
-            color: "teal",
+            color: "blue",
             displays: [{kind: "note", note: "C2"}],
         },
         {
             index: 1,
             notes: [40],
-            color: "emerald",
+            color: "slate",
             displays: [{kind: "note", note: "E2"}],
         },
         {
@@ -67,13 +67,13 @@ test("Up mode walks C E G per octave then next octave", () => {
         {
             index: 1,
             notes: [40],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E2"}],
         },
         {
             index: 2,
             notes: [43],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "G2"}],
         },
     ]);
@@ -104,13 +104,13 @@ test("Down mode walks from highest octave C E G downward", () => {
         {
             index: 1,
             notes: [64],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E4"}],
         },
         {
             index: 2,
             notes: [67],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "G4"}],
         },
     ]);
@@ -140,43 +140,43 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
         {
             index: 1,
             notes: [40],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E2"}],
         },
         {
             index: 2,
             notes: [43],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "G2"}],
         },
         {
             index: 3,
             notes: [48],
-            color: "cyan",
+            color: "sky",
             displays: [{kind: "note", note: "C3"}],
         },
         {
             index: 4,
             notes: [52],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E3"}],
         },
         {
             index: 5,
             notes: [55],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "G3"}],
         },
         {
             index: 6,
             notes: [60],
-            color: "yellow",
+            color: "indigo",
             displays: [{kind: "note", note: "C4"}],
         },
         {
             index: 7,
             notes: [64],
-            color: "lime",
+            color: "pink",
             displays: [{kind: "note", note: "E4"}],
         },
         {
@@ -205,39 +205,39 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
     expect(prompts).to.deep.equal([
         {
             index: 0,
-            notes: [36],
+            notes: [60],
             color: "yellow",
-            displays: [{kind: "note", note: "C2"}],
+            displays: [{kind: "note", note: "C4"}],
         },
         {
             index: 1,
-            notes: [40],
+            notes: [64],
             color: "red",
-            displays: [{kind: "note", note: "E2"}],
+            displays: [{kind: "note", note: "E4"}],
         },
         {
             index: 2,
-            notes: [43],
+            notes: [67],
             color: "yellow",
-            displays: [{kind: "note", note: "G2"}],
+            displays: [{kind: "note", note: "G4"}],
         },
         {
             index: 3,
-            notes: [36],
-            color: "orange",
-            displays: [{kind: "note", note: "C2"}],
+            notes: [60],
+            color: "purple",
+            displays: [{kind: "note", note: "C4"}],
         },
         {
             index: 4,
-            notes: [40],
+            notes: [64],
             color: "amber",
-            displays: [{kind: "note", note: "E2"}],
+            displays: [{kind: "note", note: "E4"}],
         },
         {
             index: 5,
-            notes: [43],
-            color: "green",
-            displays: [{kind: "note", note: "G2"}],
+            notes: [67],
+            color: "rose",
+            displays: [{kind: "note", note: "G4"}],
         },
     ]);
 });

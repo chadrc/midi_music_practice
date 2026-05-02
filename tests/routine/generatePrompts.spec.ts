@@ -9,16 +9,16 @@ import {minimalBakedPart} from "./fixtures";
 test("dispatches by practice type with full prompt payloads", () => {
     expect(generatePrompts(minimalBakedPart({promptCount: 2, seed: 200}), new NumberGenerator(22334))).to.deep.equal([
         {
-            index: 0,
-            notes: [63],
-            color: "green",
-            displays: [{kind: "note", note: "D#4"}],
-        },
-        {
             index: 1,
             notes: [20],
             color: "emerald",
             displays: [{kind: "note", note: "G#0"}],
+        },
+        {
+            index: 0,
+            notes: [63],
+            color: "green",
+            displays: [{kind: "note", note: "D#4"}],
         },
     ]);
 
@@ -40,7 +40,7 @@ test("dispatches by practice type with full prompt payloads", () => {
         {
             index: 0,
             notes: [36],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "C2"}],
         },
     ]);

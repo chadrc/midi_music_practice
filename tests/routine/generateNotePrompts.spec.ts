@@ -10,33 +10,33 @@ test("returns single-note prompts for fixed seed (full objects)", () => {
     expect(prompts).to.deep.equal([
         {
             index: 1,
-            notes: [62],
-            color: "lime",
-            displays: [{kind: "note", note: "D4"}],
-        },
-        {
-            index: 2,
-            notes: [5],
-            color: "teal",
-            displays: [{kind: "note", note: "F-1"}],
-        },
-        {
-            index: 4,
-            notes: [22],
-            color: "teal",
-            displays: [{kind: "note", note: "A#0"}],
+            notes: [65],
+            color: "pink",
+            displays: [{kind: "note", note: "F4"}],
         },
         {
             index: 0,
             notes: [61],
-            color: "teal",
+            color: "blue",
             displays: [{kind: "note", note: "C#4"}],
         },
         {
+            index: 4,
+            notes: [105],
+            color: "blue",
+            displays: [{kind: "note", note: "A7"}],
+        },
+        {
             index: 3,
-            notes: [2],
+            notes: [125],
             color: "yellow",
-            displays: [{kind: "note", note: "D-1"}],
+            displays: [{kind: "note", note: "F9"}],
+        },
+        {
+            index: 2,
+            notes: [5],
+            color: "blue",
+            displays: [{kind: "note", note: "F-1"}],
         },
     ]);
 });

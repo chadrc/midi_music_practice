@@ -23,7 +23,7 @@ test("emits scale prompts with one note each for fixed seed", () => {
         {
             index: 0,
             notes: [36],
-            color: "red",
+            color: "fuchsia",
             displays: [{kind: "note", note: "C2"}],
         },
         {
@@ -60,13 +60,13 @@ test("Up mode walks scale degrees in order from lowest part octave upward", () =
         {
             index: 1,
             notes: [38],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "D2"}],
         },
         {
             index: 2,
             notes: [40],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E2"}],
         },
     ]);
@@ -97,13 +97,13 @@ test("Down mode walks from highest part octave through scale degrees downward", 
         {
             index: 1,
             notes: [62],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "D4"}],
         },
         {
             index: 2,
             notes: [64],
-            color: "orange",
+            color: "purple",
             displays: [{kind: "note", note: "E4"}],
         },
     ]);

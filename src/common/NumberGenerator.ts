@@ -42,11 +42,11 @@ export class NumberGenerator {
   }
 
   next(): number {
-    let num = 0;
+    let num = 0n;
 
     for (let i = 0; i < this.bitLength; i++) {
       const output = this.state & 1;
-      num = Math.abs((num << 1) | output);
+      num = (num << 1n) | BigInt(output);
 
       const bit =
         (this.state ^
@@ -58,7 +58,8 @@ export class NumberGenerator {
       this.state = Math.abs((this.state >>> 1) | (bit << (this.bitLength - 1)));
     }
 
-    return Math.abs(num / this.maxNumber);
+    const denom = this.maxNumber - 1;
+    return denom > 0 ? Number(num) / denom : 0;
   }
 
   range(min: number, max: number): number {

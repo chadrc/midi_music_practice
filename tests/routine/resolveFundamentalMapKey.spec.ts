@@ -28,7 +28,7 @@ test("rolls a registry key when baseNote is missing", () => {
             },
             new NumberGenerator(0.3),
         ),
-    ).to.equal("DSharp");
+    ).to.equal("GSharp");
 });
 
 test("rolled key exists in major chord registry", () => {
