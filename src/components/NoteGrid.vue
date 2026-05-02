@@ -57,7 +57,27 @@ function opacityForNote(row: number, column: number) {
   if (exists(props.hints.find((n) => n === note))) {
     return .5;
   }
+
+  const hasEnsemble = props.ensembleHints.length > 0;
+  const inEnsemble = exists(props.ensembleHints.find((n) => n === note));
+  if (hasEnsemble) {
+    return inEnsemble ? 0.16 : 0.1;
+  }
   return 0.25;
+}
+
+function labelOpacityForNote(row: number, column: number) {
+  const note = midiNoteAtRowColumn(row, column);
+  if (!exists(note)) {
+    return 1;
+  }
+  if (midiStore.playData[note].on) {
+    return 1;
+  }
+  if (exists(props.hints.find((n) => n === note))) {
+    return 1;
+  }
+  return 0.42;
 }
 
 function lerp(a: number, b: number, t: number) {
@@ -82,7 +102,7 @@ function colorForNote(row: number, column: number) {
   return `hsl(${hue}, ${saturation}%, 50%)`;
 }
 
-/** Inner cell shape (opacity applied here so ensemble ring stays fully opaque on the shell). */
+/** Inner cell shape; ensemble ring sits on this wrapper while opacity only affects the fill layer. */
 function innerCellClass(row: number, column: number) {
   const classes = [
     "note-grid-cell",
@@ -92,15 +112,18 @@ function innerCellClass(row: number, column: number) {
   if (BLACK_KEYS_ONLY_SCALE.contains(note)) {
     classes.push("black-key");
   }
+  if (ensembleHintForNote(note)) {
+    classes.push("ensemble-hint");
+  }
   return classes.join(" ");
 }
 
 function cellShellClass(row: number, column: number) {
-  const note = midiNoteAtRowColumn(row, column);
-  if (ensembleHintForNote(note)) {
-    return "note-grid-cell-shell ensemble-hint";
+  const classes = ["note-grid-cell-shell"];
+  if (props.noteStyle === "circle") {
+    classes.push("note-grid-cell-shell--circle");
   }
-  return "note-grid-cell-shell";
+  return classes.join(" ");
 }
 
 function ensembleHintForNote(note: number) {
@@ -148,24 +171,30 @@ function makeNoteText(row: number, column: number) {
           v-if="hasNote(r, c)"
           :class="cellShellClass(r, c)"
         >
-          <div
-            :style="{
-              opacity: opacityForNote(r, c),
-              'background-color': colorForNote(r, c)
-            }"
-            :class="innerCellClass(r, c)"
-          >
-            <span>{{ makeNoteText(r, c) }}</span>
+          <div :class="innerCellClass(r, c)">
+            <div
+              class="note-grid-cell-fill"
+              :style="{
+                opacity: opacityForNote(r, c),
+                'background-color': colorForNote(r, c)
+              }"
+            />
+            <span
+              class="note-grid-cell-label"
+              :style="{ opacity: labelOpacityForNote(r, c) }"
+            >{{ makeNoteText(r, c) }}</span>
           </div>
         </div>
         <div
           v-else
           :class="cellShellClass(r, c)"
         >
-          <div
-            :style="{opacity: opacityForNote(r, c)}"
-            :class="`${innerCellClass(r, c)} empty`"
-          />
+          <div :class="`${innerCellClass(r, c)} empty`">
+            <div
+              class="note-grid-cell-fill"
+              :style="{ opacity: opacityForNote(r, c) }"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -190,12 +219,17 @@ function makeNoteText(row: number, column: number) {
   display: flex;
   flex-direction: column-reverse;
   height: 100%;
+  /* Ring draws outside the shell; gap equals 2× ring so neighbors’ shadows don’t overlap. */
+  --note-grid-cell-ring: 3px;
+  --note-grid-ensemble-ring: var(--p-slate-400, #94a3b8);
+  gap: calc(var(--note-grid-cell-ring) * 2);
 }
 
 .note-grid-row {
   display: flex;
   flex-direction: row;
   height: 100%;
+  gap: calc(var(--note-grid-cell-ring) * 2);
 }
 
 .note-grid-cell-shell {
@@ -203,22 +237,36 @@ function makeNoteText(row: number, column: number) {
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
-  /* Same 3px ring geometry as ensemble cells; transparent so the scene behind shows through. */
-  box-shadow: 0 0 0 3px transparent;
+  box-shadow: 0 0 0 var(--note-grid-cell-ring) transparent;
 }
 
-.note-grid-cell-shell.ensemble-hint {
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 0 0 3px #fff;
+.note-grid-cell-shell--circle {
+  border-radius: 50%;
 }
 
 .note-grid-cell {
+  position: relative;
   display: flex;
   width: var(--note-test-grid-cell-size);
   height: var(--note-test-grid-cell-size);
   justify-content: center;
   align-items: center;
+}
+
+.note-grid-cell.ensemble-hint {
+  box-shadow: 0 0 0 var(--note-grid-cell-ring) var(--note-grid-ensemble-ring);
+}
+
+.note-grid-cell-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  transition: opacity 0.2s;
+}
+
+.note-grid-cell-label {
+  position: relative;
+  z-index: 1;
   transition: opacity 0.2s;
 }
 
@@ -226,7 +274,7 @@ function makeNoteText(row: number, column: number) {
   background-color: var(--p-neutral-700);
 }
 
-.note-grid-cell.empty {
+.note-grid-cell.empty .note-grid-cell-fill {
   background-color: var(--p-neutral-800);
 }
 
