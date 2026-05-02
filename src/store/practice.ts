@@ -10,6 +10,17 @@ import {useRoutineStore} from "./routineEdit";
 
 const MILISECONDS_IN_MINUTE = 60000;
 
+function midiMatchesPromptTarget(
+    playedMidi: number,
+    targetMidi: number,
+    requireOctave: boolean,
+): boolean {
+    if (requireOctave) {
+        return playedMidi === targetMidi;
+    }
+    return playedMidi % 12 === targetMidi % 12;
+}
+
 export interface PromptData {
     success: boolean;
     current: boolean;
@@ -239,7 +250,11 @@ export const usePracticeStore = defineStore('practice', () => {
                             .filter((a) => a.time > frameTime);
 
                         if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
-                            data1 === note && data2 >= settingsStore.currentSettings.minSuccessVelocity
+                            midiMatchesPromptTarget(
+                                data1,
+                                note,
+                                settingsStore.currentSettings.requireOctave,
+                            ) && data2 >= settingsStore.currentSettings.minSuccessVelocity
                         ))) {
                             success = false;
                         }
