@@ -3,12 +3,14 @@ import {Button, Step, StepList, Stepper} from "primevue";
 import {computed} from "vue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
+import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
 import StaffPromptCell from "./StaffPromptCell.vue";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
 
 const staffMode = computed(() => settingsStore.practiceUi.promptDisplay === "staff");
+const staffAllMode = computed(() => settingsStore.practiceUi.promptDisplay === "staffAll");
 
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
@@ -57,6 +59,16 @@ function promptCardClass(prompt: PromptData) {
       </div>
     </div>
     <div
+      v-if="staffAllMode"
+      class="prompt-staff-all"
+    >
+      <StaffAllPromptsRow
+        :prompts="practiceStore.activePrompts"
+        :require-octave="settingsStore.currentSettings.requireOctave"
+      />
+    </div>
+    <div
+      v-else
       class="prompt-cards"
       :class="{
         'prompt-cards--over-eight': practiceStore.activePrompts.length > 8,
@@ -168,6 +180,18 @@ function promptCardClass(prompt: PromptData) {
   max-width: 36rem;
 }
 
+.prompt-staff-all {
+  flex: 1;
+  width: 100%;
+  max-width: min(100%, 72rem);
+  overflow-x: auto;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  min-height: 140px;
+  box-sizing: border-box;
+}
+
 .prompt-cards {
   flex: 1;
   display: flex;
@@ -232,7 +256,7 @@ function promptCardClass(prompt: PromptData) {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100px;
+  min-height: 116px;
   min-width: 120px;
   width: 100%;
   max-width: 280px;

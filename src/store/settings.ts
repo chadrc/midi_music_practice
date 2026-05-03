@@ -35,7 +35,7 @@ interface PracticeSettings {
     matchPracticeRoutine: boolean;
 }
 
-export type PromptDisplayMode = "bubbles" | "staff";
+export type PromptDisplayMode = "bubbles" | "staff" | "staffAll";
 
 interface PracticeUiSettings {
     promptDisplay: PromptDisplayMode;
