@@ -6,7 +6,6 @@ import {
     ParentType,
     PracticePoolMode,
     PracticeType,
-    SCALE_TYPE_OPTIONS,
     UserRoutinePartSettings,
     UserRoutinePractice,
     UserRoutineSettingsKeys,
@@ -33,11 +32,12 @@ import {
     CHROMATIC_SCALE_SET_NAME,
     displayNameFromMapKey,
     getRegisteredScale,
+    MAJOR_SCALE_SET_NAME,
     NoteScale,
     SCALES,
 } from "../notes/scales";
 import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
-import {CHORDS, Chord, MAJOR_CHORDS_SET_NAME} from "../notes/chords";
+import {CHORDS, Chord, MAJOR_CHORDS_SET_NAME, chordSpellPrefersFlats} from "../notes/chords";
 import {clone, exists} from "../utilities";
 import {NumberGenerator} from "../common/NumberGenerator";
 import type {NumberRangeLike} from "../common/NumberRange";
@@ -140,6 +140,27 @@ export function pitchClassesFromMidis(midis: number[]): number[] {
     return [...new Set(midis.map((n) => ((n % 12) + 12) % 12))].sort((a, b) => a - b);
 }
 
+/** MIDI pitch class 0–11. */
+function normPitchClass(midi: number): number {
+    return ((midi % 12) + 12) % 12;
+}
+
+/**
+ * Scale pitches in one scientific octave are collected low→high; rotate so the scale tonic (root)
+ * comes first, then continue ascending through the octave. Required when the key’s root is not
+ * the lowest MIDI in C–B octave layout (e.g. B major starts on C# in “piano order”).
+ */
+function rotateScaleMidisRootFirst(sortedAsc: number[], rootPitchClass: number): number[] {
+    if (sortedAsc.length === 0) {
+        return sortedAsc;
+    }
+    const i = sortedAsc.findIndex((n) => normPitchClass(n) === rootPitchClass);
+    if (i <= 0) {
+        return sortedAsc;
+    }
+    return [...sortedAsc.slice(i), ...sortedAsc.slice(0, i)];
+}
+
 /** MIDI values allowed for this part (notes pool + chord/scale filter). */
 function playableMidiSet(settings: BakedRoutinePartSettings): Set<number> {
     return new Set(midiNotesForNoteRange(settings.noteRange));
@@ -194,7 +215,7 @@ export function noteScaleFromPractice(practice: UserRoutinePractice): NoteScale 
         case PracticeType.Scales: {
             const p = practice;
             if (p.scaleTypes.length === 0) {
-                return getRegisteredScale(CHROMATIC_SCALE_SET_NAME, p.baseNote ?? BaseNotes.C.mapKey);
+                return getRegisteredScale(MAJOR_SCALE_SET_NAME, p.baseNote ?? BaseNotes.C.mapKey);
             }
             return getRegisteredScale(p.scaleTypes[0], p.baseNote ?? BaseNotes.C.mapKey);
         }
@@ -210,7 +231,7 @@ export function practiceScaleMembership(practice: UserRoutinePractice): Practice
             const p = practice;
             const baseKey = p.baseNote ?? BaseNotes.C.mapKey;
             const typeIds =
-                p.scaleTypes.length > 0 ? p.scaleTypes : [CHROMATIC_SCALE_SET_NAME];
+                p.scaleTypes.length > 0 ? p.scaleTypes : [MAJOR_SCALE_SET_NAME];
             const scales = typeIds.map((t) => getRegisteredScale(t, baseKey));
             if (scales.length === 1) {
                 return scales[0];
@@ -483,8 +504,13 @@ export const generateNotesForRange = (settings: Pick<BakedRoutinePartSettings, "
     return midiNotesForNoteRange(settings.noteRange);
 };
 
-export function formatDisplayNote(requireOctave: boolean, midi: number): string {
-    return requireOctave ? formatMidiNote(midi) : formatMidiLetter(midi);
+export function formatDisplayNote(requireOctave: boolean, midi: number, chordType?: ChordTypeId): string {
+    const preferFlats = chordType !== undefined && chordSpellPrefersFlats(chordType);
+    return requireOctave ? formatMidiNote(midi, preferFlats) : formatMidiLetter(midi, preferFlats);
+}
+
+function effectiveScaleTypesPool(practice: RoutineScalesPractice): ScaleTypeId[] {
+    return practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [MAJOR_SCALE_SET_NAME];
 }
 
 export function resolveFundamentalMapKey(
@@ -586,13 +612,14 @@ function chordToneMidiSegmentsOrdered(
             if (fitted === null) {
                 continue;
             }
-            segments.push({voicing: fitted, chordType});
+            const traversal = up ? fitted : [...fitted].reverse();
+            segments.push({voicing: traversal, chordType});
         }
     }
     return segments;
 }
 
-/** Each inner array is one scale’s pitches in a single part octave (sorted low→high). */
+/** Each inner array is one scale’s degrees in one nominal part octave, root first, whole-octave-shifted into {@link playableMidiSet} when possible (same as chord voicings). */
 function scaleToneMidiSegmentsOrdered(
     pool: ScaleTypeId[],
     fundamentalMapKey: string,
@@ -603,6 +630,7 @@ function scaleToneMidiSegmentsOrdered(
     if (practice.type !== PracticeType.Scales) {
         return [];
     }
+    const allowed = playableMidiSet(settings);
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
@@ -617,7 +645,14 @@ function scaleToneMidiSegmentsOrdered(
                 }
             }
             inOct.sort((a, b) => a - b);
-            segments.push(inOct);
+            const rootPc = scale.fundamental.pitchClass;
+            const rootFirst = rotateScaleMidisRootFirst(inOct, rootPc);
+            const fitted = transposeChordVoicingIntoAllowed(rootFirst, allowed);
+            if (fitted === null) {
+                continue;
+            }
+            const traversal = up ? fitted : [...fitted].reverse();
+            segments.push(traversal);
         }
     }
     return segments;
@@ -657,7 +692,7 @@ export function tryBuildChordPrompt(
         index: promptIndex,
         notes: [note],
         color: colorOptions[colorRoll],
-        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note, chordType)}],
         ensembleMidi: voicing,
         ensemblePitchClasses: pitchClassesFromMidis(voicing),
     };
@@ -804,7 +839,12 @@ export function generateChordPrompts(
                 index: i,
                 notes: [note],
                 color: colorOptions[colorRoll],
-                displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+                displays: [
+                    {
+                        kind: "note",
+                        note: formatDisplayNote(settings.requireOctave, note, cycleChordType ?? undefined),
+                    },
+                ],
                 ensembleMidi,
                 ensemblePitchClasses,
                 ...(multiTypePool && cycleChordType !== null
@@ -846,7 +886,7 @@ export function generateChordPrompts(
             index: i,
             notes: [target],
             color: colorOptions[colorRoll],
-            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
+            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target, chordType)}],
             ensembleMidi: ensemble,
             ensemblePitchClasses,
             ...(multiTypePool ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, chordType)} : {}),
@@ -865,7 +905,7 @@ export function generateScalePrompts(
     }
     const practice = practiceUntyped;
     const fundKey = resolveFundamentalMapKey(practice, generator);
-    const pool = practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [...SCALE_TYPE_OPTIONS];
+    const pool = effectiveScaleTypesPool(practice);
     const prompts: Prompt[] = [];
     const allowed = playableMidiSet(settings);
     if (allowed.size === 0) {

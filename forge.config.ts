@@ -6,13 +6,50 @@ import { MakerRpm } from '@electron-forge/maker-rpm';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import path from 'path';
+
+/** Basename (no extension) for @electron/packager: uses .png on Linux, .ico / .icns when you add them beside this name. */
+const appIconBase = path.resolve(__dirname, 'assets/MIDI_Practice_Icon_512');
+const linuxAppIcon = path.resolve(__dirname, 'assets/MIDI_Practice_Icon_512.png');
+const linuxDesktopTemplate = path.resolve(__dirname, 'linux/desktop.ejs');
+
+/** Freedesktop hicolor icons (same PNG scaled by installers); needed for GNOME/KDE app menus / search. */
+const linuxHicolorIcons: Record<string, string> = {
+    '48x48': linuxAppIcon,
+    '64x64': linuxAppIcon,
+    '128x128': linuxAppIcon,
+    '256x256': linuxAppIcon,
+    '512x512': linuxAppIcon,
+};
+
+const linuxPackagingOptions = {
+    icon: linuxHicolorIcons,
+    desktopTemplate: linuxDesktopTemplate,
+    /** Must match the running window’s WM class so the shell picks up the .desktop icon in Activities / search. */
+    startupWMClass: 'midi_music_practice',
+    productName: 'MIDI Music Practice',
+    categories: ['Audio', 'AudioVideo', 'Education', 'Utility', 'GNOME', 'GTK'],
+};
+
+/** RPM needs `rpmbuild` on PATH; omit MakerRpm unless explicitly requested (see `npm run make:rpm`). */
+const includeRpm = process.env.FORGE_MAKE_RPM === '1';
 
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    // Linux: MIDI_Practice_Icon_512.png. For Windows add MIDI_Practice_Icon_512.ico; for macOS add MIDI_Practice_Icon_512.icns (same folder).
+    icon: appIconBase,
   },
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({})],
+  // Windows installer icon: add assets/MIDI_Practice_Icon_512.ico and set setupIcon in MakerSquirrel.
+  makers: [
+    new MakerSquirrel({}),
+    new MakerZIP({}, ['darwin']),
+    ...(includeRpm ? [new MakerRpm({ options: linuxPackagingOptions as never })] : []),
+    new MakerDeb({
+      options: linuxPackagingOptions as never,
+    }),
+  ],
   plugins: [
     new VitePlugin({
       // `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.

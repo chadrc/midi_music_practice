@@ -1,12 +1,14 @@
 import {expect, test} from "vitest";
 import {generateScalePrompts} from "../../src/routine";
-import {PracticePoolMode, PracticeType} from "../../src/routine/types";
+import {PracticePoolMode, PracticeType, NoteRangeType} from "../../src/routine/types";
 import {MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
 const cIonian2 = [36, 38, 40, 41, 43, 45, 47];
 const cIonian4 = [60, 62, 64, 65, 67, 69, 71];
+/** Descending pitch in nominal octave (Down mode). */
+const cIonian4Desc = [71, 69, 67, 65, 64, 62, 60];
 const cIonianDegreePC = [0, 2, 4, 5, 7, 9, 11];
 
 test("emits scale prompts with one note each for fixed seed", () => {
@@ -43,6 +45,64 @@ test("emits scale prompts with one note each for fixed seed", () => {
         ],
         repeatFocusLabel: "C Major (Ionian)",
     });
+});
+
+test("Up/Down modes start each part octave on the tonic, not the lowest MIDI in C–B octave order", () => {
+    const bSortedAsc4 = [61, 63, 64, 66, 68, 70, 71];
+    const bRotatedRootFirst = [...bSortedAsc4.slice(6), ...bSortedAsc4.slice(0, 6)];
+    const up = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 1,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "B",
+                scaleTypes: [MAJOR_SCALE_SET_NAME],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(0),
+    );
+    expect(up.prompts[0]!.notes).toEqual([71]);
+    expect(up.prompts[0]!.ensembleMidi).toEqual(bRotatedRootFirst);
+
+    const down = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 1,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "B",
+                scaleTypes: [MAJOR_SCALE_SET_NAME],
+                mode: PracticePoolMode.Down,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(0),
+    );
+    expect(down.prompts[0]!.notes).toEqual([70]);
+    expect(down.prompts[0]!.ensembleMidi).toEqual([...bRotatedRootFirst].reverse());
+});
+
+test("Up mode shifts a full octave-root-first segment into the playable MIDI range (e.g. guitar without C2)", () => {
+    const shiftedCmaj = [48, 50, 52, 53, 55, 57, 59];
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 3,
+            noteRange: {type: NoteRangeType.Notes, range: {start: 45, end: 65}},
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [MAJOR_SCALE_SET_NAME],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 2, end: 2},
+            },
+        }),
+        new NumberGenerator(1),
+    );
+    expect(generated.prompts[0]!.notes).toEqual([48]);
+    expect(generated.prompts[0]!.ensembleMidi).toEqual(shiftedCmaj);
+    expect(generated.prompts[1]!.notes).toEqual([50]);
+    expect(generated.prompts[2]!.notes).toEqual([52]);
 });
 
 test("Up mode walks scale degrees in order from lowest part octave upward", () => {
@@ -260,7 +320,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
     });
 });
 
-test("Down mode walks from highest part octave through scale degrees downward", () => {
+test("Down mode walks from highest part octave, degrees descending in pitch", () => {
     const generated = generateScalePrompts(
         minimalBakedPart({
             promptCount: 3,
@@ -278,26 +338,26 @@ test("Down mode walks from highest part octave through scale degrees downward", 
         prompts: [
             {
                 index: 0,
-                notes: [60],
+                notes: [71],
                 color: "sky",
-                displays: [{kind: "note", note: "C4"}],
-                ensembleMidi: cIonian4,
+                displays: [{kind: "note", note: "B4"}],
+                ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
             },
             {
                 index: 1,
-                notes: [62],
+                notes: [69],
                 color: "purple",
-                displays: [{kind: "note", note: "D4"}],
-                ensembleMidi: cIonian4,
+                displays: [{kind: "note", note: "A4"}],
+                ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
             },
             {
                 index: 2,
-                notes: [64],
+                notes: [67],
                 color: "purple",
-                displays: [{kind: "note", note: "E4"}],
-                ensembleMidi: cIonian4,
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
             },
         ],

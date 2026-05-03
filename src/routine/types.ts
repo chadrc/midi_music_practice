@@ -96,7 +96,7 @@ export interface RoutineChordsPractice {
 export interface RoutineScalesPractice {
     type: PracticeType.Scales;
     baseNote?: string;
-    /** Empty means chromatic in the chosen (or default) root, matching legacy `[{}]`. */
+    /** Empty: practice Ionian for that root in prompts (add “Chromatic” in the list for all 12 tones). */
     scaleTypes: ScaleTypeId[];
     /** Order / traversal of the scale-type pool; default Random. */
     mode: PracticePoolMode;

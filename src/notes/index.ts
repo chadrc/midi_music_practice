@@ -25,6 +25,7 @@ export * from "./notes";
 export * from "./chords";
 
 export const LETTER_NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const LETTER_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
 const CHORD_TYPE_TO_NAME: {[key: string]: string} = {
     [MAJOR_CHORDS_SET_NAME]: "maj",
     [MINOR_CHORDS_SET_NAME]: "min",
@@ -48,12 +49,13 @@ const CHORD_TYPE_TO_NAME: {[key: string]: string} = {
     [SHELL_CHORDS_SET_NAME]: "maj7shell",
 };
 
-export const formatMidiNote = (midiNote: number) => {
+export const formatMidiNote = (midiNote: number, preferFlats = false) => {
     // 0 is C-1
-    const letterNo = midiNote % 12;
+    const letterNo = ((midiNote % 12) + 12) % 12;
     const octave = scientificOctaveFromMidi(midiNote);
+    const letters = preferFlats ? LETTER_NOTES_FLAT : LETTER_NOTES;
 
-    return `${LETTER_NOTES[letterNo]}${octave}`;
+    return `${letters[letterNo]}${octave}`;
 }
 
 /** Scientific octave used in {@link formatMidiNote} (e.g. MIDI 60 → 4 for “C4”). */
@@ -61,9 +63,10 @@ export function scientificOctaveFromMidi(midiNote: number): number {
     return Math.floor(midiNote / 12) - 1;
 }
 
-export const formatMidiLetter = (midiNote: number) => {
-    const letterNo = midiNote % 12;
-    return `${LETTER_NOTES[letterNo]}`;
+export const formatMidiLetter = (midiNote: number, preferFlats = false) => {
+    const letterNo = ((midiNote % 12) + 12) % 12;
+    const letters = preferFlats ? LETTER_NOTES_FLAT : LETTER_NOTES;
+    return `${letters[letterNo]}`;
 }
 
 export const formatChord = (type: string, note: number) => {

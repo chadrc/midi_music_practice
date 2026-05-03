@@ -8,6 +8,7 @@ import {minimalBakedPart} from "./fixtures";
 const cMaj2 = [36, 40, 43];
 const cMaj3 = [48, 52, 55];
 const cMaj4 = [60, 64, 67];
+const cMaj4Desc = [67, 64, 60];
 const cMajDegreePC = [0, 4, 7];
 
 test("emits chord prompts with one note each for fixed seed and practice", () => {
@@ -100,7 +101,7 @@ test("Up mode walks C E G per octave then next octave", () => {
     });
 });
 
-test("Down mode walks from highest octave C E G downward", () => {
+test("Down mode walks from highest octave, chord tones descending in pitch", () => {
     const generated = generateChordPrompts(
         minimalBakedPart({
             promptCount: 3,
@@ -118,10 +119,10 @@ test("Down mode walks from highest octave C E G downward", () => {
         prompts: [
             {
                 index: 0,
-                notes: [60],
+                notes: [67],
                 color: "sky",
-                displays: [{kind: "note", note: "C4"}],
-                ensembleMidi: cMaj4,
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
@@ -129,15 +130,15 @@ test("Down mode walks from highest octave C E G downward", () => {
                 notes: [64],
                 color: "purple",
                 displays: [{kind: "note", note: "E4"}],
-                ensembleMidi: cMaj4,
+                ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 2,
-                notes: [67],
+                notes: [60],
                 color: "purple",
-                displays: [{kind: "note", note: "G4"}],
-                ensembleMidi: cMaj4,
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
             },
         ],

@@ -126,7 +126,7 @@ watchEffect(() => {
         option-value="value"
         display="chip"
         filter
-        placeholder="Scales (chromatic default when empty)"
+        placeholder="Scale types (major / Ionian when empty)"
         class="practice-item-control practice-item-multiselect"
       />
       <div class="octave-range-block">

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
+import fs from 'fs';
 import path from 'path';
 import started from 'electron-squirrel-startup';
 
@@ -7,13 +8,25 @@ if (started) {
   app.quit();
 }
 
+/** Aligns Linux WM_CLASS with StartupWMClass in linux/desktop.ejs so GNOME Activities/search use the right icon. */
+if (process.platform === 'linux') {
+  app.setName('midi_music_practice');
+}
+
 console.log(app.getVersion());
+
+/** Icon path: main lives in `.vite/build/` in dev and when packaged (inside app.asar). */
+function resolveWindowIconPath(): string | undefined {
+  const iconFile = path.join(__dirname, '../../assets/MIDI_Practice_Icon_512.png');
+  return fs.existsSync(iconFile) ? iconFile : undefined;
+}
 
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1600,
     height: 1200,
+    icon: resolveWindowIconPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },

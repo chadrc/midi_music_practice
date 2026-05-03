@@ -27,12 +27,12 @@ test("Scales practice with major type uses diatonic pitch classes", () => {
     expect([...scale.notes]).to.deep.equal([0, 2, 4, 5, 7, 9, 11]);
 });
 
-test("Scales practice with empty scaleTypes uses chromatic pitch-class set", () => {
+test("Scales practice with empty scaleTypes defaults to diatonic major pitch classes", () => {
     const scale = noteScaleFromPractice({
         type: PracticeType.Scales,
         baseNote: "C",
         scaleTypes: [],
         mode: PracticePoolMode.Random,
     });
-    expect([...scale.notes]).to.deep.equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
+    expect([...scale.notes]).to.deep.equal([0, 2, 4, 5, 7, 9, 11]);
 });

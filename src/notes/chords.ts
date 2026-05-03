@@ -63,6 +63,24 @@ export const CHORD_TYPE_OPTIONS = [
     SHELL_CHORDS_SET_NAME,
 ] as const;
 
+export type ChordTypeFromOptions = (typeof CHORD_TYPE_OPTIONS)[number];
+
+/** Qualities whose chord tones read more clearly with eb/bb spellings (e.g. C minor third as Eb not D#). */
+const FLAT_SPELLING_CHORD_TYPES: ReadonlySet<ChordTypeFromOptions> = new Set([
+    MINOR_CHORDS_SET_NAME,
+    MINOR_7TH_CHORDS_SET_NAME,
+    MINOR_6TH_CHORDS_SET_NAME,
+    DIMINISHED_CHORDS_SET_NAME,
+    DIMINISHED_7TH_CHORDS_SET_NAME,
+    HALF_DIMINISHED_7TH_CHORDS_SET_NAME,
+    DOMINANT_7TH_CHORDS_SET_NAME,
+    DOMINANT_9TH_CHORDS_SET_NAME,
+]);
+
+export function chordSpellPrefersFlats(type: ChordTypeFromOptions): boolean {
+    return FLAT_SPELLING_CHORD_TYPES.has(type);
+}
+
 export const MAJOR_CHORD_PATTERN = [1, 5, 8];
 export const MAJOR_7TH_CHORD_PATTERN = [1, 5, 8, 12];
 export const MINOR_CHORD_PATTERN = [1, 4, 8];

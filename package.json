@@ -2,12 +2,13 @@
   "name": "midi_music_practice",
   "productName": "midi_music_practice",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Practice your instrument with MIDI",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "make:rpm": "FORGE_MAKE_RPM=1 electron-forge make --targets rpm",
     "publish": "electron-forge publish",
     "lint": "eslint .",
     "test": "vitest"
