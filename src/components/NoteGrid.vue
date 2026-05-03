@@ -219,6 +219,7 @@ function makeNoteText(row: number, column: number) {
   display: flex;
   flex-direction: column-reverse;
   height: 100%;
+  justify-content: start;
   /* Ring draws outside the shell; gap equals 2× ring so neighbors’ shadows don’t overlap. */
   --note-grid-cell-ring: 3px;
   --note-grid-ensemble-ring: var(--p-slate-400, #94a3b8);
@@ -228,7 +229,6 @@ function makeNoteText(row: number, column: number) {
 .note-grid-row {
   display: flex;
   flex-direction: row;
-  height: 100%;
   gap: calc(var(--note-grid-cell-ring) * 2);
 }
 
@@ -284,7 +284,9 @@ function makeNoteText(row: number, column: number) {
 
 .note-style-circle {
   margin: 0.1rem;
-  border-radius: 50%;
+  /*border-radius: 50%;*/
+  padding: .25rem 1rem;
+  height: auto;
 }
 
 .note-style-bar {
