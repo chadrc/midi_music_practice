@@ -33,6 +33,7 @@ test("emits scale prompts with one note each for fixed seed", () => {
                 displays: [{kind: "note", note: "C2"}],
                 ensembleMidi: cIonian2,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -41,6 +42,7 @@ test("emits scale prompts with one note each for fixed seed", () => {
                 displays: [{kind: "note", note: "D2"}],
                 ensembleMidi: cIonian2,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major (Ionian)",
@@ -128,6 +130,7 @@ test("Up mode walks scale degrees in order from lowest part octave upward", () =
                 displays: [{kind: "note", note: "C2"}],
                 ensembleMidi: cIonian2,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -136,6 +139,7 @@ test("Up mode walks scale degrees in order from lowest part octave upward", () =
                 displays: [{kind: "note", note: "D2"}],
                 ensembleMidi: cIonian2,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -144,6 +148,7 @@ test("Up mode walks scale degrees in order from lowest part octave upward", () =
                 displays: [{kind: "note", note: "E2"}],
                 ensembleMidi: cIonian2,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major (Ionian)",
@@ -173,6 +178,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -181,6 +187,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -189,6 +196,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "D4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 3,
@@ -197,6 +205,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 4,
@@ -205,6 +214,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "B4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 5,
@@ -213,6 +223,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "F4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 6,
@@ -221,6 +232,7 @@ test("Random mode visits each scale degree once per cycle before repeating", () 
                 displays: [{kind: "note", note: "A4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major (Ionian)",
@@ -250,6 +262,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "A4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -258,6 +271,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "B4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -266,6 +280,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "D4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 3,
@@ -274,6 +289,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 4,
@@ -282,6 +298,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 5,
@@ -290,6 +307,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 6,
@@ -298,6 +316,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "F4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 7,
@@ -306,6 +325,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "F4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 8,
@@ -314,6 +334,7 @@ test("Random mode starts a fresh cycle after exhausting degrees (partial second 
                 displays: [{kind: "note", note: "B4"}],
                 ensembleMidi: cIonian4,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major (Ionian)",
@@ -343,6 +364,7 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
                 displays: [{kind: "note", note: "B4"}],
                 ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -351,6 +373,7 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
                 displays: [{kind: "note", note: "A4"}],
                 ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -359,6 +382,7 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: cIonian4Desc,
                 ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major (Ionian)",

@@ -1,6 +1,11 @@
 import {formatMidiNote} from "../notes";
+import {midiToEasyScorePitchForKey} from "./staffKeySpelling";
 
 export const GRAND_STAFF_SPLIT_MIDI = 60;
+
+export type StaffChordSpellingMode =
+  | {mode: "eachNote"}
+  | {mode: "keySignature"; vexKey: string};
 
 /** Middle C (C4) octave anchor when octave need not match the target MIDI. */
 export function effectiveMidiForStaff(midi: number, requireOctave: boolean): number {
@@ -24,12 +29,19 @@ export function midiToEasyScorePitch(midi: number): string {
 }
 
 /** Quarter-note chord or single note; first pitch carries `/q`. */
-export function buildChordEasyScoreLine(midis: number[]): string {
+export function buildChordEasyScoreLine(
+    midis: number[],
+    spelling: StaffChordSpellingMode = {mode: "eachNote"},
+): string {
     const sorted = [...new Set(midis)].sort((a, b) => b - a);
     if (sorted.length === 0) {
         return "B4/w/r";
     }
-    const pitches = sorted.map(midiToEasyScorePitch);
+    const pitchForMidi =
+        spelling.mode === "keySignature"
+            ? (m: number) => midiToEasyScorePitchForKey(m, spelling.vexKey)
+            : midiToEasyScorePitch;
+    const pitches = sorted.map(pitchForMidi);
     if (pitches.length === 1) {
         return `${pitches[0]}/q`;
     }

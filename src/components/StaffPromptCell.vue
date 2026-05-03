@@ -6,12 +6,17 @@ import {
   buildChordEasyScoreLine,
   mapPromptNotesToStaffMidis,
   splitGrandStaffMidis,
+  type StaffChordSpellingMode,
 } from "../notation/staffFromMidi";
+import {normalizeVexKey} from "../notation/staffKeySpelling";
 import {minStaveWidthPx, STAFF_NOTATION_METER} from "../notation/staffLayout";
+import type {StaffAccidentalsMode} from "../store/settings";
 
 const props = defineProps<{
   noteMidis: number[];
   requireOctave: boolean;
+  staffAccidentals: StaffAccidentalsMode;
+  vexKey: string;
 }>();
 
 const hostRef = ref<HTMLElement | null>(null);
@@ -35,15 +40,23 @@ function bassQuarterRests(score: EasyScore, count: number) {
   return t;
 }
 
+function chordSpelling(): StaffChordSpellingMode {
+  if (props.staffAccidentals === "keySignature") {
+    return {mode: "keySignature", vexKey: props.vexKey};
+  }
+  return {mode: "eachNote"};
+}
+
 /** One 4/4 measure: target on its beat(s) as beat 1, remaining beats quarter rests. */
 function buildVoicesForStaffCell(
   score: EasyScore,
   grand: boolean,
   mapped: number[],
+  spelling: StaffChordSpellingMode,
 ): Voice[] {
   score.set({time: STAFF_NOTATION_METER});
   if (!grand) {
-    const line = buildChordEasyScoreLine(mapped);
+    const line = buildChordEasyScoreLine(mapped, spelling);
     const tickables = [...score.notes(line), ...trebleQuarterRests(score, 3)];
     return [score.voice(tickables, {time: STAFF_NOTATION_METER})];
   }
@@ -53,10 +66,10 @@ function buildVoicesForStaffCell(
   const hasB = bass.length > 0;
 
   const trebleTick = hasT
-    ? [...score.notes(buildChordEasyScoreLine(treble)), ...trebleQuarterRests(score, 3)]
+    ? [...score.notes(buildChordEasyScoreLine(treble, spelling)), ...trebleQuarterRests(score, 3)]
     : trebleQuarterRests(score, 4);
   const bassTick = hasB
-    ? [...score.notes(buildChordEasyScoreLine(bass), {clef: "bass"}), ...bassQuarterRests(score, 3)]
+    ? [...score.notes(buildChordEasyScoreLine(bass, spelling), {clef: "bass"}), ...bassQuarterRests(score, 3)]
     : bassQuarterRests(score, 4);
 
   return [
@@ -65,14 +78,14 @@ function buildVoicesForStaffCell(
   ];
 }
 
-function measureStaveWidthPx(score: EasyScore, voices: Voice[]): number {
+function measureStaveWidthPx(score: EasyScore, voices: Voice[], withKeySignature: boolean): number {
   const formatter = new Formatter();
   formatter.joinVoices(voices);
   const minTickWidth = formatter.preCalculateMinTotalWidth(voices);
-  return minStaveWidthPx(minTickWidth);
+  return minStaveWidthPx(minTickWidth, {withKeySignature});
 }
 
-function measureStaveWidthInProbe(grand: boolean, mapped: number[]): number {
+function measureStaveWidthInProbe(grand: boolean, mapped: number[], spelling: StaffChordSpellingMode): number {
   const probe = document.createElement("div");
   probe.id = `${domId}-measure-${Date.now().toString(36)}`;
   probe.setAttribute("aria-hidden", "true");
@@ -84,8 +97,9 @@ function measureStaveWidthInProbe(grand: boolean, mapped: number[]): number {
       renderer: {elementId: probe.id, width: 800, height: 400},
     });
     const measureScore = probeFactory.EasyScore();
-    const voices = buildVoicesForStaffCell(measureScore, grand, mapped);
-    return measureStaveWidthPx(measureScore, voices);
+    const voices = buildVoicesForStaffCell(measureScore, grand, mapped, spelling);
+    const withKs = spelling.mode === "keySignature";
+    return measureStaveWidthPx(measureScore, voices, withKs);
   } finally {
     document.body.removeChild(probe);
   }
@@ -109,8 +123,9 @@ function draw() {
   const containerWidth = Math.max(140, Math.floor(el.getBoundingClientRect().width) || 180);
   const grand = props.requireOctave;
   const height = grand ? 170 : 95;
+  const spelling = chordSpelling();
 
-  const staveWidthPx = measureStaveWidthInProbe(grand, mapped);
+  const staveWidthPx = measureStaveWidthInProbe(grand, mapped, spelling);
 
   const systemX = 8;
   const rendererWidth = Math.max(containerWidth, systemX + staveWidthPx + 12);
@@ -119,7 +134,7 @@ function draw() {
     renderer: {elementId: el.id, width: rendererWidth, height},
   });
   const score = vf.EasyScore();
-  const voices = buildVoicesForStaffCell(score, grand, mapped);
+  const voices = buildVoicesForStaffCell(score, grand, mapped, spelling);
 
   const system = vf.System({
     spaceBetweenStaves: 9,
@@ -130,17 +145,25 @@ function draw() {
     noJustification: false,
   });
 
+  const useKs = props.staffAccidentals === "keySignature";
+  const keySpec = normalizeVexKey(props.vexKey);
+
   if (!grand) {
-    system
-      .addStave({voices: [voices[0]!]})
-      .addClef("treble")
-      .addTimeSignature(STAFF_NOTATION_METER);
+    const st = system.addStave({voices: [voices[0]!]}).addClef("treble");
+    if (useKs) {
+      st.addKeySignature(keySpec);
+    }
+    st.addTimeSignature(STAFF_NOTATION_METER);
   } else {
-    system
-      .addStave({voices: [voices[0]!]})
-      .addClef("treble")
-      .addTimeSignature(STAFF_NOTATION_METER);
-    system.addStave({voices: [voices[1]!]}).addClef("bass");
+    const trebleSt = system.addStave({voices: [voices[0]!]}).addClef("treble");
+    if (useKs) {
+      trebleSt.addKeySignature(keySpec);
+    }
+    trebleSt.addTimeSignature(STAFF_NOTATION_METER);
+    const bassSt = system.addStave({voices: [voices[1]!]}).addClef("bass");
+    if (useKs) {
+      bassSt.addKeySignature(keySpec);
+    }
     system.addConnector("brace");
     system.addConnector("singleRight");
   }
@@ -153,9 +176,10 @@ function draw() {
       const bb = svg.getBBox();
       if (bb.width > 0 && bb.height > 0) {
         const pad = 10;
+        const padLeftExtra = useKs ? 48 : 0;
         svg.setAttribute(
           "viewBox",
-          `${bb.x - pad} ${bb.y - pad} ${bb.width + pad * 2} ${bb.height + pad * 2}`,
+          `${bb.x - pad - padLeftExtra} ${bb.y - pad} ${bb.width + pad * 2 + padLeftExtra} ${bb.height + pad * 2}`,
         );
         svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
         svg.removeAttribute("width");
@@ -182,7 +206,8 @@ onMounted(() => {
 onUnmounted(() => resizeObserver?.disconnect());
 
 watch(
-  () => `${props.requireOctave}:${props.noteMidis.join(",")}`,
+  () =>
+    `${props.requireOctave}:${props.noteMidis.join(",")}:${props.staffAccidentals}:${props.vexKey}`,
   draw,
 );
 </script>
@@ -221,5 +246,10 @@ watch(
   justify-content: center;
   align-items: center;
   box-sizing: border-box;
+  overflow: visible;
+}
+
+.staff-prompt-mount :deep(svg) {
+  overflow: visible;
 }
 </style>

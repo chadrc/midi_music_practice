@@ -3,11 +3,26 @@ import {Button, Step, StepList, Stepper} from "primevue";
 import {computed} from "vue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
+import {inferVexKeySignature} from "../notation/staffKeySpelling";
 import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
 import StaffPromptCell from "./StaffPromptCell.vue";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
+
+/**
+ * Key signature must follow the routine part that built these prompts. When “Not Matching” is on,
+ * {@link useSettingsStore.currentSettings} still reflects the sidebar and may be a different practice type.
+ */
+const practiceForStaffKey = computed(() => {
+  const part = practiceStore.currentRoutinePart;
+  return part != null ? part.bakedSettings.practice : settingsStore.currentSettings.practice;
+});
+
+/** Focus prompt for combined staff (key sig matches what you’re playing now). */
+const activeStaffPrompt = computed(
+  () => practiceStore.activePrompts[practiceStore.currentPrompt] ?? practiceStore.activePrompts[0],
+);
 
 const staffMode = computed(() => settingsStore.practiceUi.promptDisplay === "staff");
 const staffAllMode = computed(() => settingsStore.practiceUi.promptDisplay === "staffAll");
@@ -65,6 +80,14 @@ function promptCardClass(prompt: PromptData) {
       <StaffAllPromptsRow
         :prompts="practiceStore.activePrompts"
         :require-octave="settingsStore.currentSettings.requireOctave"
+        :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
+        :vex-key="
+          inferVexKeySignature(
+            practiceForStaffKey,
+            activeStaffPrompt?.prompt.notes ?? [],
+            activeStaffPrompt?.prompt.staffFundamentalMapKey,
+          )
+        "
       />
     </div>
     <div
@@ -87,6 +110,14 @@ function promptCardClass(prompt: PromptData) {
             <StaffPromptCell
               :note-midis="prompt.prompt.notes"
               :require-octave="settingsStore.currentSettings.requireOctave"
+              :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
+              :vex-key="
+                inferVexKeySignature(
+                  practiceForStaffKey,
+                  prompt.prompt.notes,
+                  prompt.prompt.staffFundamentalMapKey,
+                )
+              "
             />
           </template>
           <template v-else>
@@ -263,6 +294,7 @@ function promptCardClass(prompt: PromptData) {
   border-radius: 1rem;
   padding: 0.35rem 0.25rem;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .prompt-text {

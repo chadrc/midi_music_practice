@@ -11,13 +11,20 @@ export const STAVE_TRAILING_RESERVE_PX = 44;
  * (more space between beats, and slack that becomes margin at both ends of the bar).
  */
 export const STAVE_JUSTIFY_EXTRA_PX = 100;
+/** Horizontal room for a key signature (_formatter width excludes stave modifiers). */
+export const STAVE_KEY_SIGNATURE_RESERVE_PX = 96;
 
-export function minStaveWidthPx(minTickWidth: number): number {
-  return Math.ceil(
-    minTickWidth +
-      Stave.rightPadding +
-      STAVE_LEADING_RESERVE_PX +
-      STAVE_TRAILING_RESERVE_PX +
-      STAVE_JUSTIFY_EXTRA_PX,
-  );
+export function minStaveWidthPx(
+    minTickWidth: number,
+    options?: {withKeySignature?: boolean},
+): number {
+    const keyExtra = options?.withKeySignature ? STAVE_KEY_SIGNATURE_RESERVE_PX : 0;
+    return Math.ceil(
+        minTickWidth +
+          Stave.rightPadding +
+          STAVE_LEADING_RESERVE_PX +
+          STAVE_TRAILING_RESERVE_PX +
+          STAVE_JUSTIFY_EXTRA_PX +
+          keyExtra,
+    );
 }

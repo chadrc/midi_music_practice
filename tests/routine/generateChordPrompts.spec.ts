@@ -34,6 +34,7 @@ test("emits chord prompts with one note each for fixed seed and practice", () =>
                 displays: [{kind: "note", note: "C2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -42,6 +43,7 @@ test("emits chord prompts with one note each for fixed seed and practice", () =>
                 displays: [{kind: "note", note: "E2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -50,6 +52,7 @@ test("emits chord prompts with one note each for fixed seed and practice", () =>
                 displays: [{kind: "note", note: "G2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major",
@@ -79,6 +82,7 @@ test("Up mode walks C E G per octave then next octave", () => {
                 displays: [{kind: "note", note: "C2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -87,6 +91,7 @@ test("Up mode walks C E G per octave then next octave", () => {
                 displays: [{kind: "note", note: "E2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -95,6 +100,7 @@ test("Up mode walks C E G per octave then next octave", () => {
                 displays: [{kind: "note", note: "G2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major",
@@ -124,6 +130,7 @@ test("Down mode walks from highest octave, chord tones descending in pitch", () 
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -132,6 +139,7 @@ test("Down mode walks from highest octave, chord tones descending in pitch", () 
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -140,6 +148,7 @@ test("Down mode walks from highest octave, chord tones descending in pitch", () 
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: cMaj4Desc,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major",
@@ -169,6 +178,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "C2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -177,6 +187,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "E2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -185,6 +196,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "G2"}],
                 ensembleMidi: cMaj2,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 3,
@@ -193,6 +205,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "C3"}],
                 ensembleMidi: cMaj3,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 4,
@@ -201,6 +214,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "E3"}],
                 ensembleMidi: cMaj3,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 5,
@@ -209,6 +223,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "G3"}],
                 ensembleMidi: cMaj3,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 6,
@@ -217,6 +232,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: cMaj4,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 7,
@@ -225,6 +241,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: cMaj4,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 8,
@@ -233,6 +250,7 @@ test("Up mode covers full C major arpeggio across three part octaves for nine pr
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: cMaj4,
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major",
@@ -262,6 +280,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 1,
@@ -270,6 +289,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 2,
@@ -278,6 +298,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 3,
@@ -286,6 +307,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "E4"}],
                 ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 4,
@@ -294,6 +316,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "C4"}],
                 ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
             {
                 index: 5,
@@ -302,6 +325,7 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
                 displays: [{kind: "note", note: "G4"}],
                 ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
             },
         ],
         repeatFocusLabel: "C Major",

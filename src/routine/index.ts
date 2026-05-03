@@ -695,6 +695,7 @@ export function tryBuildChordPrompt(
         displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note, chordType)}],
         ensembleMidi: voicing,
         ensemblePitchClasses: pitchClassesFromMidis(voicing),
+        staffFundamentalMapKey: fundamentalMapKey,
     };
 }
 
@@ -730,6 +731,7 @@ export function tryBuildScalePrompt(
         displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
         ensembleMidi: choices,
         ensemblePitchClasses: pitchClassesFromMidis(notes),
+        staffFundamentalMapKey: fundamentalMapKey,
     };
 }
 
@@ -847,6 +849,7 @@ export function generateChordPrompts(
                 ],
                 ensembleMidi,
                 ensemblePitchClasses,
+                staffFundamentalMapKey: fundKey,
                 ...(multiTypePool && cycleChordType !== null
                     ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, cycleChordType)}
                     : {}),
@@ -889,6 +892,7 @@ export function generateChordPrompts(
             displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target, chordType)}],
             ensembleMidi: ensemble,
             ensemblePitchClasses,
+            staffFundamentalMapKey: fundKey,
             ...(multiTypePool ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, chordType)} : {}),
         });
     }
@@ -998,6 +1002,7 @@ export function generateScalePrompts(
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
                 ensembleMidi,
                 ensemblePitchClasses,
+                staffFundamentalMapKey: fundKey,
             });
         }
         return {prompts, repeatFocusLabel};
@@ -1030,6 +1035,7 @@ export function generateScalePrompts(
             displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
             ensembleMidi: ensemble,
             ensemblePitchClasses,
+            staffFundamentalMapKey: fundKey,
         });
     }
     return {prompts, repeatFocusLabel};

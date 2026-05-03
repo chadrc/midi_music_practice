@@ -21,6 +21,7 @@ test("builds single-note scale prompt for fixed seed", () => {
         displays: [{kind: "note", note: "G3"}],
         ensembleMidi: [48, 50, 52, 53, 55, 57, 59],
         ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
+        staffFundamentalMapKey: "C",
     });
 });
 
@@ -59,6 +60,7 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "G2"}],
             ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
             ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 1,
@@ -67,6 +69,7 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "A2"}],
             ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
             ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 2,
@@ -75,6 +78,7 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "C2"}],
             ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
             ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 3,
@@ -83,6 +87,7 @@ test("sequential scale prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "G2"}],
             ensembleMidi: [36, 38, 40, 41, 43, 45, 47],
             ensemblePitchClasses: [0, 2, 4, 5, 7, 9, 11],
+            staffFundamentalMapKey: "C",
         },
     ]);
 });

@@ -21,6 +21,7 @@ test("builds single-note chord prompt for fixed seed", () => {
         displays: [{kind: "note", note: "C2"}],
         ensembleMidi: [36, 40, 43],
         ensemblePitchClasses: [0, 4, 7],
+        staffFundamentalMapKey: "C",
     });
 });
 
@@ -94,6 +95,7 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "C2"}],
             ensembleMidi: [36, 40, 43],
             ensemblePitchClasses: [0, 4, 7],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 1,
@@ -102,6 +104,7 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "E2"}],
             ensembleMidi: [36, 40, 43],
             ensemblePitchClasses: [0, 4, 7],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 2,
@@ -110,6 +113,7 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "E2"}],
             ensembleMidi: [36, 40, 43],
             ensemblePitchClasses: [0, 4, 7],
+            staffFundamentalMapKey: "C",
         },
         {
             index: 3,
@@ -118,6 +122,7 @@ test("sequential chord prompts with one generator and fixed partOctave", () => {
             displays: [{kind: "note", note: "G2"}],
             ensembleMidi: [36, 40, 43],
             ensemblePitchClasses: [0, 4, 7],
+            staffFundamentalMapKey: "C",
         },
     ]);
 });

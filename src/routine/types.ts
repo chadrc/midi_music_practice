@@ -170,6 +170,11 @@ export interface Prompt {
     ensembleMidi?: number[];
     /** Pitch classes (0–11) for this chord or scale; used to highlight all matching MIDIs when requireOctave is false. */
     ensemblePitchClasses?: number[];
+    /**
+     * Registry root key (e.g. `FSharp`) matching {@link resolveFundamentalMapKey} for this batch.
+     * Used for staff key signature when `practice.baseNote` is unset.
+     */
+    staffFundamentalMapKey?: string;
 }
 
 /** One batch of prompts from {@link generatePrompts} plus optional chord/scale context for the repeat. */

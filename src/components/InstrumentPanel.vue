@@ -157,6 +157,15 @@ const selectedScale = computed(() =>
     practiceScaleMembership(currentSettings.value.practice),
 );
 
+const staffKeySignatureForNotation = computed({
+  get() {
+    return settingsStore.practiceUi.staffAccidentals === "keySignature";
+  },
+  set(v: boolean) {
+    settingsStore.practiceUi.staffAccidentals = v ? "keySignature" : "eachNote";
+  },
+});
+
 const showPracticeItems = computed(() => {
   const t = currentSettings.value.practice.type;
   return t === PracticeType.Chords || t === PracticeType.Scales;
@@ -287,14 +296,24 @@ function updateNoteRange(range: number[]) {
         </Suspense>
       </TabPanel>
       <TabPanel value="options">
-        <div class="option-control">
-          <span>Min Velocity for Success</span>
-          <Slider
-            v-model="currentSettings.minSuccessVelocity"
-            class="min-success-slider"
-            :max="127"
-          />
-          <span>{{ currentSettings.minSuccessVelocity }}</span>
+        <div class="options-tab-stack">
+          <div class="option-control">
+            <span>Min Velocity for Success</span>
+            <Slider
+              v-model="currentSettings.minSuccessVelocity"
+              class="min-success-slider"
+              :max="127"
+            />
+            <span>{{ currentSettings.minSuccessVelocity }}</span>
+          </div>
+          <div class="option-control staff-accidentals-row">
+            <span>Staff accidentals</span>
+            <ToggleButton
+              v-model="staffKeySignatureForNotation"
+              on-label="Key signature"
+              off-label="Next to notes"
+            />
+          </div>
         </div>
       </TabPanel>
     </TabPanels>
@@ -368,6 +387,17 @@ function updateNoteRange(range: number[]) {
   display: inline-flex;
   justify-content: center;
   align-items: center;
+}
+
+.options-tab-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.staff-accidentals-row .p-togglebutton {
+  margin-left: 1rem;
 }
 
 .min-success-slider {

@@ -37,8 +37,12 @@ interface PracticeSettings {
 
 export type PromptDisplayMode = "bubbles" | "staff" | "staffAll";
 
+/** How accidentals are drawn on per-prompt staff notation. */
+export type StaffAccidentalsMode = "eachNote" | "keySignature";
+
 interface PracticeUiSettings {
     promptDisplay: PromptDisplayMode;
+    staffAccidentals: StaffAccidentalsMode;
 }
 
 interface SettingsStore {
@@ -86,6 +90,7 @@ export const useSettingsStore = defineStore('settings', {
 
         const defaultPracticeUi: PracticeUiSettings = {
             promptDisplay: "bubbles",
+            staffAccidentals: "eachNote",
         };
 
         if (localStorage.getItem('settings')) {
