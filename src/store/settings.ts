@@ -35,12 +35,19 @@ interface PracticeSettings {
     matchPracticeRoutine: boolean;
 }
 
+export type PromptDisplayMode = "bubbles" | "staff";
+
+interface PracticeUiSettings {
+    promptDisplay: PromptDisplayMode;
+}
+
 interface SettingsStore {
     noteGrid: NoteGridSettings;
     audio: AudioSettings;
     instruments: InstrumentSettings;
     userRoutine: UserRoutinePartSettings;
     practice: PracticeSettings;
+    practiceUi: PracticeUiSettings;
 }
 
 export const NONE_VALUE = "none";
@@ -76,6 +83,10 @@ export const useSettingsStore = defineStore('settings', {
             selectedRoutine: NONE_VALUE,
             matchPracticeRoutine: true,
         }
+
+        const defaultPracticeUi: PracticeUiSettings = {
+            promptDisplay: "bubbles",
+        };
 
         if (localStorage.getItem('settings')) {
             const stored = JSON.parse(localStorage.getItem('settings')!);
@@ -116,6 +127,7 @@ export const useSettingsStore = defineStore('settings', {
                 instruments: Object.assign(defaultInstrument, stored.instruments),
                 userRoutine,
                 practice: Object.assign(defaultPractice, stored.practice),
+                practiceUi: Object.assign(defaultPracticeUi, stored.practiceUi ?? {}),
             }
         }
 
@@ -125,6 +137,7 @@ export const useSettingsStore = defineStore('settings', {
             instruments: defaultInstrument,
             userRoutine: defaultUserRoutine,
             practice: defaultPractice,
+            practiceUi: defaultPracticeUi,
         }
     },
     getters: {

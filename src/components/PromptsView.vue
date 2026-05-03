@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import {Button, Step, StepList, Stepper} from "primevue";
+import {computed} from "vue";
 import {PromptData, usePracticeStore} from "../store/practice";
-import {exists} from "../utilities";
+import {useSettingsStore} from "../store/settings";
+import StaffPromptCell from "./StaffPromptCell.vue";
 
 const practiceStore = usePracticeStore();
+const settingsStore = useSettingsStore();
+
+const staffMode = computed(() => settingsStore.practiceUi.promptDisplay === "staff");
 
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
-  return `var(--p-${prompt.prompt.color}-800`;
+  return `var(--p-${prompt.prompt.color}-800)`;
 }
 
 function promptCardClass(prompt: PromptData) {
@@ -63,34 +68,42 @@ function promptCardClass(prompt: PromptData) {
         :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-          :class="promptCardClass(prompt)"
+          :class="staffMode ? 'prompt-staff-card' : promptCardClass(prompt)"
           :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <template
-            v-for="(disp, di) in prompt.prompt.displays"
-            :key="di"
-          >
-            <div
-              v-if="disp.kind === 'note'"
-              class="prompt-text"
+          <template v-if="staffMode">
+            <StaffPromptCell
+              :note-midis="prompt.prompt.notes"
+              :require-octave="settingsStore.currentSettings.requireOctave"
+            />
+          </template>
+          <template v-else>
+            <template
+              v-for="(disp, di) in prompt.prompt.displays"
+              :key="di"
             >
-              <span>{{ disp.note }}</span>
-            </div>
-            <div
-              v-else
-              class="prompt-block"
-            >
-              <div class="prompt-title">
-                {{ disp.title }}
+              <div
+                v-if="disp.kind === 'note'"
+                class="prompt-text"
+              >
+                <span>{{ disp.note }}</span>
               </div>
-              <div class="prompt-cells">
-                <span
-                  v-for="(cell, ci) in disp.cells"
-                  :key="ci"
-                  class="prompt-cell"
-                >{{ cell }}</span>
+              <div
+                v-else
+                class="prompt-block"
+              >
+                <div class="prompt-title">
+                  {{ disp.title }}
+                </div>
+                <div class="prompt-cells">
+                  <span
+                    v-for="(cell, ci) in disp.cells"
+                    :key="ci"
+                    class="prompt-cell"
+                  >{{ cell }}</span>
+                </div>
               </div>
-            </div>
+            </template>
           </template>
         </div>
       </div>
@@ -213,6 +226,19 @@ function promptCardClass(prompt: PromptData) {
   flex-direction: column;
   font-size: 1rem;
   gap: 0.35rem;
+}
+
+.prompt-staff-card {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  min-width: 120px;
+  width: 100%;
+  max-width: 280px;
+  border-radius: 1rem;
+  padding: 0.35rem 0.25rem;
+  box-sizing: border-box;
 }
 
 .prompt-text {

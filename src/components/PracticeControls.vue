@@ -1,8 +1,14 @@
 <script setup lang="ts">
-import {Button, Select} from "primevue";
+import {Button, Select, SelectButton} from "primevue";
 import {usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
+import type {PromptDisplayMode} from "../store/settings";
 import RoutineSelect from "./RoutineSelect.vue";
+
+const promptDisplayOptions: {label: string; value: PromptDisplayMode}[] = [
+  {label: "Bubbles", value: "bubbles"},
+  {label: "Staff", value: "staff"},
+];
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
@@ -31,6 +37,16 @@ function onStop() {
   <div class="instrument-option">
     <span>Routine: </span>
     <RoutineSelect />
+  </div>
+  <div class="instrument-option prompt-display-toggle">
+    <span>Prompts: </span>
+    <SelectButton
+      v-model="settingsStore.practiceUi.promptDisplay"
+      :options="promptDisplayOptions"
+      option-label="label"
+      option-value="value"
+      :disabled="settingsStore.editingDisabled"
+    />
   </div>
   <div class="instrument-option">
     <span>Target BPM: </span>
