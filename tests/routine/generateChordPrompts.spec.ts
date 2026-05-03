@@ -1,7 +1,7 @@
 import {expect, test} from "vitest";
 import {generateChordPrompts} from "../../src/routine";
 import {PracticePoolMode, PracticeType} from "../../src/routine/types";
-import {MAJOR_CHORDS_SET_NAME} from "../../src/notes/chords";
+import {MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME} from "../../src/notes/chords";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
@@ -256,53 +256,73 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
         prompts: [
             {
                 index: 0,
-                notes: [60],
+                notes: [67],
                 color: "yellow",
-                displays: [{kind: "note", note: "C4"}],
-                ensembleMidi: cMaj4,
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 1,
-                notes: [64],
-                color: "red",
-                displays: [{kind: "note", note: "E4"}],
-                ensembleMidi: cMaj4,
+                notes: [60],
+                color: "indigo",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 2,
-                notes: [67],
-                color: "yellow",
-                displays: [{kind: "note", note: "G4"}],
-                ensembleMidi: cMaj4,
+                notes: [64],
+                color: "purple",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: [67, 60, 64],
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 3,
-                notes: [60],
-                color: "indigo",
-                displays: [{kind: "note", note: "C4"}],
-                ensembleMidi: cMaj4,
+                notes: [64],
+                color: "yellow",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 4,
-                notes: [64],
-                color: "purple",
-                displays: [{kind: "note", note: "E4"}],
-                ensembleMidi: cMaj4,
+                notes: [60],
+                color: "indigo",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
             },
             {
                 index: 5,
                 notes: [67],
-                color: "amber",
+                color: "violet",
                 displays: [{kind: "note", note: "G4"}],
-                ensembleMidi: cMaj4,
+                ensembleMidi: [64, 60, 67],
                 ensemblePitchClasses: cMajDegreePC,
             },
         ],
         repeatFocusLabel: "C Major",
     });
+});
+
+test("Random mode with multiple chord qualities includes a single-type repeatFocusLabel on each prompt", () => {
+    const generated = generateChordPrompts(
+        minimalBakedPart({
+            promptCount: 6,
+            practice: {
+                type: PracticeType.Chords,
+                baseNote: "C",
+                chordTypes: [MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME],
+                mode: PracticePoolMode.Random,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(42),
+    );
+    expect(generated.prompts.length).toBe(6);
+    for (const p of generated.prompts) {
+        expect(p.repeatFocusLabel === "C Major" || p.repeatFocusLabel === "C Minor").toBe(true);
+    }
 });

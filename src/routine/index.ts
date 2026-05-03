@@ -427,6 +427,10 @@ function chordRepeatFocusLabel(
     return `${root} ${typesLegend}`;
 }
 
+function chordPromptFocusLabel(fundKey: string, chordType: ChordTypeId): string {
+    return `${displayNameFromMapKey(fundKey)} ${CHORD_TYPE_LABEL[chordType]}`;
+}
+
 function scaleRepeatFocusLabel(
     fundKey: string,
     practice: RoutineScalesPractice,
@@ -513,6 +517,19 @@ export function pickPoolIndex(
     }
 }
 
+/** Uniform random chord quality from `pool` that exists for `fundamentalMapKey`. */
+export function pickRandomChordTypeForFundamental(
+    pool: ChordTypeId[],
+    fundamentalMapKey: string,
+    generator: NumberGenerator,
+): ChordTypeId | null {
+    const viable = pool.filter((t) => CHORDS[t][fundamentalMapKey]);
+    if (viable.length === 0) {
+        return null;
+    }
+    return viable[generator.rangeExclusiveI(0, viable.length)]!;
+}
+
 function fundamentalMidiForChordInPartOctave(
     chord: Chord,
     partOctave: number,
@@ -538,13 +555,13 @@ function orderedPartOctaves(lo: number, hi: number, up: boolean): number[] {
     return Array.from({length: span}, (_, k) => (up ? lo + k : hi - k));
 }
 
-/** Each inner array is one chord voicing (low→high) in traversal order. */
+/** Each entry is one chord voicing (low→high) in traversal order plus its quality id. */
 function chordToneMidiSegmentsOrdered(
     pool: ChordTypeId[],
     fundamentalMapKey: string,
     settings: BakedRoutinePartSettings,
     up: boolean,
-): number[][] {
+): {voicing: number[]; chordType: ChordTypeId}[] {
     const practice = settings.practice;
     if (practice.type !== PracticeType.Chords) {
         return [];
@@ -553,7 +570,7 @@ function chordToneMidiSegmentsOrdered(
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
-    const segments: number[][] = [];
+    const segments: {voicing: number[]; chordType: ChordTypeId}[] = [];
     for (const partOct of orderedPartOctaves(lo, hi, up)) {
         for (const chordType of pool) {
             const chord = CHORDS[chordType][fundamentalMapKey];
@@ -569,7 +586,7 @@ function chordToneMidiSegmentsOrdered(
             if (fitted === null) {
                 continue;
             }
-            segments.push(fitted);
+            segments.push({voicing: fitted, chordType});
         }
     }
     return segments;
@@ -734,22 +751,15 @@ export function generateChordPrompts(
         const span = hi - lo + 1;
         const randomPartOctave = lo + generator.rangeExclusiveI(0, span);
 
-        let chordType: ChordTypeId | null = null;
-        const maxTypePicks = Math.max(32, pool.length * 8);
-        for (let pick = 0; pick < maxTypePicks; pick++) {
-            const t = pool[pickPoolIndex(practice.mode, pool.length, 0, generator)]!;
-            if (CHORDS[t][fundKey]) {
-                chordType = t;
-                break;
-            }
-        }
-        if (chordType === null) {
+        if (!pool.some((t) => CHORDS[t][fundKey])) {
             return {prompts: []};
         }
 
-        const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, chordType);
+        const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
+        const multiTypePool = pool.length > 1;
 
         let cycleVoicing: number[] | null = null;
+        let cycleChordType: ChordTypeId | null = null;
         let cycleIndex = 0;
         let attempts = 0;
         const maxAttempts = settings.promptCount * 24;
@@ -757,6 +767,10 @@ export function generateChordPrompts(
             attempts++;
             const i = prompts.length;
             if (!cycleVoicing || cycleIndex >= cycleVoicing.length) {
+                const chordType = pickRandomChordTypeForFundamental(pool, fundKey, generator);
+                if (chordType === null) {
+                    return {prompts, repeatFocusLabel};
+                }
                 const chord = CHORDS[chordType][fundKey];
                 if (!chord) {
                     return {prompts, repeatFocusLabel};
@@ -765,17 +779,20 @@ export function generateChordPrompts(
                 if (fundamental === null) {
                     return {prompts, repeatFocusLabel};
                 }
-                cycleVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
-                if (cycleVoicing.length === 0) {
+                const rawVoicing = midiVoicingForChordAtFundamental(chord, fundamental);
+                if (rawVoicing.length === 0) {
                     return {prompts, repeatFocusLabel};
                 }
-                const fitted = transposeChordVoicingIntoAllowed(cycleVoicing, allowed);
+                const fitted = transposeChordVoicingIntoAllowed(rawVoicing, allowed);
                 if (fitted === null) {
                     cycleVoicing = null;
+                    cycleChordType = null;
                     cycleIndex = 0;
                     continue;
                 }
-                cycleVoicing = fitted;
+                cycleChordType = chordType;
+                cycleVoicing = fitted.slice();
+                shufflePermutationInPlace(cycleVoicing, generator);
                 cycleIndex = 0;
             }
             const note = cycleVoicing[cycleIndex]!;
@@ -790,26 +807,40 @@ export function generateChordPrompts(
                 displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
                 ensembleMidi,
                 ensemblePitchClasses,
+                ...(multiTypePool && cycleChordType !== null
+                    ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, cycleChordType)}
+                    : {}),
             });
         }
         return {prompts, repeatFocusLabel};
     }
 
     const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
+    const multiTypePool = pool.length > 1;
     const up = practice.mode === PracticePoolMode.Up;
     const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, up);
-    const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
+    const steps: {
+        target: number;
+        ensemble: number[];
+        ensemblePitchClasses: number[];
+        chordType: ChordTypeId;
+    }[] = [];
     for (const seg of segments) {
-        const ensemblePitchClasses = pitchClassesFromMidis(seg);
-        for (const target of seg) {
-            steps.push({target, ensemble: seg, ensemblePitchClasses});
+        const ensemblePitchClasses = pitchClassesFromMidis(seg.voicing);
+        for (const target of seg.voicing) {
+            steps.push({
+                target,
+                ensemble: seg.voicing,
+                ensemblePitchClasses,
+                chordType: seg.chordType,
+            });
         }
     }
     if (steps.length === 0) {
         return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
-        const {target, ensemble, ensemblePitchClasses} = steps[i % steps.length]!;
+        const {target, ensemble, ensemblePitchClasses, chordType} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
         prompts.push({
             index: i,
@@ -818,6 +849,7 @@ export function generateChordPrompts(
             displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
             ensembleMidi: ensemble,
             ensemblePitchClasses,
+            ...(multiTypePool ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, chordType)} : {}),
         });
     }
     return {prompts, repeatFocusLabel};

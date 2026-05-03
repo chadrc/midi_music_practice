@@ -161,6 +161,11 @@ export interface Prompt {
     notes: number[];
     color: string;
     displays: PromptDisplay[];
+    /**
+     * When set (e.g. chord practice with multiple qualities in the pool), overrides
+     * {@link RoutinePartRepetition.repeatFocusLabel} for this prompt in the practice UI.
+     */
+    repeatFocusLabel?: string;
     /** Chord voicing or scale degrees (playable-range) when {@link BakedRoutinePartSettings.requireOctave} is true. */
     ensembleMidi?: number[];
     /** Pitch classes (0–11) for this chord or scale; used to highlight all matching MIDIs when requireOctave is false. */

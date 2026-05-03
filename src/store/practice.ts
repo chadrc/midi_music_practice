@@ -85,7 +85,13 @@ export const usePracticeStore = defineStore('practice', () => {
         if (currentRepetition.value < 0 || currentRepetition.value >= part.repetitions.length) {
             return null;
         }
-        return part.repetitions[currentRepetition.value]!.repeatFocusLabel ?? null;
+        const repetition = part.repetitions[currentRepetition.value]!;
+        const active = activePrompts.value[currentPrompt.value];
+        const promptLabel = active?.prompt.repeatFocusLabel;
+        if (promptLabel !== undefined) {
+            return promptLabel;
+        }
+        return repetition.repeatFocusLabel ?? null;
     });
 
     const firstNoteTime = computed(() => {
