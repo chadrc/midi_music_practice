@@ -45,7 +45,7 @@ const routineEditStore = useRoutineStore();
         :key="index"
         :value="index + 1"
       >
-        {{ item.name }}
+        {{ item.name || `Part ${index + 1}` }}
       </Step>
       <Step :value="routineEditStore.currentEdit.parts.length + 1">
         New
