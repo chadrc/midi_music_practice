@@ -51,7 +51,12 @@ function promptCardClass(prompt: PromptData) {
         {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
       </div>
     </div>
-    <div class="prompt-cards">
+    <div
+      class="prompt-cards"
+      :class="{
+        'prompt-cards--over-eight': practiceStore.activePrompts.length > 8,
+      }"
+    >
       <div
         v-for="(prompt, pi) in practiceStore.activePrompts"
         :key="`${pi}-${prompt.prompt.index}`"
@@ -153,6 +158,21 @@ function promptCardClass(prompt: PromptData) {
 .prompt-cards {
   flex: 1;
   display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  align-items: center;
+}
+
+/** More than 8 prompts: fixed 8 per row so the rest wrap without shrinking unreadably. */
+.prompt-cards--over-eight {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  align-content: center;
+  gap: 0.25rem 0;
+  width: 100%;
+  max-width: min(100%, 72rem);
+  box-sizing: border-box;
 }
 
 .prompt-column {
@@ -161,6 +181,12 @@ function promptCardClass(prompt: PromptData) {
   align-items: center;
   height: 100%;
   padding: 1rem;
+}
+
+.prompt-cards--over-eight .prompt-column {
+  height: auto;
+  min-height: 0;
+  min-width: 0;
 }
 
 .prompt-column.current {

@@ -48,12 +48,19 @@ const currentNotes = computed(() =>
 );
 
 const currentPromptHints = computed(() => {
-  const prompt = practiceStore.activePrompts[practiceStore.currentPrompt];
-  if (exists(prompt)) {
-    return prompt.prompt.notes;
+  const pd = practiceStore.activePrompts[practiceStore.currentPrompt];
+  if (!exists(pd)) {
+    return [];
   }
-
-  return [];
+  const midis = pd.prompt.notes;
+  if (!midis.length) {
+    return [];
+  }
+  if (settingsStore.currentSettings.requireOctave) {
+    return midis;
+  }
+  const pcSet = new Set(midis.map((n) => ((n % 12) + 12) % 12));
+  return currentNotes.value.filter((n) => pcSet.has(((n % 12) + 12) % 12));
 });
 
 /** Chord voicing / scale degrees for the active prompt (white outline on the grid). */
