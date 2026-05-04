@@ -7,7 +7,6 @@ import RoutineSelect from "./RoutineSelect.vue";
 
 const promptDisplayOptions: {label: string; value: PromptDisplayMode}[] = [
   {label: "Bubbles", value: "bubbles"},
-  {label: "Staff each", value: "staff"},
   {label: "One staff", value: "staffAll"},
 ];
 

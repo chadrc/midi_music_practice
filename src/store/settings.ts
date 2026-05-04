@@ -35,9 +35,9 @@ interface PracticeSettings {
     matchPracticeRoutine: boolean;
 }
 
-export type PromptDisplayMode = "bubbles" | "staff" | "staffAll";
+export type PromptDisplayMode = "bubbles" | "staffAll";
 
-/** How accidentals are drawn on per-prompt staff notation. */
+/** How accidentals are drawn on the combined staff notation. */
 export type StaffAccidentalsMode = "eachNote" | "keySignature";
 
 interface PracticeUiSettings {
@@ -126,13 +126,24 @@ export const useSettingsStore = defineStore('settings', {
                 promptCount: rawUr.promptCount,
             };
 
+            const storedPracticeUi = stored.practiceUi ?? {};
+            const migratedPromptDisplay =
+                storedPracticeUi.promptDisplay === "staff"
+                    ? "bubbles"
+                    : (storedPracticeUi.promptDisplay ?? defaultPracticeUi.promptDisplay);
+            const practiceUi: PracticeUiSettings = {
+                ...defaultPracticeUi,
+                ...storedPracticeUi,
+                promptDisplay: migratedPromptDisplay as PromptDisplayMode,
+            };
+
             return {
                 noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
                 audio: Object.assign(defaultAudio, stored.audio),
                 instruments: Object.assign(defaultInstrument, stored.instruments),
                 userRoutine,
                 practice: Object.assign(defaultPractice, stored.practice),
-                practiceUi: Object.assign(defaultPracticeUi, stored.practiceUi ?? {}),
+                practiceUi,
             }
         }
 

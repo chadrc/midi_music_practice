@@ -5,7 +5,6 @@ import {PromptData, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
 import {inferVexKeySignature} from "../notation/staffKeySpelling";
 import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
-import StaffPromptCell from "./StaffPromptCell.vue";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
@@ -24,7 +23,6 @@ const activeStaffPrompt = computed(
   () => practiceStore.activePrompts[practiceStore.currentPrompt] ?? practiceStore.activePrompts[0],
 );
 
-const staffMode = computed(() => settingsStore.practiceUi.promptDisplay === "staff");
 const staffAllMode = computed(() => settingsStore.practiceUi.promptDisplay === "staffAll");
 
 function formatPromptColor(prompt: PromptData) {
@@ -103,50 +101,34 @@ function promptCardClass(prompt: PromptData) {
         :class="`prompt-column ${prompt.current ? 'current' : ''}`"
       >
         <div
-          :class="staffMode ? 'prompt-staff-card' : promptCardClass(prompt)"
+          :class="promptCardClass(prompt)"
           :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <template v-if="staffMode">
-            <StaffPromptCell
-              :note-midis="prompt.prompt.notes"
-              :require-octave="settingsStore.currentSettings.requireOctave"
-              :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
-              :vex-key="
-                inferVexKeySignature(
-                  practiceForStaffKey,
-                  prompt.prompt.notes,
-                  prompt.prompt.staffFundamentalMapKey,
-                )
-              "
-            />
-          </template>
-          <template v-else>
-            <template
-              v-for="(disp, di) in prompt.prompt.displays"
-              :key="di"
+          <template
+            v-for="(disp, di) in prompt.prompt.displays"
+            :key="di"
+          >
+            <div
+              v-if="disp.kind === 'note'"
+              class="prompt-text"
             >
-              <div
-                v-if="disp.kind === 'note'"
-                class="prompt-text"
-              >
-                <span>{{ disp.note }}</span>
+              <span>{{ disp.note }}</span>
+            </div>
+            <div
+              v-else
+              class="prompt-block"
+            >
+              <div class="prompt-title">
+                {{ disp.title }}
               </div>
-              <div
-                v-else
-                class="prompt-block"
-              >
-                <div class="prompt-title">
-                  {{ disp.title }}
-                </div>
-                <div class="prompt-cells">
-                  <span
-                    v-for="(cell, ci) in disp.cells"
-                    :key="ci"
-                    class="prompt-cell"
-                  >{{ cell }}</span>
-                </div>
+              <div class="prompt-cells">
+                <span
+                  v-for="(cell, ci) in disp.cells"
+                  :key="ci"
+                  class="prompt-cell"
+                >{{ cell }}</span>
               </div>
-            </template>
+            </div>
           </template>
         </div>
       </div>
@@ -281,20 +263,6 @@ function promptCardClass(prompt: PromptData) {
   flex-direction: column;
   font-size: 1rem;
   gap: 0.35rem;
-}
-
-.prompt-staff-card {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 116px;
-  min-width: 120px;
-  width: 100%;
-  max-width: 280px;
-  border-radius: 1rem;
-  padding: 0.35rem 0.25rem;
-  box-sizing: border-box;
-  overflow: visible;
 }
 
 .prompt-text {

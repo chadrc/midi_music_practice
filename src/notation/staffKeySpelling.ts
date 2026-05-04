@@ -263,7 +263,7 @@ export function parallelMajorVexKeyFromPromptMidis(midis: number[]): string {
 }
 
 /**
- * VexFlow key signature string for the active practice + prompt (per-card staff).
+ * VexFlow key signature string for the active practice + prompt (combined staff).
  */
 export function inferVexKeySignature(
   practice: UserRoutinePractice,
