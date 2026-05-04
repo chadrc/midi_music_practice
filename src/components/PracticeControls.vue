@@ -46,7 +46,6 @@ function onStop() {
       :options="promptDisplayOptions"
       option-label="label"
       option-value="value"
-      :disabled="settingsStore.editingDisabled"
     />
   </div>
   <div class="instrument-option">
