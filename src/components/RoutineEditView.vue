@@ -11,6 +11,10 @@ import RoutinePartNoteRangeEditor from "../routine/components/RoutinePartNoteRan
 import {exists} from "../utilities";
 
 const routineEditStore = useRoutineStore();
+
+function isChordOrScalePractice(p: {type?: PracticeType} | null): boolean {
+  return p != null && (p.type === PracticeType.Chords || p.type === PracticeType.Scales);
+}
 </script>
 
 <template>
@@ -118,7 +122,7 @@ const routineEditStore = useRoutineStore();
           <SettingsEditField
             v-model="item.minSuccessVelocity"
             label="Minimum Velocity"
-            :set-value="32"
+            :set-value="20"
             :component="InputNumber"
             :component-props="{min: 0, max: 127, showButtons: true}"
           />
@@ -129,6 +133,33 @@ const routineEditStore = useRoutineStore();
             :component="InputNumber"
             :component-props="{min: 0, showButtons: true}"
           />
+          <template v-if="isChordOrScalePractice(item.practice)">
+            <div class="settings-edit-field">
+              <span>Free play (blank prompts; any note in set):</span>
+              <ToggleSwitch
+                :model-value="item.freePlayInSet === true"
+                @update:model-value="(v: boolean) => { item.freePlayInSet = v; }"
+              />
+            </div>
+            <div
+              v-if="item.freePlayInSet === true"
+              class="settings-edit-field"
+            >
+              <span>Max same pitch in a row (empty = no limit):</span>
+              <InputNumber
+                :model-value="item.maxConsecutiveSamePitchSuccess ?? undefined"
+                :min="1"
+                :max="99"
+                show-buttons
+                placeholder="—"
+                @update:model-value="
+                  (v: number | null) => {
+                    item.maxConsecutiveSamePitchSuccess = v == null ? null : v;
+                  }
+                "
+              />
+            </div>
+          </template>
           <Button
             v-if="routineEditStore.selectedStep !== 1"
             severity="danger"

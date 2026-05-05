@@ -20,6 +20,8 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         requireOctave: null,
         minSuccessVelocity: null,
         promptCount: null,
+        freePlayInSet: null,
+        maxConsecutiveSamePitchSuccess: null,
     }
 }
 

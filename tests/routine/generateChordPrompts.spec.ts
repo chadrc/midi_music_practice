@@ -332,6 +332,28 @@ test("Random mode arpeggiates each chord tone once before repeating", () => {
     });
 });
 
+test("freePlayInSet uses freePlaySet prompt type", () => {
+    const generated = generateChordPrompts(
+        minimalBakedPart({
+            freePlayInSet: true,
+            promptCount: 3,
+            practice: {
+                type: PracticeType.Chords,
+                baseNote: "C",
+                chordTypes: [MAJOR_CHORDS_SET_NAME],
+                mode: PracticePoolMode.Up,
+            },
+        }),
+        new NumberGenerator(12345),
+    );
+    expect(generated.prompts).toHaveLength(3);
+    for (const pr of generated.prompts) {
+        expect(pr.type).toBe("freePlaySet");
+        expect("displays" in pr).toBe(false);
+        expect(pr.ensembleMidi.length).toBeGreaterThan(0);
+    }
+});
+
 test("Random mode with multiple chord qualities includes a single-type repeatFocusLabel on each prompt", () => {
     const generated = generateChordPrompts(
         minimalBakedPart({

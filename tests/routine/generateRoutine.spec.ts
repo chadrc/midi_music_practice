@@ -15,6 +15,8 @@ test("empty parts yields empty routine object", () => {
                 requireOctave: true,
                 minSuccessVelocity: 1,
                 promptCount: 1,
+                freePlayInSet: false,
+                maxConsecutiveSamePitchSuccess: null,
             },
         ),
     ).to.deep.equal({parts: []});
@@ -40,6 +42,8 @@ test("bakes one part into full repetition + bakedSettings", () => {
                     requireOctave: true,
                     minSuccessVelocity: 1,
                     promptCount: 3,
+                    freePlayInSet: false,
+                    maxConsecutiveSamePitchSuccess: null,
                 },
             ],
         },
@@ -52,6 +56,8 @@ test("bakes one part into full repetition + bakedSettings", () => {
             requireOctave: true,
             minSuccessVelocity: 1,
             promptCount: 1,
+            freePlayInSet: false,
+            maxConsecutiveSamePitchSuccess: null,
         },
     );
     const stripped = {
@@ -101,6 +107,8 @@ test("bakes one part into full repetition + bakedSettings", () => {
                     requireOctave: true,
                     minSuccessVelocity: 1,
                     promptCount: 3,
+                    freePlayInSet: false,
+                    maxConsecutiveSamePitchSuccess: null,
                 },
             },
         ],

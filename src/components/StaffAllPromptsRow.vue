@@ -17,6 +17,8 @@ const props = defineProps<{
   requireOctave: boolean;
   staffAccidentals: StaffAccidentalsMode;
   vexKey: string;
+  /** When true, each beat is a rest until completed; then shows the played pitch. */
+  freePlay?: boolean;
 }>();
 
 const hostRef = ref<HTMLElement | null>(null);
@@ -48,6 +50,7 @@ function buildCombinedVoice(
   prompts: PromptData[],
   requireOctave: boolean,
   spelling: StaffChordSpellingMode,
+  freePlay: boolean,
 ) {
   const n = prompts.length;
   if (n === 0) {
@@ -61,11 +64,23 @@ function buildCombinedVoice(
   const tickables: Note[] = [];
   for (let i = 0; i < n; i++) {
     const pd = prompts[i]!;
-    const midis = mapPromptNotesToStaffMidis(pd.prompt.notes, requireOctave);
-    const line = buildChordEasyScoreLine(midis, spelling);
-    const ns = score.notes(line);
-    applyPromptStyle(pd, ns);
-    tickables.push(...ns);
+    if (freePlay) {
+      if (pd.success && pd.freePlayResolvedMidi != null) {
+        const midis = mapPromptNotesToStaffMidis([pd.freePlayResolvedMidi], requireOctave);
+        const line = buildChordEasyScoreLine(midis, spelling);
+        const ns = score.notes(line);
+        applyPromptStyle(pd, ns);
+        tickables.push(...ns);
+      } else {
+        tickables.push(...score.notes("B4/q/r"));
+      }
+    } else {
+      const midis = mapPromptNotesToStaffMidis(pd.prompt.notes, requireOctave);
+      const line = buildChordEasyScoreLine(midis, spelling);
+      const ns = score.notes(line);
+      applyPromptStyle(pd, ns);
+      tickables.push(...ns);
+    }
     if ((i + 1) % 4 === 0 && i + 1 < n) {
       tickables.push(vf.BarNote({type: "single"}));
     }
@@ -81,6 +96,7 @@ function measureCombinedWidthPxInProbe(
   prompts: PromptData[],
   requireOctave: boolean,
   spelling: StaffChordSpellingMode,
+  freePlay: boolean,
 ): number {
   const probe = document.createElement("div");
   probe.id = `${domId}-measure-${Date.now().toString(36)}`;
@@ -93,7 +109,7 @@ function measureCombinedWidthPxInProbe(
       renderer: {elementId: probe.id, width: 1200, height: 400},
     });
     const score = probeFactory.EasyScore();
-    const voice = buildCombinedVoice(score, probeFactory, prompts, requireOctave, spelling);
+    const voice = buildCombinedVoice(score, probeFactory, prompts, requireOctave, spelling, freePlay);
     if (!voice) {
       return 120;
     }
@@ -126,8 +142,9 @@ function draw() {
   const height = 100;
 
   const spelling = chordSpelling();
+  const freePlay = props.freePlay === true;
 
-  const staveWidthPx = measureCombinedWidthPxInProbe(prompts, props.requireOctave, spelling);
+  const staveWidthPx = measureCombinedWidthPxInProbe(prompts, props.requireOctave, spelling, freePlay);
 
   const systemX = 8;
   const rendererWidth = Math.max(containerWidth, systemX + staveWidthPx + 12);
@@ -136,7 +153,7 @@ function draw() {
     renderer: {elementId: el.id, width: rendererWidth, height},
   });
   const score = vf.EasyScore();
-  const voice = buildCombinedVoice(score, vf, prompts, props.requireOctave, spelling);
+  const voice = buildCombinedVoice(score, vf, prompts, props.requireOctave, spelling, freePlay);
   if (!voice) {
     return;
   }
@@ -198,8 +215,13 @@ onUnmounted(() => resizeObserver?.disconnect());
 
 watch(
   () =>
-    `${props.requireOctave}:${props.staffAccidentals}:${props.vexKey}:${
-      props.prompts.map((p) => `${p.prompt.index}:${p.current}:${p.success}:${p.prompt.notes.join(",")}`).join("|")
+    `${props.freePlay === true}:${props.requireOctave}:${props.staffAccidentals}:${props.vexKey}:${
+      props.prompts
+        .map(
+          (p) =>
+            `${p.prompt.index}:${p.current}:${p.success}:${p.freePlayResolvedMidi ?? ""}:${p.prompt.notes.join(",")}`,
+        )
+        .join("|")
     }`,
   draw,
 );

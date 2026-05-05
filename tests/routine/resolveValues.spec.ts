@@ -27,6 +27,8 @@ test("fills nulls from defaults (full baked object)", () => {
                 requireOctave: false,
                 minSuccessVelocity: 10,
                 promptCount: 5,
+                freePlayInSet: false,
+                maxConsecutiveSamePitchSuccess: null,
             },
         ),
     ).to.deep.equal({
@@ -41,6 +43,8 @@ test("fills nulls from defaults (full baked object)", () => {
         requireOctave: false,
         minSuccessVelocity: 10,
         promptCount: 7,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
     });
 });
 
@@ -54,6 +58,8 @@ test("repeatCount and cloneRepeat are not overwritten when defaults are baked pa
         requireOctave: false,
         minSuccessVelocity: 10,
         promptCount: 5,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
     };
     const first = resolveValues(
         {
@@ -102,6 +108,8 @@ test("repeatCount null or undefined inherits from baked parent", () => {
         requireOctave: false,
         minSuccessVelocity: 10,
         promptCount: 5,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
     };
     const first = resolveValues(
         {

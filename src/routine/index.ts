@@ -15,6 +15,9 @@ import {
     RoutineSettings,
     Prompt,
     GeneratedRepetitionPrompts,
+    type PromptDisplay,
+    type FreePlaySetPrompt,
+    type StandardPrompt,
     type UserRoutineNoteRange,
 } from "./types";
 import {formatMidiLetter, formatMidiNote, scientificOctaveFromMidi} from "../notes";
@@ -272,6 +275,53 @@ const colorOptions = [
     "slate"
 ]
 
+function makeChordScalePrompt(
+    settings: BakedRoutinePartSettings,
+    shared: {
+        index: number;
+        notes: number[];
+        color: string;
+        ensembleMidi: number[];
+        ensemblePitchClasses: number[];
+        staffFundamentalMapKey?: string;
+        repeatFocusLabel?: string;
+    },
+    displays: PromptDisplay[],
+): Prompt {
+    if (settings.freePlayInSet) {
+        const p: FreePlaySetPrompt = {
+            type: "freePlaySet",
+            index: shared.index,
+            notes: shared.notes,
+            color: shared.color,
+            ensembleMidi: shared.ensembleMidi,
+            ensemblePitchClasses: shared.ensemblePitchClasses,
+        };
+        if (shared.staffFundamentalMapKey !== undefined) {
+            p.staffFundamentalMapKey = shared.staffFundamentalMapKey;
+        }
+        if (shared.repeatFocusLabel !== undefined) {
+            p.repeatFocusLabel = shared.repeatFocusLabel;
+        }
+        return p;
+    }
+    const p: StandardPrompt = {
+        index: shared.index,
+        notes: shared.notes,
+        color: shared.color,
+        displays,
+        ensembleMidi: shared.ensembleMidi,
+        ensemblePitchClasses: shared.ensemblePitchClasses,
+    };
+    if (shared.staffFundamentalMapKey !== undefined) {
+        p.staffFundamentalMapKey = shared.staffFundamentalMapKey;
+    }
+    if (shared.repeatFocusLabel !== undefined) {
+        p.repeatFocusLabel = shared.repeatFocusLabel;
+    }
+    return p;
+}
+
 function resolvedPartRepeatCount(
     base: RoutinePartSettings,
     defaults: UserRoutinePartSettings | BakedRoutinePartSettings,
@@ -305,6 +355,8 @@ export const resolveValues = (
         "requireOctave",
         "minSuccessVelocity",
         "promptCount",
+        "freePlayInSet",
+        "maxConsecutiveSamePitchSuccess",
     ];
 
     const baked: BakedRoutinePartSettings = {
@@ -688,15 +740,18 @@ export function tryBuildChordPrompt(
     }
     const note = voicing[generator.rangeExclusiveI(0, voicing.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-    return {
-        index: promptIndex,
-        notes: [note],
-        color: colorOptions[colorRoll],
-        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note, chordType)}],
-        ensembleMidi: voicing,
-        ensemblePitchClasses: pitchClassesFromMidis(voicing),
-        staffFundamentalMapKey: fundamentalMapKey,
-    };
+    return makeChordScalePrompt(
+        settings,
+        {
+            index: promptIndex,
+            notes: [note],
+            color: colorOptions[colorRoll],
+            ensembleMidi: voicing,
+            ensemblePitchClasses: pitchClassesFromMidis(voicing),
+            staffFundamentalMapKey: fundamentalMapKey,
+        },
+        [{kind: "note", note: formatDisplayNote(settings.requireOctave, note, chordType)}],
+    );
 }
 
 export function tryBuildScalePrompt(
@@ -724,15 +779,18 @@ export function tryBuildScalePrompt(
     }
     const note = choices[generator.rangeExclusiveI(0, choices.length)]!;
     const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-    return {
-        index: promptIndex,
-        notes: [note],
-        color: colorOptions[colorRoll],
-        displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
-        ensembleMidi: choices,
-        ensemblePitchClasses: pitchClassesFromMidis(notes),
-        staffFundamentalMapKey: fundamentalMapKey,
-    };
+    return makeChordScalePrompt(
+        settings,
+        {
+            index: promptIndex,
+            notes: [note],
+            color: colorOptions[colorRoll],
+            ensembleMidi: choices,
+            ensemblePitchClasses: pitchClassesFromMidis(notes),
+            staffFundamentalMapKey: fundamentalMapKey,
+        },
+        [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+    );
 }
 
 export function generateNotePrompts(
@@ -837,23 +895,29 @@ export function generateChordPrompts(
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
             const ensembleMidi = cycleVoicing.slice();
             const ensemblePitchClasses = pitchClassesFromMidis(cycleVoicing);
-            prompts.push({
-                index: i,
-                notes: [note],
-                color: colorOptions[colorRoll],
-                displays: [
+            prompts.push(
+                makeChordScalePrompt(
+                    settings,
                     {
-                        kind: "note",
-                        note: formatDisplayNote(settings.requireOctave, note, cycleChordType ?? undefined),
+                        index: i,
+                        notes: [note],
+                        color: colorOptions[colorRoll],
+                        ensembleMidi,
+                        ensemblePitchClasses,
+                        staffFundamentalMapKey: fundKey,
+                        repeatFocusLabel:
+                            multiTypePool && cycleChordType !== null
+                                ? chordPromptFocusLabel(fundKey, cycleChordType)
+                                : undefined,
                     },
-                ],
-                ensembleMidi,
-                ensemblePitchClasses,
-                staffFundamentalMapKey: fundKey,
-                ...(multiTypePool && cycleChordType !== null
-                    ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, cycleChordType)}
-                    : {}),
-            });
+                    [
+                        {
+                            kind: "note",
+                            note: formatDisplayNote(settings.requireOctave, note, cycleChordType ?? undefined),
+                        },
+                    ],
+                ),
+            );
         }
         return {prompts, repeatFocusLabel};
     }
@@ -885,16 +949,24 @@ export function generateChordPrompts(
     for (let i = 0; i < settings.promptCount; i++) {
         const {target, ensemble, ensemblePitchClasses, chordType} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-        prompts.push({
-            index: i,
-            notes: [target],
-            color: colorOptions[colorRoll],
-            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target, chordType)}],
-            ensembleMidi: ensemble,
-            ensemblePitchClasses,
-            staffFundamentalMapKey: fundKey,
-            ...(multiTypePool ? {repeatFocusLabel: chordPromptFocusLabel(fundKey, chordType)} : {}),
-        });
+        prompts.push(
+            makeChordScalePrompt(
+                settings,
+                {
+                    index: i,
+                    notes: [target],
+                    color: colorOptions[colorRoll],
+                    ensembleMidi: ensemble,
+                    ensemblePitchClasses,
+                    staffFundamentalMapKey: fundKey,
+                    repeatFocusLabel: multiTypePool
+                        ? chordPromptFocusLabel(fundKey, chordType)
+                        : undefined,
+                },
+                [{kind: "note", note: formatDisplayNote(settings.requireOctave, target, chordType)}],
+            ),
+        );
+
     }
     return {prompts, repeatFocusLabel};
 }
@@ -995,15 +1067,20 @@ export function generateScalePrompts(
                 continue;
             }
             const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-            prompts.push({
-                index: i,
-                notes: [note],
-                color: colorOptions[colorRoll],
-                displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
-                ensembleMidi,
-                ensemblePitchClasses,
-                staffFundamentalMapKey: fundKey,
-            });
+            prompts.push(
+                makeChordScalePrompt(
+                    settings,
+                    {
+                        index: i,
+                        notes: [note],
+                        color: colorOptions[colorRoll],
+                        ensembleMidi,
+                        ensemblePitchClasses,
+                        staffFundamentalMapKey: fundKey,
+                    },
+                    [{kind: "note", note: formatDisplayNote(settings.requireOctave, note)}],
+                ),
+            );
         }
         return {prompts, repeatFocusLabel};
     }
@@ -1028,15 +1105,20 @@ export function generateScalePrompts(
     for (let i = 0; i < settings.promptCount; i++) {
         const {target, ensemble, ensemblePitchClasses} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
-        prompts.push({
-            index: i,
-            notes: [target],
-            color: colorOptions[colorRoll],
-            displays: [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
-            ensembleMidi: ensemble,
-            ensemblePitchClasses,
-            staffFundamentalMapKey: fundKey,
-        });
+        prompts.push(
+            makeChordScalePrompt(
+                settings,
+                {
+                    index: i,
+                    notes: [target],
+                    color: colorOptions[colorRoll],
+                    ensembleMidi: ensemble,
+                    ensemblePitchClasses,
+                    staffFundamentalMapKey: fundKey,
+                },
+                [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
+            ),
+        );
     }
     return {prompts, repeatFocusLabel};
 }

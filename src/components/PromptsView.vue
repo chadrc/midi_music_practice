@@ -4,6 +4,8 @@ import {computed} from "vue";
 import {PromptData, usePracticeStore} from "../store/practice";
 import {useSettingsStore} from "../store/settings";
 import {inferVexKeySignature} from "../notation/staffKeySpelling";
+import {formatDisplayNote} from "../routine";
+import {isFreePlaySetPrompt, PracticeType} from "../routine/types";
 import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
 
 const practiceStore = usePracticeStore();
@@ -25,12 +27,37 @@ const activeStaffPrompt = computed(
 
 const staffAllMode = computed(() => settingsStore.practiceUi.promptDisplay === "staffAll");
 
+const freePlayInSet = computed(() => {
+  const part = practiceStore.currentRoutinePart;
+  if (practiceStore.activePrompts.length > 0) {
+    return practiceStore.activePrompts.some((row) => isFreePlaySetPrompt(row.prompt));
+  }
+  if (part == null) {
+    return false;
+  }
+  const b = part.bakedSettings;
+  return (
+    b.freePlayInSet === true &&
+    (b.practice.type === PracticeType.Chords || b.practice.type === PracticeType.Scales)
+  );
+});
+
 function formatPromptColor(prompt: PromptData) {
   if (prompt.success) return 'var(--p-gray-800)';
   return `var(--p-${prompt.prompt.color}-800)`;
 }
 
+function freePlayPlayedLabel(pd: PromptData): string {
+  if (pd.freePlayResolvedMidi == null) {
+    return "";
+  }
+  return formatDisplayNote(settingsStore.currentSettings.requireOctave, pd.freePlayResolvedMidi);
+}
+
 function promptCardClass(prompt: PromptData) {
+  if (isFreePlaySetPrompt(prompt.prompt)) {
+    return "prompt-card";
+  }
   const multi = prompt.prompt.displays.some(
     (d) => d.kind === "chord" || d.kind === "scale",
   );
@@ -77,6 +104,7 @@ function promptCardClass(prompt: PromptData) {
     >
       <StaffAllPromptsRow
         :prompts="practiceStore.activePrompts"
+        :free-play="freePlayInSet"
         :require-octave="settingsStore.currentSettings.requireOctave"
         :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
         :vex-key="
@@ -89,7 +117,7 @@ function promptCardClass(prompt: PromptData) {
       />
     </div>
     <div
-      v-else
+      v-if="!staffAllMode"
       class="prompt-cards"
       :class="{
         'prompt-cards--over-eight': practiceStore.activePrompts.length > 8,
@@ -104,31 +132,46 @@ function promptCardClass(prompt: PromptData) {
           :class="promptCardClass(prompt)"
           :style="{backgroundColor: formatPromptColor(prompt)}"
         >
-          <template
-            v-for="(disp, di) in prompt.prompt.displays"
-            :key="di"
-          >
+          <template v-if="isFreePlaySetPrompt(prompt.prompt)">
             <div
-              v-if="disp.kind === 'note'"
+              v-if="prompt.success && prompt.freePlayResolvedMidi != null"
               class="prompt-text"
             >
-              <span>{{ disp.note }}</span>
+              <span>{{ freePlayPlayedLabel(prompt) }}</span>
             </div>
-            <div
+            <span
               v-else
-              class="prompt-block"
+              class="prompt-blank"
+              aria-hidden="true"
+            >&nbsp;</span>
+          </template>
+          <template v-else>
+            <template
+              v-for="(disp, di) in prompt.prompt.displays"
+              :key="di"
             >
-              <div class="prompt-title">
-                {{ disp.title }}
+              <div
+                v-if="disp.kind === 'note'"
+                class="prompt-text"
+              >
+                <span>{{ disp.note }}</span>
               </div>
-              <div class="prompt-cells">
-                <span
-                  v-for="(cell, ci) in disp.cells"
-                  :key="ci"
-                  class="prompt-cell"
-                >{{ cell }}</span>
+              <div
+                v-else
+                class="prompt-block"
+              >
+                <div class="prompt-title">
+                  {{ disp.title }}
+                </div>
+                <div class="prompt-cells">
+                  <span
+                    v-for="(cell, ci) in disp.cells"
+                    :key="ci"
+                    class="prompt-cell"
+                  >{{ cell }}</span>
+                </div>
               </div>
-            </div>
+            </template>
           </template>
         </div>
       </div>

@@ -125,6 +125,15 @@ export interface UserRoutinePartSettings {
     requireOctave: boolean;
     minSuccessVelocity: number;
     promptCount: number;
+    /**
+     * Chords/scales only: hide prompt text/staff; any note in the current target set counts as success.
+     */
+    freePlayInSet: boolean;
+    /**
+     * With {@link freePlayInSet}: at most this many consecutive accepted hits on the same pitch class
+     * before a different pitch class from the set is required. `null` = no limit.
+     */
+    maxConsecutiveSamePitchSuccess: number | null;
 }
 
 export type UserRoutineSettingsKeys = (keyof UserRoutinePartSettings)[];
@@ -156,7 +165,10 @@ export type PromptDisplay =
     | {kind: "chord"; title: string; cells: string[]}
     | {kind: "scale"; title: string; cells: string[]};
 
-export interface Prompt {
+/** Shown text/icons for the prompt bubble or staff labels. */
+export interface StandardPrompt {
+    /** Omit or `"standard"` (default when missing for saved data). */
+    type?: "standard";
     index: number;
     notes: number[];
     color: string;
@@ -175,6 +187,27 @@ export interface Prompt {
      * Used for staff key signature when `practice.baseNote` is unset.
      */
     staffFundamentalMapKey?: string;
+}
+
+/**
+ * Chord/scale “free play”: no labels; any pitch in the set can complete the step.
+ * Carries only what the engine and grid need (plus {@link type}).
+ */
+export interface FreePlaySetPrompt {
+    type: "freePlaySet";
+    index: number;
+    notes: number[];
+    color: string;
+    repeatFocusLabel?: string;
+    ensembleMidi: number[];
+    ensemblePitchClasses: number[];
+    staffFundamentalMapKey?: string;
+}
+
+export type Prompt = StandardPrompt | FreePlaySetPrompt;
+
+export function isFreePlaySetPrompt(p: Prompt): p is FreePlaySetPrompt {
+    return p.type === "freePlaySet";
 }
 
 /** One batch of prompts from {@link generatePrompts} plus optional chord/scale context for the repeat. */

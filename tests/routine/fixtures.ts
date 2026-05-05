@@ -14,6 +14,8 @@ export function minimalBakedPart(
         requireOctave: true,
         minSuccessVelocity: 64,
         promptCount: 4,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
         repeatCount: 0,
         cloneRepeat: false,
         parentSettings: ParentType.Settings,

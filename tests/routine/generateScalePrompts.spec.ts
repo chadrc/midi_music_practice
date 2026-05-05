@@ -388,3 +388,25 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
         repeatFocusLabel: "C Major (Ionian)",
     });
 });
+
+test("freePlayInSet uses freePlaySet prompt type for scales", () => {
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            freePlayInSet: true,
+            promptCount: 2,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [MAJOR_SCALE_SET_NAME],
+                mode: PracticePoolMode.Up,
+            },
+        }),
+        new NumberGenerator(12347),
+    );
+    expect(generated.prompts.length).toBeGreaterThan(0);
+    for (const pr of generated.prompts) {
+        expect(pr.type).toBe("freePlaySet");
+        expect("displays" in pr).toBe(false);
+        expect(pr.ensembleMidi.length).toBeGreaterThan(0);
+    }
+});

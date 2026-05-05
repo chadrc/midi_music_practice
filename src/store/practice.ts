@@ -5,8 +5,13 @@ import {useSettingsStore} from "./settings";
 import {generateRoutine, generateRoutineSet} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
-import {ParentType, Prompt, Routine} from "../routine/types";
+import {ParentType, Prompt, Routine, isFreePlaySetPrompt} from "../routine/types";
 import {useRoutineStore} from "./routineEdit";
+import {
+    midiMatchesPromptSet,
+    normPitchClass,
+    samePitchRunBlocksSuccess,
+} from "../practice/freePlaySetMatch";
 
 const MILISECONDS_IN_MINUTE = 60000;
 
@@ -26,6 +31,8 @@ export interface PromptData {
     current: boolean;
     prompt: Prompt;
     successTime: number | null;
+    /** Set when a free-play step completes: note that was played (for staff/bubble reveal). */
+    freePlayResolvedMidi: number | null;
 }
 
 export interface PracticeAttempt {
@@ -55,6 +62,9 @@ export const usePracticeStore = defineStore('practice', () => {
 
     const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
+
+    const freePlayLastAcceptedPc = ref<number | null>(null);
+    const freePlayConsecutiveSamePitch = ref(0);
 
     const currentRoutinePart = computed(() => {
         if (!exists(routine.value)) {
@@ -220,12 +230,16 @@ export const usePracticeStore = defineStore('practice', () => {
         activePrompts.value = [];
         currentPrompt.value = 0;
 
+        freePlayLastAcceptedPc.value = null;
+        freePlayConsecutiveSamePitch.value = 0;
+
         for (const prompt of rep.prompts) {
             activePrompts.value.push({
                 success: false,
                 current: false,
                 prompt: prompt,
                 successTime: null,
+                freePlayResolvedMidi: null,
             })
         }
 
@@ -247,6 +261,9 @@ export const usePracticeStore = defineStore('practice', () => {
         currentPrompt.value = 0;
         activePrompts.value = [];
         practiceSessionTime.value = 0;
+
+        freePlayLastAcceptedPc.value = null;
+        freePlayConsecutiveSamePitch.value = 0;
 
         generatePrompts();
 
@@ -288,24 +305,67 @@ export const usePracticeStore = defineStore('practice', () => {
                         data
                     });
 
-                    let success = true;
-                    for (const note of activePrompt.prompt.notes) {
-                        const notesInFrame = attempts.value
-                            .toReversed()
-                            .filter((a) => a.time > frameTime);
+                    const part = currentRoutinePart.value;
+                    const baked = part?.bakedSettings;
 
-                        if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
-                            midiMatchesPromptTarget(
-                                data1,
-                                note,
-                                settingsStore.currentSettings.requireOctave,
-                            ) && data2 >= settingsStore.currentSettings.minSuccessVelocity
-                        ))) {
-                            success = false;
+                    const requireOctave = settingsStore.currentSettings.requireOctave;
+                    const minVel = settingsStore.currentSettings.minSuccessVelocity;
+
+                    if (data.data2 < minVel) {
+                        return;
+                    }
+
+                    let success: boolean;
+                    if (isFreePlaySetPrompt(activePrompt.prompt)) {
+                        const p = activePrompt.prompt;
+                        if (!midiMatchesPromptSet(data.data1, p, requireOctave)) {
+                            return;
+                        }
+                        const playedPc = normPitchClass(data.data1);
+                        if (
+                            baked != null &&
+                            samePitchRunBlocksSuccess(
+                                playedPc,
+                                freePlayLastAcceptedPc.value,
+                                freePlayConsecutiveSamePitch.value,
+                                baked.maxConsecutiveSamePitchSuccess,
+                            )
+                        ) {
+                            return;
+                        }
+                        if (
+                            freePlayLastAcceptedPc.value === null ||
+                            playedPc !== freePlayLastAcceptedPc.value
+                        ) {
+                            freePlayLastAcceptedPc.value = playedPc;
+                            freePlayConsecutiveSamePitch.value = 1;
+                        } else {
+                            freePlayConsecutiveSamePitch.value += 1;
+                        }
+                        success = true;
+                    } else {
+                        success = true;
+                        for (const note of activePrompt.prompt.notes) {
+                            const notesInFrame = attempts.value
+                                .toReversed()
+                                .filter((a) => a.time > frameTime);
+
+                            if (!exists(notesInFrame.find(({data: {data1, data2}}) =>
+                                midiMatchesPromptTarget(
+                                    data1,
+                                    note,
+                                    requireOctave,
+                                ) && data2 >= minVel
+                            ))) {
+                                success = false;
+                            }
                         }
                     }
 
                     if (success) {
+                        if (isFreePlaySetPrompt(activePrompt.prompt)) {
+                            activePrompt.freePlayResolvedMidi = data.data1;
+                        }
                         successCount.value += 1;
                         activePrompt.success = true;
                         activePrompt.successTime = now;

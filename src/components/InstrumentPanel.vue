@@ -5,7 +5,7 @@ import PracticeItemsEditor from "../routine/components/PracticeItemsEditor.vue";
 import RNBOPatch from "./RNBOPatch.vue";
 import NoteGrid from "./NoteGrid.vue";
 import {useSettingsStore} from "../store/settings";
-import {NoteRangeType, PracticeType} from "../routine/types";
+import {NoteRangeType, PracticeType, isFreePlaySetPrompt} from "../routine/types";
 import {
   maxForNoteRangeType,
   setNoteRangeType,
@@ -50,6 +50,9 @@ const currentNotes = computed(() =>
 const currentPromptHints = computed(() => {
   const pd = practiceStore.activePrompts[practiceStore.currentPrompt];
   if (!exists(pd)) {
+    return [];
+  }
+  if (isFreePlaySetPrompt(pd.prompt)) {
     return [];
   }
   const midis = pd.prompt.notes;

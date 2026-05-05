@@ -79,8 +79,10 @@ export const useSettingsStore = defineStore('settings', {
             noteRange: defaultUserRoutineNoteRange(),
             practice: defaultPracticeForType(PracticeType.Notes),
             requireOctave: true,
-            minSuccessVelocity: 100,
+            minSuccessVelocity: 20,
             promptCount: 8,
+            freePlayInSet: false,
+            maxConsecutiveSamePitchSuccess: null,
         }
 
         const defaultPractice: PracticeSettings = {
@@ -124,6 +126,11 @@ export const useSettingsStore = defineStore('settings', {
                 requireOctave: rawUr.requireOctave,
                 minSuccessVelocity: rawUr.minSuccessVelocity,
                 promptCount: rawUr.promptCount,
+                freePlayInSet: rawUr.freePlayInSet ?? defaultUserRoutine.freePlayInSet,
+                maxConsecutiveSamePitchSuccess:
+                    rawUr.maxConsecutiveSamePitchSuccess !== undefined
+                        ? rawUr.maxConsecutiveSamePitchSuccess
+                        : defaultUserRoutine.maxConsecutiveSamePitchSuccess,
             };
 
             const storedPracticeUi = stored.practiceUi ?? {};
