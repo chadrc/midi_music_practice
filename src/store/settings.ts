@@ -3,10 +3,30 @@ import {RNBOParameter} from "./types";
 import {
     defaultPracticeForType,
     defaultUserRoutineNoteRange,
+    maxForNoteRangeType,
     midiNotesForNoteRange,
     noteScaleFromPractice,
+    setNoteRangeType,
 } from "../routine";
-import {UserRoutinePartSettings, PracticeType, UserRoutinePractice, UserRoutineNoteRange} from "../routine/types";
+import {
+    NoteRangeType,
+    PracticeType,
+    type UserRoutineNoteRange,
+    type UserRoutinePartSettings,
+    type UserRoutinePractice,
+} from "../routine/types";
+import {
+    defaultReferenceGridSlot,
+} from "../routine/referenceGrid";
+import {
+    defaultReferenceViewSettings,
+    mergeStoredReferenceView,
+    mergeStoredReferencePresets,
+    snapshotReferenceViewSettings,
+    clampReferencePatternDim,
+    type ReferenceViewSettings,
+    type ReferenceViewPreset,
+} from "../routine/referenceViewSettings";
 import {NumberRangeLike} from "../common/NumberRange";
 import {exists} from "../utilities";
 import {usePracticeStore} from "./practice";
@@ -52,6 +72,8 @@ interface SettingsStore {
     userRoutine: UserRoutinePartSettings;
     practice: PracticeSettings;
     practiceUi: PracticeUiSettings;
+    referenceView: ReferenceViewSettings;
+    referencePresets: ReferenceViewPreset[];
 }
 
 export const NONE_VALUE = "none";
@@ -151,6 +173,8 @@ export const useSettingsStore = defineStore('settings', {
                 userRoutine,
                 practice: Object.assign(defaultPractice, stored.practice),
                 practiceUi,
+                referenceView: mergeStoredReferenceView(stored.referenceView),
+                referencePresets: mergeStoredReferencePresets(stored.referencePresets),
             }
         }
 
@@ -161,6 +185,8 @@ export const useSettingsStore = defineStore('settings', {
             userRoutine: defaultUserRoutine,
             practice: defaultPractice,
             practiceUi: defaultPracticeUi,
+            referenceView: defaultReferenceViewSettings(),
+            referencePresets: [],
         }
     },
     getters: {
@@ -190,7 +216,14 @@ export const useSettingsStore = defineStore('settings', {
         editingDisabled() {
             const practiceStore = usePracticeStore();
             return practiceStore.practicing;
-        }
+        },
+        referenceNoteRangeMax(state) {
+            return maxForNoteRangeType(state.referenceView.noteRange.type);
+        },
+        referenceNoteRangeSliderValues(state): [number, number] {
+            const r = state.referenceView.noteRange.range;
+            return [r.start, r.end];
+        },
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {
@@ -212,6 +245,69 @@ export const useSettingsStore = defineStore('settings', {
             } else {
                 this.instruments.instrumentData.push(data)
             }
-        }
+        },
+        referenceSyncTileCount() {
+            const target = this.referenceView.patternRows * this.referenceView.patternCols;
+            const gs = this.referenceView.gridSelections;
+            while (gs.length < target) {
+                gs.push(defaultReferenceGridSlot());
+            }
+            if (gs.length > target) {
+                gs.splice(target);
+            }
+        },
+        referenceSetPatternRows(value: number | null) {
+            if (value != null) {
+                this.referenceView.patternRows = clampReferencePatternDim(value);
+                this.referenceSyncTileCount();
+            }
+        },
+        referenceSetPatternCols(value: number | null) {
+            if (value != null) {
+                this.referenceView.patternCols = clampReferencePatternDim(value);
+                this.referenceSyncTileCount();
+            }
+        },
+        referenceSetNoteRangeType(t: NoteRangeType) {
+            setNoteRangeType(this.referenceView.noteRange, t);
+        },
+        referenceSetNoteRangeSlider(range: number[]) {
+            const r = this.referenceView.noteRange.range;
+            r.start = range[0]!;
+            r.end = range[1]!;
+        },
+        referenceSavePreset(name: string): string | null {
+            const trimmed = name.trim();
+            if (!trimmed) {
+                return null;
+            }
+            const snap = snapshotReferenceViewSettings(this.referenceView);
+            const id = crypto.randomUUID();
+            this.referencePresets.push({
+                id,
+                name: trimmed.slice(0, 80),
+                ...snap,
+            });
+            return id;
+        },
+        referenceLoadPreset(id: string) {
+            const p = this.referencePresets.find((x) => x.id === id);
+            if (!p) {
+                return;
+            }
+            const m = mergeStoredReferenceView({
+                noteRange: p.noteRange,
+                patternRows: p.patternRows,
+                patternCols: p.patternCols,
+                gridSelections: p.gridSelections,
+            });
+            this.$patch({referenceView: m});
+        },
+        referenceDeletePreset(id: string) {
+            const i = this.referencePresets.findIndex((x) => x.id === id);
+            if (i !== -1) {
+                this.referencePresets.splice(i, 1);
+            }
+        },
     },
 })

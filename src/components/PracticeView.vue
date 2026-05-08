@@ -8,8 +8,8 @@ import RoutineEditView from "./RoutineEditView.vue";
 import InstrumentPanel from "./InstrumentPanel.vue";
 import PracticeControls from "./PracticeControls.vue";
 import RoutineEditControls from "./RoutineEditControls.vue";
-import EarTrainingView from "../ear_training/components/EarTrainingView.vue";
-import EarTrainingControls from "../ear_training/components/EarTrainingControls.vue";
+import ReferenceGridsView from "./ReferenceGridsView.vue";
+import ReferenceGridsControls from "./ReferenceGridsControls.vue";
 
 interface ViewOption {
   name: string;
@@ -29,9 +29,9 @@ const views = [
     overflow: false,
   },
   {
-    name: "Ear Training",
-    component: markRaw(EarTrainingView),
-    toolbar: markRaw(EarTrainingControls),
+    name: "Reference",
+    component: markRaw(ReferenceGridsView),
+    toolbar: markRaw(ReferenceGridsControls),
     overflow: true,
   },
   {
@@ -98,6 +98,7 @@ function makeOverflowClass(overflow: boolean) {
       </Dialog>
     </section>
     <Splitter
+      v-if="currentView.name !== 'Reference'"
       class="splitter"
       layout="vertical"
       style="height: 500px"
@@ -114,6 +115,17 @@ function makeOverflowClass(overflow: boolean) {
         <InstrumentPanel />
       </SplitterPanel>
     </Splitter>
+    <div
+      v-else
+      class="reference-body"
+    >
+      <div
+        class="active-view reference-active"
+        :class="makeOverflowClass(currentView.overflow)"
+      >
+        <component :is="currentView.component" />
+      </div>
+    </div>
   </section>
 </template>
 
@@ -172,7 +184,15 @@ function makeOverflowClass(overflow: boolean) {
   margin-right: 0.5rem;
 }
 
-.chord-ratio-slider-wrapper > span {
-  margin-bottom: 0.5rem;
+.reference-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.reference-active {
+  min-height: 0;
+  flex: 1;
 }
 </style>

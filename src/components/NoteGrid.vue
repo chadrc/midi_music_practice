@@ -61,9 +61,9 @@ function opacityForNote(row: number, column: number) {
   const hasEnsemble = props.ensembleHints.length > 0;
   const inEnsemble = exists(props.ensembleHints.find((n) => n === note));
   if (hasEnsemble) {
-    return inEnsemble ? 0.16 : 0.1;
+    return inEnsemble ? 0.12 : 0.06;
   }
-  return 0.25;
+  return 0.11;
 }
 
 function labelOpacityForNote(row: number, column: number) {
@@ -77,7 +77,7 @@ function labelOpacityForNote(row: number, column: number) {
   if (exists(props.hints.find((n) => n === note))) {
     return 1;
   }
-  return 0.42;
+  return 0.28;
 }
 
 function lerp(a: number, b: number, t: number) {

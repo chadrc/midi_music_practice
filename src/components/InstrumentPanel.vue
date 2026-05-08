@@ -11,11 +11,11 @@ import {
   setNoteRangeType,
   practiceScaleMembership,
   defaultPracticeForType,
+  noteGridLayoutFromNoteRange,
 } from "../routine";
 import {computed} from "vue";
 import {usePracticeStore} from "../store/practice";
 import {exists} from "../utilities";
-import {generateNotesForRange} from "../routine";
 
 const settingsStore = useSettingsStore();
 const practiceStore = usePracticeStore();
@@ -43,9 +43,9 @@ function makeNoteRangeOptions() {
   ]
 }
 
-const currentNotes = computed(() =>
-    generateNotesForRange(settingsStore.currentSettings)
-);
+const gridLayout = computed(() => noteGridLayoutFromNoteRange(activeNoteRange.value));
+
+const currentNotes = computed(() => gridLayout.value.notes);
 
 const currentPromptHints = computed(() => {
   const pd = practiceStore.activePrompts[practiceStore.currentPrompt];
@@ -95,66 +95,13 @@ const noteRangeValues = computed(() => {
 
 const noteRangeMax = computed(() => maxForNoteRangeType(activeNoteRange.value.type))
 
-const gridStyle = computed(() => {
-  switch (activeNoteRange.value.type) {
-    case NoteRangeType.Notes:
-      return "box"
-    case NoteRangeType.Frets:
-      return "circle"
-    case NoteRangeType.Octaves:
-      return "bar"
-    default:
-      return "box";
-  }
-})
+const gridStyle = computed(() => gridLayout.value.noteStyle);
 
-const gridColumns = computed(() => {
-  switch (activeNoteRange.value.type) {
-    case NoteRangeType.Notes:
-      return 12
-    case NoteRangeType.Frets: {
-      const {start, end} = activeNoteRange.value.range;
-      return end - start + 1
-    }
-    case NoteRangeType.Octaves:
-      return currentNotes.value.length
-    default:
-      return 1;
-  }
-})
+const gridColumns = computed(() => gridLayout.value.columns);
 
-const gridHeaders = computed(() => {
-  switch (activeNoteRange.value.type) {
-    case NoteRangeType.Notes:
-      return []
-    case NoteRangeType.Frets: {
-      const {start, end} = activeNoteRange.value.range;
-      const headers = []
-      for (let i = start; i <= end; ++i) {
-        headers.push(i.toString())
-      }
+const gridHeaders = computed(() => gridLayout.value.headers);
 
-      return headers
-    }
-    case NoteRangeType.Octaves:
-      return []
-    default:
-      return [];
-  }
-})
-
-const gridNoteFormat = computed(() => {
-  switch (activeNoteRange.value.type) {
-    case NoteRangeType.Notes:
-      return "letter-octave"
-    case NoteRangeType.Frets:
-      return "letter-octave"
-    case NoteRangeType.Octaves:
-      return "letter"
-    default:
-      return "letter";
-  }
-})
+const gridNoteFormat = computed(() => gridLayout.value.noteFormat);
 
 const selectedScale = computed(() =>
     practiceScaleMembership(currentSettings.value.practice),

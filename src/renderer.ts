@@ -44,7 +44,7 @@ app.use(PrimeVue, {
 app.use(pinia)
 app.mount('#app');
 
-/** Persist full settings store (note grid, audio, instruments, user routine editor, practice panel). */
+/** Persist full settings store (note grid, audio, instruments, user routine, practice UI, reference panel, reference presets). */
 watch(
     pinia.state,
     (state) => {
