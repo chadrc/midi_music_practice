@@ -14,6 +14,7 @@ const options = [
 <template>
   <Select
     v-model="model"
+    class="practice-type-select"
     :options="options"
     option-label="name"
     option-value="value"
@@ -21,5 +22,7 @@ const options = [
 </template>
 
 <style scoped>
-
+.practice-type-select {
+    width: 100%;
+}
 </style>

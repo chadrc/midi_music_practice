@@ -5,7 +5,7 @@ import PracticeTypeSelect from "./PracticeTypeSelect.vue";
 import PracticeItemsEditor from "./PracticeItemsEditor.vue";
 import {defaultPracticeForType} from "..";
 
-const model = defineModel<UserRoutinePractice | null>();
+const model = defineModel<UserRoutinePractice>({required: true});
 
 function coercePracticeType(t: PracticeType | string): PracticeType {
     if (typeof t === "string") {
@@ -15,7 +15,7 @@ function coercePracticeType(t: PracticeType | string): PracticeType {
 }
 
 const practiceTypeChoice = computed({
-    get: () => model.value?.type ?? PracticeType.Notes,
+    get: () => model.value.type,
     set(t: PracticeType | string) {
         model.value = defaultPracticeForType(coercePracticeType(t));
     },
@@ -23,11 +23,10 @@ const practiceTypeChoice = computed({
 </script>
 
 <template>
-  <div
-    v-if="model"
-    class="routine-part-practice-editor"
-  >
-    <PracticeTypeSelect v-model="practiceTypeChoice" />
+  <div class="routine-part-practice-editor">
+    <div class="practice-type-row">
+      <PracticeTypeSelect v-model="practiceTypeChoice" />
+    </div>
     <PracticeItemsEditor
       v-if="model.type === PracticeType.Chords"
       v-model="model"
@@ -45,6 +44,11 @@ const practiceTypeChoice = computed({
 .routine-part-practice-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 1rem;
+  width: 100%;
+}
+
+.practice-type-row {
+  width: 100%;
 }
 </style>

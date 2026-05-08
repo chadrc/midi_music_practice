@@ -3,7 +3,8 @@ import {exists} from "../../utilities";
 import {Button} from "primevue";
 
 const props = withDefaults(defineProps<{
-  label: string,
+  /** When empty, no label row is shown (e.g. section heading already describes the field). */
+  label?: string,
   component: object,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   componentProps?: any,
@@ -11,6 +12,7 @@ const props = withDefaults(defineProps<{
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setValue?: any,
 }>(), {
+  label: "",
   componentProps: {},
   canSet: true,
   setValue: null,
@@ -29,8 +31,11 @@ function setNull() {
 </script>
 
 <template>
-  <div class="settings-edit-field">
-    <span>{{ props.label }}:</span>
+  <div
+    class="settings-edit-field"
+    :class="{'settings-edit-field--no-label': !props.label}"
+  >
+    <span v-if="props.label">{{ props.label }}:</span>
     <component
       :is="props.component"
       v-if="exists(model)"
@@ -59,6 +64,10 @@ function setNull() {
 .settings-edit-field {
   display: flex;
   align-items: center;
+}
+
+.settings-edit-field--no-label {
+  align-items: stretch;
 }
 
 .settings-edit-field > span {

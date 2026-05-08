@@ -1,6 +1,7 @@
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
-import {ParentType, type RoutinePartSettings, type RoutineSettings} from "../routine/types";
+import {defaultPracticeForType} from "../routine";
+import {ParentType, PracticeType, type RoutinePartSettings, type RoutineSettings} from "../routine/types";
 import {useGlobalStore} from "./globals";
 import {exists} from "../utilities";
 import {NONE_VALUE, useSettingsStore} from "./settings";
@@ -16,12 +17,25 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
         cloneRepeat: false,
         targetBPM: null,
         noteRange: null,
-        practice: null,
+        practice: defaultPracticeForType(PracticeType.Notes),
         requireOctave: null,
         minSuccessVelocity: null,
         promptCount: null,
         freePlayInSet: null,
         maxConsecutiveSamePitchSuccess: null,
+    }
+}
+
+function normalizeRoutinesFromStorage(list: RoutineSettings[]): void {
+    for (const routine of list) {
+        if (!Array.isArray(routine.parts)) {
+            continue;
+        }
+        for (const part of routine.parts) {
+            if (part.practice == null) {
+                part.practice = defaultPracticeForType(PracticeType.Notes);
+            }
+        }
     }
 }
 
@@ -32,7 +46,7 @@ export const useRoutineStore = defineStore('routineEdit', () => {
     const settingsStore = useSettingsStore();
 
     const routines = ref<RoutineSettings[]>(getSavedRoutines());
-    const selectedStep = ref(1);
+    const selectedPartIndex = ref(0);
     const currentRoutine = computed(() => settingsStore.practice.selectedRoutine);
 
     const currentEdit = computed<RoutineSettings | null>(() =>
@@ -57,10 +71,40 @@ export const useRoutineStore = defineStore('routineEdit', () => {
 
         settingsStore.practice.selectedRoutine = routine.id;
         routines.value.push(routine);
+        selectedPartIndex.value = 0;
     }
 
     function addNewPart() {
-        currentEdit.value.parts.push(makeDefaultRoutinePartSettings());
+        currentEdit.value!.parts.push(makeDefaultRoutinePartSettings());
+    }
+
+    function addPartAndSelect() {
+        addNewPart();
+        selectedPartIndex.value = currentEdit.value!.parts.length - 1;
+    }
+
+    function selectPart(index: number) {
+        const n = currentEdit.value?.parts.length ?? 0;
+        if (index >= 0 && index < n) {
+            selectedPartIndex.value = index;
+        }
+    }
+
+    /**
+     * Reorder parts. `toIndex` is the index the part should occupy after the move (0 … length, where `length` means after the last item).
+     */
+    function movePart(fromIndex: number, toIndex: number) {
+        const parts = currentEdit.value!.parts;
+        if (fromIndex === toIndex) {
+            return;
+        }
+        if (fromIndex < 0 || fromIndex >= parts.length || toIndex < 0 || toIndex > parts.length) {
+            return;
+        }
+        const selectedPart = parts[selectedPartIndex.value];
+        const [item] = parts.splice(fromIndex, 1);
+        parts.splice(toIndex, 0, item);
+        selectedPartIndex.value = parts.indexOf(selectedPart);
     }
 
     function saveRoutine() {
@@ -97,7 +141,9 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
         if (exists(stored)) {
             try {
-                return JSON.parse(stored) as RoutineSettings[];
+                const parsed = JSON.parse(stored) as RoutineSettings[];
+                normalizeRoutinesFromStorage(parsed);
+                return parsed;
             } catch (error) {
                 const uuid = window.crypto.randomUUID()
                 const errorKey = `error-${uuid}`
@@ -114,21 +160,24 @@ export const useRoutineStore = defineStore('routineEdit', () => {
     }
 
     function removeStep(index: number) {
-        if (index >= 0 && index < currentEdit.value.parts.length) {
-            currentEdit.value.parts.splice(index, 1);
-            selectedStep.value = 1;
+        const parts = currentEdit.value!.parts;
+        if (parts.length <= 1) {
+            return;
         }
-    }
-
-    function onStepUpdate(value: number) {
-        if (value >= currentEdit.value.parts.length + 1) {
-            addNewPart();
+        if (index < 0 || index >= parts.length) {
+            return;
         }
-        selectedStep.value = value;
+        const sel = selectedPartIndex.value;
+        parts.splice(index, 1);
+        if (index === sel) {
+            selectedPartIndex.value = Math.min(index, parts.length - 1);
+        } else if (index < sel) {
+            selectedPartIndex.value = sel - 1;
+        }
     }
 
     return {
-        selectedStep,
+        selectedPartIndex,
         routines,
         currentRoutine,
         currentEdit,
@@ -137,6 +186,8 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         saveRoutine,
         deleteRoutine,
         removeStep,
-        onStepUpdate
+        addPartAndSelect,
+        selectPart,
+        movePart,
     }
 })

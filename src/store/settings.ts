@@ -144,7 +144,7 @@ export const useSettingsStore = defineStore('settings', {
                 targetBPM: rawUr.targetBPM,
                 noteRange:
                     rawUr.noteRange ?? hoistedNoteRange ?? defaultUserRoutineNoteRange(),
-                practice,
+                practice: practice ?? defaultPracticeForType(PracticeType.Notes),
                 requireOctave: rawUr.requireOctave,
                 minSuccessVelocity: rawUr.minSuccessVelocity,
                 promptCount: rawUr.promptCount,

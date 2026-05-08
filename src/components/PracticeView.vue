@@ -98,7 +98,7 @@ function makeOverflowClass(overflow: boolean) {
       </Dialog>
     </section>
     <Splitter
-      v-if="currentView.name !== 'Reference'"
+      v-if="currentView.name === 'Practice'"
       class="splitter"
       layout="vertical"
       style="height: 500px"
@@ -117,10 +117,10 @@ function makeOverflowClass(overflow: boolean) {
     </Splitter>
     <div
       v-else
-      class="reference-body"
+      class="full-bleed-main"
     >
       <div
-        class="active-view reference-active"
+        class="active-view full-bleed-active"
         :class="makeOverflowClass(currentView.overflow)"
       >
         <component :is="currentView.component" />
@@ -184,14 +184,14 @@ function makeOverflowClass(overflow: boolean) {
   margin-right: 0.5rem;
 }
 
-.reference-body {
+.full-bleed-main {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.reference-active {
+.full-bleed-active {
   min-height: 0;
   flex: 1;
 }

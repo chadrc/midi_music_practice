@@ -387,6 +387,10 @@ export const resolveValues = (
     baked.cloneRepeat = base.cloneRepeat;
     baked.parentSettings = base.parentSettings;
 
+    if (!exists(baked.practice)) {
+        baked.practice = defaultPracticeForType(PracticeType.Notes);
+    }
+
     return baked;
 }
 
