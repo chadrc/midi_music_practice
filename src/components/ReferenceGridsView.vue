@@ -172,14 +172,19 @@ function hintsAt(index: number): number[] {
 .reference-grids-root {
     height: 100%;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
     overflow: auto;
 }
 
 .reference-pattern {
+    flex: 1;
+    min-height: 0;
     display: grid;
     grid-template-columns: repeat(var(--ref-cols, 2), minmax(0, 1fr));
+    grid-auto-rows: 1fr;
+    align-items: stretch;
     gap: 0.75rem;
-    align-items: start;
     padding-bottom: 1rem;
 }
 
@@ -234,6 +239,13 @@ function hintsAt(index: number): number[] {
     max-height: min(50vh, 28rem);
     overflow: auto;
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
+}
+
+.tile-grid-wrap :deep(.note-grid.note-grid--bar) {
+    flex: 1 1 auto;
+    min-height: 0;
 }
 </style>

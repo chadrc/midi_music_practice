@@ -157,7 +157,10 @@ function makeNoteText(row: number, column: number) {
 </script>
 
 <template>
-  <section class="note-grid">
+  <section
+    class="note-grid"
+    :class="{'note-grid--bar': noteStyle === 'bar'}"
+  >
     <div
       v-for="r in rowIndices"
       :key="`row-${r}`"
@@ -166,6 +169,7 @@ function makeNoteText(row: number, column: number) {
       <div
         v-for="c in columnIndices"
         :key="`cell-${r}-${c}`"
+        class="note-grid-slot"
       >
         <div
           v-if="hasNote(r, c)"
@@ -205,6 +209,7 @@ function makeNoteText(row: number, column: number) {
       <div
         v-for="header in props.headers"
         :key="header"
+        class="note-grid-slot"
       >
         <div :class="`note-grid-cell note-style-${props.noteStyle} header`">
           <span>{{ header }}</span>
@@ -219,17 +224,54 @@ function makeNoteText(row: number, column: number) {
   display: flex;
   flex-direction: column-reverse;
   height: 100%;
+  min-height: 0;
   justify-content: start;
   /* Ring draws outside the shell; gap equals 2× ring so neighbors’ shadows don’t overlap. */
   --note-grid-cell-ring: 3px;
   --note-grid-ensemble-ring: var(--p-slate-400, #94a3b8);
+  --note-grid-bar-gap: 0;
   gap: calc(var(--note-grid-cell-ring) * 2);
+}
+
+.note-grid.note-grid--bar {
+  gap: var(--note-grid-bar-gap);
+  /** Letter breathing room; fill stays edge-to-edge inside the cell border. */
+  --note-grid-bar-label-pad-x: 0.55rem;
 }
 
 .note-grid-row {
   display: flex;
   flex-direction: row;
   gap: calc(var(--note-grid-cell-ring) * 2);
+}
+
+.note-grid.note-grid--bar .note-grid-row {
+  gap: var(--note-grid-bar-gap);
+}
+
+/** One row of octave bars: row grows with parent height so bar fills stretch vertically. */
+.note-grid.note-grid--bar .note-grid-row:not(.header) {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/**
+ * Slot sits between row and shell; without a flex chain here the shell stays content-height
+ * even when the row has extra vertical space.
+ */
+.note-grid.note-grid--bar .note-grid-row:not(.header) .note-grid-slot {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-grid.note-grid--bar .note-grid-row:not(.header) .note-grid-cell-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  align-items: stretch;
 }
 
 .note-grid-cell-shell {
@@ -255,6 +297,13 @@ function makeNoteText(row: number, column: number) {
 
 .note-grid-cell.ensemble-hint {
   box-shadow: 0 0 0 var(--note-grid-cell-ring) var(--note-grid-ensemble-ring);
+}
+
+/** Octave bars: inside border (outer ring distorted spacing/clipped top & bottom in tall cells). */
+.note-grid.note-grid--bar .note-grid-cell.note-style-bar.ensemble-hint {
+  box-shadow: none;
+  border: var(--note-grid-cell-ring) solid var(--note-grid-ensemble-ring);
+  box-sizing: border-box;
 }
 
 .note-grid-cell-fill {
@@ -291,10 +340,22 @@ function makeNoteText(row: number, column: number) {
 
 .note-style-bar {
   width: calc(var(--note-test-grid-cell-size) * .75);
-  height: 100%;
+  min-height: var(--note-test-grid-cell-size);
 }
 
-.note-style-bar.black-key {
-  width: calc(var(--note-test-grid-cell-size) * .5);
+.note-grid.note-grid--bar .note-grid-row:not(.header) .note-grid-cell.note-style-bar {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: var(--note-test-grid-cell-size);
+  align-self: stretch;
+  box-sizing: border-box;
+}
+
+/** Horizontal padding on the label only so hue fill reaches left/right inner edges. */
+.note-grid.note-grid--bar .note-grid-row:not(.header) .note-grid-cell.note-style-bar .note-grid-cell-label {
+  padding: 0 var(--note-grid-bar-label-pad-x);
+  box-sizing: border-box;
+  text-align: center;
 }
 </style>

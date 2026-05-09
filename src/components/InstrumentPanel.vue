@@ -224,7 +224,10 @@ function updateNoteRange(range: number[]) {
             </div>
           </div>
         </div>
-        <div class="instrument-display">
+        <div
+          class="instrument-display"
+          :class="{'instrument-display--stretch': gridStyle === 'bar'}"
+        >
           <NoteGrid
             :notes="currentNotes"
             :scale="selectedScale"
@@ -294,6 +297,11 @@ function updateNoteRange(range: number[]) {
   justify-content: center;
   align-items: center;
   overflow: scroll;
+  min-height: 0;
+}
+
+.instrument-display--stretch {
+  align-items: stretch;
 }
 
 .instrument-display::-webkit-scrollbar {

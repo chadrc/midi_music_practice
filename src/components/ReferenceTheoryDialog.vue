@@ -133,7 +133,10 @@ function selectItem(index: number) {
             </li>
           </ul>
         </aside>
-        <div class="theory-grid-panel">
+        <div
+          class="theory-grid-panel"
+          :class="{'theory-grid-panel--bar': layout.noteStyle === 'bar'}"
+        >
           <div
             v-if="selectedItem"
             class="theory-grid-wrap"
@@ -229,10 +232,20 @@ function selectItem(index: number) {
     align-items: flex-start;
 }
 
-.theory-grid-wrap {
+.theory-grid-panel--bar {
+    align-items: stretch;
+}
+
+.theory-grid-panel--bar .theory-grid-wrap {
     display: flex;
-    justify-content: center;
-    padding: 0.25rem 0;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.theory-grid-panel--bar .theory-grid-wrap :deep(.note-grid.note-grid--bar) {
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 @media (max-width: 40rem) {
