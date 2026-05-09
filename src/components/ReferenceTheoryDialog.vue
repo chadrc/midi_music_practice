@@ -63,6 +63,19 @@ const selectedItem = computed((): ReferenceTheoryListItem | null => {
     return items[i] ?? null;
 });
 
+const isChordsInScaleDialog = computed(
+    () => props.sourceSlot != null && props.sourceSlot.kind === "scale",
+);
+
+/** Scale degrees in range for the tile’s scale (Chords in Scale view only). */
+const scalePanelHints = computed((): number[] => {
+    const s = props.sourceSlot;
+    if (s == null || s.kind !== "scale") {
+        return [];
+    }
+    return hintMidisForReferenceSlot(props.layout.notes, s);
+});
+
 const dialogHeader = computed(() => {
     if (props.sourceSlot == null) {
         return "";
@@ -135,10 +148,51 @@ function selectItem(index: number) {
         </aside>
         <div
           class="theory-grid-panel"
-          :class="{'theory-grid-panel--bar': layout.noteStyle === 'bar'}"
+          :class="{
+            'theory-grid-panel--bar': layout.noteStyle === 'bar',
+            'theory-grid-panel--circle': layout.noteStyle === 'circle',
+            'theory-grid-panel--dual': isChordsInScaleDialog,
+          }"
         >
           <div
-            v-if="selectedItem"
+            v-if="selectedItem && isChordsInScaleDialog"
+            class="theory-dual-grid"
+          >
+            <div class="theory-grid-block">
+              <p class="theory-grid-caption">
+                Scale
+              </p>
+              <div class="theory-grid-wrap">
+                <NoteGrid
+                  :notes="layout.notes"
+                  :scale="chromaticMembership"
+                  :note-style="layout.noteStyle"
+                  :headers="layout.headers"
+                  :columns="layout.columns"
+                  :note-format="layout.noteFormat"
+                  :hints="scalePanelHints"
+                />
+              </div>
+            </div>
+            <div class="theory-grid-block">
+              <p class="theory-grid-caption">
+                {{ selectedItem.label }}
+              </p>
+              <div class="theory-grid-wrap">
+                <NoteGrid
+                  :notes="layout.notes"
+                  :scale="chromaticMembership"
+                  :note-style="layout.noteStyle"
+                  :headers="layout.headers"
+                  :columns="layout.columns"
+                  :note-format="layout.noteFormat"
+                  :hints="hintsFor(selectedItem.highlightSlot)"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            v-else-if="selectedItem"
             class="theory-grid-wrap"
           >
             <NoteGrid
@@ -236,11 +290,76 @@ function selectItem(index: number) {
     align-items: stretch;
 }
 
+.theory-grid-panel--circle {
+    align-items: center;
+    justify-content: center;
+}
+
+.theory-grid-panel--circle .theory-grid-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.theory-grid-panel--circle .theory-grid-caption {
+    width: 100%;
+    text-align: center;
+}
+
+.theory-grid-panel--circle .theory-grid-block {
+    align-items: center;
+}
+
+.theory-grid-panel--dual {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.theory-grid-panel--dual.theory-grid-panel--circle {
+    align-items: center;
+}
+
+.theory-dual-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+}
+
+.theory-grid-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+}
+
+.theory-grid-panel--dual:not(.theory-grid-panel--bar) .theory-grid-block {
+    flex: 0 0 auto;
+}
+
+.theory-grid-caption {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    opacity: 0.9;
+    flex-shrink: 0;
+}
+
 .theory-grid-panel--bar .theory-grid-wrap {
     display: flex;
     flex-direction: column;
     min-height: 0;
     height: 100%;
+}
+
+.theory-grid-panel--bar.theory-grid-panel--dual .theory-grid-block .theory-grid-wrap {
+    flex: 1 1 auto;
+    min-height: 8rem;
 }
 
 .theory-grid-panel--bar .theory-grid-wrap :deep(.note-grid.note-grid--bar) {
