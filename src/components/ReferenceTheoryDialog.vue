@@ -5,7 +5,8 @@ import NoteGrid from "./NoteGrid.vue";
 import type {ReferenceGridSlot, ReferenceTheoryListItem} from "../routine/referenceGrid";
 import {hintMidisForReferenceSlot, referenceTheoryListItemsForSlot} from "../routine/referenceGrid";
 import type {NoteGridLayoutFromNoteRange} from "../routine/noteGridLayout";
-import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES} from "../notes/scales";
+import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
+import {BaseNotes, CHROMATIC_SCALE_SET_NAME, SCALES, displayNameFromMapKey} from "../notes/scales";
 
 const visible = defineModel<boolean>("visible", {required: true});
 
@@ -67,14 +68,48 @@ const isChordsInScaleDialog = computed(
     () => props.sourceSlot != null && props.sourceSlot.kind === "scale",
 );
 
-/** Scale degrees in range for the tile’s scale (Chords in Scale view only). */
-const scalePanelHints = computed((): number[] => {
+const isScalesWithChordDialog = computed(
+    () => props.sourceSlot != null && props.sourceSlot.kind === "chord",
+);
+
+const showTheoryDualGrids = computed(
+    () =>
+        selectedItem.value != null &&
+        (isChordsInScaleDialog.value || isScalesWithChordDialog.value),
+);
+
+/** Top panel: full tile scale (Chords in Scale) or full tile chord (Scales with Chord). */
+const theoryDualFirstHints = computed((): number[] => {
     const s = props.sourceSlot;
-    if (s == null || s.kind !== "scale") {
+    if (s == null) {
         return [];
     }
     return hintMidisForReferenceSlot(props.layout.notes, s);
 });
+
+const theoryDualFirstCaption = computed((): string => {
+    const s = props.sourceSlot;
+    if (s == null) {
+        return "";
+    }
+    const root =
+        Object.values(BaseNotes).find((b) => b.mapKey === s.baseNoteMapKey)?.getName() ??
+        displayNameFromMapKey(s.baseNoteMapKey);
+    if (s.kind === "scale") {
+        return `${root} — ${SCALE_TYPE_LABEL[s.scaleType]}`;
+    }
+    return `${root} — ${CHORD_TYPE_LABEL[s.chordType]}`;
+});
+
+const theoryDualSecondHints = computed((): number[] => {
+    const item = selectedItem.value;
+    if (item == null) {
+        return [];
+    }
+    return hintMidisForReferenceSlot(props.layout.notes, item.highlightSlot);
+});
+
+const theoryDualSecondCaption = computed((): string => selectedItem.value?.label ?? "");
 
 const dialogHeader = computed(() => {
     if (props.sourceSlot == null) {
@@ -88,10 +123,6 @@ const dialogHeader = computed(() => {
 function itemKey(item: ReferenceTheoryListItem, index: number): string {
     const g = item.highlightSlot;
     return `${index}-${g.kind}-${g.baseNoteMapKey}-${g.scaleType}-${g.chordType}`;
-}
-
-function hintsFor(gridSlot: ReferenceGridSlot): number[] {
-    return hintMidisForReferenceSlot(props.layout.notes, gridSlot);
 }
 
 function selectItem(index: number) {
@@ -151,16 +182,16 @@ function selectItem(index: number) {
           :class="{
             'theory-grid-panel--bar': layout.noteStyle === 'bar',
             'theory-grid-panel--circle': layout.noteStyle === 'circle',
-            'theory-grid-panel--dual': isChordsInScaleDialog,
+            'theory-grid-panel--dual': showTheoryDualGrids,
           }"
         >
           <div
-            v-if="selectedItem && isChordsInScaleDialog"
+            v-if="showTheoryDualGrids"
             class="theory-dual-grid"
           >
             <div class="theory-grid-block">
               <p class="theory-grid-caption">
-                Scale
+                {{ theoryDualFirstCaption }}
               </p>
               <div class="theory-grid-wrap">
                 <NoteGrid
@@ -170,13 +201,13 @@ function selectItem(index: number) {
                   :headers="layout.headers"
                   :columns="layout.columns"
                   :note-format="layout.noteFormat"
-                  :hints="scalePanelHints"
+                  :hints="theoryDualFirstHints"
                 />
               </div>
             </div>
             <div class="theory-grid-block">
               <p class="theory-grid-caption">
-                {{ selectedItem.label }}
+                {{ theoryDualSecondCaption }}
               </p>
               <div class="theory-grid-wrap">
                 <NoteGrid
@@ -186,24 +217,10 @@ function selectItem(index: number) {
                   :headers="layout.headers"
                   :columns="layout.columns"
                   :note-format="layout.noteFormat"
-                  :hints="hintsFor(selectedItem.highlightSlot)"
+                  :hints="theoryDualSecondHints"
                 />
               </div>
             </div>
-          </div>
-          <div
-            v-else-if="selectedItem"
-            class="theory-grid-wrap"
-          >
-            <NoteGrid
-              :notes="layout.notes"
-              :scale="chromaticMembership"
-              :note-style="layout.noteStyle"
-              :headers="layout.headers"
-              :columns="layout.columns"
-              :note-format="layout.noteFormat"
-              :hints="hintsFor(selectedItem.highlightSlot)"
-            />
           </div>
         </div>
       </div>
@@ -343,7 +360,6 @@ function selectItem(index: number) {
 }
 
 .theory-grid-caption {
-    margin: 0;
     font-size: 0.8rem;
     font-weight: 600;
     opacity: 0.9;
