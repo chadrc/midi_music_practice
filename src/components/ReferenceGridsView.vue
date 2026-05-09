@@ -16,6 +16,7 @@ import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
 import {
     CHORD_TYPE_OPTIONS,
     SCALE_TYPE_OPTIONS,
+    NoteRangeType,
     type ChordTypeId,
 } from "../routine/types";
 const {referenceView} = storeToRefs(useSettingsStore());
@@ -73,6 +74,8 @@ const tiles = computed(() => {
     return out;
 });
 
+const isSingleReferenceTile = computed(() => tiles.value.length === 1);
+
 function hintsAt(index: number): number[] {
     return hintMidisForReferenceSlot(
         layout.value.notes,
@@ -86,6 +89,7 @@ function hintsAt(index: number): number[] {
   <div class="reference-grids-root">
     <div
       class="reference-pattern"
+      :class="{'reference-pattern--fit-content': isSingleReferenceTile}"
       :style="{'--ref-cols': referenceView.patternCols}"
     >
       <div
@@ -147,7 +151,14 @@ function hintsAt(index: number): number[] {
             >♪</span>
           </Button>
         </div>
-        <div class="tile-grid-wrap">
+        <div
+          class="tile-grid-wrap"
+          :class="{
+            'tile-grid-wrap--single': isSingleReferenceTile,
+            'tile-grid-wrap--octaves': referenceView.noteRange.type === NoteRangeType.Octaves,
+            'tile-grid-wrap--frets': referenceView.noteRange.type === NoteRangeType.Frets,
+          }"
+        >
           <NoteGrid
             :notes="layout.notes"
             :scale="chromaticMembership"
@@ -186,6 +197,14 @@ function hintsAt(index: number): number[] {
     align-items: stretch;
     gap: 0.75rem;
     padding-bottom: 1rem;
+}
+
+/** One tile: don’t stretch the pattern row to the viewport—size to content. */
+.reference-pattern.reference-pattern--fit-content {
+    flex: 0 0 auto;
+    min-height: 0;
+    grid-auto-rows: auto;
+    align-items: start;
 }
 
 .reference-tile {
@@ -241,6 +260,24 @@ function hintsAt(index: number): number[] {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    justify-content: center;
+}
+
+.tile-grid-wrap--single {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none;
+}
+
+.tile-grid-wrap--octaves {
+    flex: 0 0 auto;
+    height: 200px;
+    min-height: 200px;
+    max-height: 200px;
+}
+
+.tile-grid-wrap--frets {
+    align-items: center;
     justify-content: center;
 }
 
