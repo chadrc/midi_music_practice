@@ -1,6 +1,7 @@
 import {exists} from "../utilities";
 import {CHORDS, MAJOR_CHORDS_SET_NAME, type Chord} from "../notes/chords";
-import {BaseNotes, getRegisteredScale, MAJOR_SCALE_SET_NAME} from "../notes/scales";
+import {CHORD_TYPE_LABEL, SCALE_TYPE_LABEL} from "../notes/notes";
+import {BaseNotes, BASE_NOTES_CHROMATIC_ORDER, CHROMATIC_SCALE_SET_NAME, displayNameFromMapKey, getRegisteredScale, MAJOR_SCALE_SET_NAME} from "../notes/scales";
 import {
     CHORD_TYPE_OPTIONS,
     SCALE_TYPE_OPTIONS,
@@ -61,6 +62,68 @@ function resolveChord(kind: ChordTypeId, baseNoteKey: string): Chord {
     }
     const firstKey = Object.keys(sub)[0]!;
     return sub[firstKey]!;
+}
+
+function baseNoteDisplayName(mapKey: string): string {
+    const b = Object.values(BaseNotes).find((n) => n.mapKey === mapKey);
+    return b != null ? b.getName() : displayNameFromMapKey(mapKey);
+}
+
+/** One selectable row in the reference theory dialog; {@link highlightSlot} drives {@link hintMidisForReferenceSlot}. */
+export interface ReferenceTheoryListItem {
+    label: string;
+    highlightSlot: ReferenceGridSlot;
+}
+
+/**
+ * When the tile is a chord: scales (same tile root) that contain the chord’s pitch classes (chromatic excluded).
+ * When the tile is a scale: every chord quality on each scale degree (one spelling per pitch class from
+ * {@link BASE_NOTES_CHROMATIC_ORDER}) whose tones all lie in the scale.
+ */
+export function referenceTheoryListItemsForSlot(slot: ReferenceGridSlot): ReferenceTheoryListItem[] {
+    if (slot.kind === "chord") {
+        const chord = resolveChord(slot.chordType, slot.baseNoteMapKey);
+        const rootName = baseNoteDisplayName(slot.baseNoteMapKey);
+        const items: ReferenceTheoryListItem[] = [];
+        for (const scaleType of SCALE_TYPE_OPTIONS) {
+            if (scaleType === CHROMATIC_SCALE_SET_NAME) {
+                continue;
+            }
+            const scale = getRegisteredScale(scaleType, slot.baseNoteMapKey);
+            if (scale.containsChord(chord)) {
+                items.push({
+                    label: `${rootName} — ${SCALE_TYPE_LABEL[scaleType]}`,
+                    highlightSlot: {
+                        kind: "scale",
+                        scaleType,
+                        chordType: slot.chordType,
+                        baseNoteMapKey: slot.baseNoteMapKey,
+                    },
+                });
+            }
+        }
+        return items;
+    }
+    const scale = getRegisteredScale(slot.scaleType, slot.baseNoteMapKey);
+    const items: ReferenceTheoryListItem[] = [];
+    for (const baseNote of BASE_NOTES_CHROMATIC_ORDER) {
+        for (const chordType of CHORD_TYPE_OPTIONS) {
+            const chord = resolveChord(chordType, baseNote.mapKey);
+            if (!scale.containsChord(chord)) {
+                continue;
+            }
+            items.push({
+                label: `${baseNote.getName()} — ${CHORD_TYPE_LABEL[chordType]}`,
+                highlightSlot: {
+                    kind: "chord",
+                    scaleType: slot.scaleType,
+                    chordType,
+                    baseNoteMapKey: baseNote.mapKey,
+                },
+            });
+        }
+    }
+    return items;
 }
 
 function normPc(midi: number): number {

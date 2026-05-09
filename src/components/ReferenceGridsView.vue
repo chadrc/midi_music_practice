@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {Select, SelectButton} from "primevue";
+import {Button, Select, SelectButton} from "primevue";
 import {storeToRefs} from "pinia";
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import NoteGrid from "./NoteGrid.vue";
+import ReferenceTheoryDialog from "./ReferenceTheoryDialog.vue";
 import {useSettingsStore} from "../store/settings";
 import {noteGridLayoutFromNoteRange} from "../routine/noteGridLayout";
-import {hintMidisForReferenceSlot} from "../routine/referenceGrid";
+import {hintMidisForReferenceSlot, type ReferenceGridSlot} from "../routine/referenceGrid";
 import {
     BaseNotes,
     CHROMATIC_SCALE_SET_NAME,
@@ -18,6 +19,23 @@ import {
     type ChordTypeId,
 } from "../routine/types";
 const {referenceView} = storeToRefs(useSettingsStore());
+
+const theoryDialogVisible = ref(false);
+const theorySourceSlot = ref<ReferenceGridSlot | null>(null);
+
+function theoryTooltip(kind: ReferenceGridSlot["kind"]): string {
+    return kind === "chord" ? "Scales with Chord" : "Chords in Scale";
+}
+
+function openTheoryDialog(slot: ReferenceGridSlot) {
+    theorySourceSlot.value = {
+        kind: slot.kind,
+        scaleType: slot.scaleType,
+        chordType: slot.chordType,
+        baseNoteMapKey: slot.baseNoteMapKey,
+    };
+    theoryDialogVisible.value = true;
+}
 
 const layout = computed(() => noteGridLayoutFromNoteRange(referenceView.value.noteRange));
 
@@ -112,6 +130,22 @@ function hintsAt(index: number): number[] {
             class="root-select"
             size="small"
           />
+          <Button
+            v-tooltip.top="theoryTooltip(referenceView.gridSelections[t.index]!.kind)"
+            type="button"
+            rounded
+            text
+            size="small"
+            severity="secondary"
+            class="tile-theory-btn"
+            :aria-label="theoryTooltip(referenceView.gridSelections[t.index]!.kind)"
+            @click="openTheoryDialog(referenceView.gridSelections[t.index]!)"
+          >
+            <span
+              class="tile-theory-note-glyph"
+              aria-hidden="true"
+            >♪</span>
+          </Button>
         </div>
         <div class="tile-grid-wrap">
           <NoteGrid
@@ -126,6 +160,11 @@ function hintsAt(index: number): number[] {
         </div>
       </div>
     </div>
+    <ReferenceTheoryDialog
+      v-model:visible="theoryDialogVisible"
+      :source-slot="theorySourceSlot"
+      :layout="layout"
+    />
   </div>
 </template>
 
@@ -163,6 +202,18 @@ function hintsAt(index: number): number[] {
     justify-content: center;
     gap: 0.5rem 0.65rem;
     width: 100%;
+}
+
+.tile-theory-btn {
+    flex-shrink: 0;
+    padding: 0;
+    min-width: 2.25rem;
+}
+
+.tile-theory-note-glyph {
+    font-size: 1.1rem;
+    line-height: 1;
+    opacity: 0.88;
 }
 
 .type-select {

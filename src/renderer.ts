@@ -31,7 +31,8 @@ import {createApp, watch} from "vue";
 import {createPinia} from "pinia";
 import Main from "./MainContainer.vue"
 import PrimeVue from "primevue/config";
-import Aura from "@primevue/themes/aura"
+import Aura from "@primevue/themes/aura";
+import Tooltip from "primevue/tooltip";
 
 const app = createApp(Main)
 const pinia = createPinia()
@@ -41,6 +42,7 @@ app.use(PrimeVue, {
         preset: Aura
     }
 })
+app.directive("tooltip", Tooltip)
 app.use(pinia)
 app.mount('#app');
 
