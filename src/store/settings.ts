@@ -3,6 +3,7 @@ import {RNBOParameter} from "./types";
 import {
     defaultPracticeForType,
     defaultUserRoutineNoteRange,
+    maxForNoteRangeType,
     midiNotesForNoteRange,
     noteScaleFromPractice,
     setNoteRangeType,
@@ -27,7 +28,7 @@ import {
     type ReferenceViewSettings,
     type ReferenceViewPreset,
 } from "../routine/referenceViewSettings";
-import {NumberRangeLike} from "../common/NumberRange";
+import {NumberRangeLike, shiftNumberRangeWithinMax} from "../common/NumberRange";
 import {exists} from "../utilities";
 import {usePracticeStore} from "./practice";
 
@@ -242,11 +243,15 @@ export const useSettingsStore = defineStore('settings', {
         referenceSyncTileCount() {
             const target = this.referenceView.patternColsPerRow.reduce((s, c) => s + c, 0);
             const gs = this.referenceView.gridSelections;
+            const nr = this.referenceView.noteRanges;
             while (gs.length < target) {
                 gs.push(defaultReferenceGridSlot());
+                const lastNr = nr[nr.length - 1] ?? defaultUserRoutineNoteRange();
+                nr.push(cloneUserRoutineNoteRange(lastNr));
             }
             if (gs.length > target) {
                 gs.splice(target);
+                nr.splice(target);
             }
         },
         referenceSetPatternRows(value: number | null) {
@@ -263,14 +268,6 @@ export const useSettingsStore = defineStore('settings', {
             if (p.length > n) {
                 p.splice(n);
             }
-            const nr = this.referenceView.noteRangesPerRow;
-            while (nr.length < n) {
-                const last = nr[nr.length - 1] ?? defaultUserRoutineNoteRange();
-                nr.push(cloneUserRoutineNoteRange(last));
-            }
-            if (nr.length > n) {
-                nr.splice(n);
-            }
             this.referenceSyncTileCount();
         },
         referenceSetPatternColsForRow(row: number, value: number | null) {
@@ -284,21 +281,34 @@ export const useSettingsStore = defineStore('settings', {
             p[row] = clampReferencePatternDim(value);
             this.referenceSyncTileCount();
         },
-        referenceSetNoteRangeTypeForRow(row: number, t: NoteRangeType) {
-            const nr = this.referenceView.noteRangesPerRow;
-            if (row < 0 || row >= this.referenceView.patternRows || nr[row] == null) {
+        referenceSetNoteRangeTypeForTile(flatIndex: number, t: NoteRangeType) {
+            const nr = this.referenceView.noteRanges;
+            if (flatIndex < 0 || flatIndex >= nr.length || nr[flatIndex] == null) {
                 return;
             }
-            setNoteRangeType(nr[row]!, t);
+            setNoteRangeType(nr[flatIndex]!, t);
         },
-        referenceSetNoteRangeSliderForRow(row: number, range: number[]) {
-            const entry = this.referenceView.noteRangesPerRow[row];
-            if (row < 0 || row >= this.referenceView.patternRows || entry == null) {
+        referenceSetNoteRangeSliderForTile(flatIndex: number, range: number[]) {
+            const entry = this.referenceView.noteRanges[flatIndex];
+            if (flatIndex < 0 || flatIndex >= this.referenceView.noteRanges.length || entry == null) {
                 return;
             }
             const [a, b] = range;
             entry.range.start = a!;
             entry.range.end = b!;
+        },
+        referenceShiftNoteRangeBy(flatIndex: number, delta: number) {
+            if (delta === 0 || !Number.isFinite(delta)) {
+                return;
+            }
+            const entry = this.referenceView.noteRanges[flatIndex];
+            if (flatIndex < 0 || flatIndex >= this.referenceView.noteRanges.length || entry == null) {
+                return;
+            }
+            const max = maxForNoteRangeType(entry.type);
+            const next = shiftNumberRangeWithinMax(entry.range, delta, max);
+            entry.range.start = next.start;
+            entry.range.end = next.end;
         },
         referenceSavePreset(name: string): string | null {
             const trimmed = name.trim();
@@ -320,7 +330,7 @@ export const useSettingsStore = defineStore('settings', {
                 return;
             }
             const m = mergeStoredReferenceView({
-                noteRangesPerRow: p.noteRangesPerRow,
+                noteRanges: p.noteRanges,
                 patternRows: p.patternRows,
                 patternColsPerRow: p.patternColsPerRow,
                 gridSelections: p.gridSelections,

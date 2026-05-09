@@ -5,6 +5,38 @@ export interface NumberRangeLike {
     end: number;
 }
 
+/**
+ * Shifts both ends of `range` by `delta`, then clamps the interval into [0, max].
+ * Preserves inclusive width when possible; may shrink when hitting an edge.
+ * Order is normalized so start ≤ end in the result.
+ */
+export function shiftNumberRangeWithinMax(
+    range: NumberRangeLike,
+    delta: number,
+    max: number,
+): NumberRangeLike {
+    let lo = Math.min(range.start, range.end);
+    let hi = Math.max(range.start, range.end);
+    lo += delta;
+    hi += delta;
+    if (lo < 0) {
+        const fix = -lo;
+        lo += fix;
+        hi += fix;
+    }
+    if (hi > max) {
+        const fix = hi - max;
+        lo -= fix;
+        hi -= fix;
+    }
+    lo = Math.max(0, Math.min(max, lo));
+    hi = Math.max(0, Math.min(max, hi));
+    if (lo > hi) {
+        [lo, hi] = [hi, lo];
+    }
+    return {start: lo, end: hi};
+}
+
 export default class NumberRange {
     public start: number;
     public end: number;

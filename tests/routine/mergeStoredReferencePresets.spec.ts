@@ -7,6 +7,7 @@ import {
 import {BaseNotes, MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {MAJOR_CHORDS_SET_NAME} from "../../src/notes/chords";
 import {NoteRangeType} from "../../src/routine/types";
+import {NOTE_RANGE_MAX_MIDI} from "../../src/routine";
 
 test("mergeStoredReferencePresets skips invalid entries and restores full presets", () => {
     const raw = [
@@ -38,7 +39,10 @@ test("mergeStoredReferencePresets skips invalid entries and restores full preset
             id: "preset-1",
             name: "Triads",
             showTileControls: false,
-            noteRangesPerRow: [{type: NoteRangeType.Notes, range: {start: 60, end: 72}}],
+            noteRanges: [
+                {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+                {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+            ],
             patternRows: 1,
             patternColsPerRow: [2],
             gridSelections: [
@@ -61,14 +65,18 @@ test("mergeStoredReferencePresets skips invalid entries and restores full preset
 
 test("snapshotReferenceViewSettings returns merge-normalized copy", () => {
     const live = defaultReferenceViewSettings();
-    live.noteRangesPerRow[0]!.range.start = 55;
-    live.noteRangesPerRow[0]!.range.end = 77;
+    live.noteRanges[0]!.range.start = 55;
+    live.noteRanges[0]!.range.end = 77;
     const snap = snapshotReferenceViewSettings(live);
     expect(snap).to.deep.equal({
-        noteRangesPerRow: [
+        noteRanges: [
             {
                 type: NoteRangeType.Notes,
                 range: {start: 55, end: 77},
+            },
+            {
+                type: NoteRangeType.Notes,
+                range: {start: 0, end: NOTE_RANGE_MAX_MIDI},
             },
         ],
         patternRows: 1,

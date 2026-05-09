@@ -18,8 +18,8 @@ export function clampReferencePatternDim(n: number): number {
 }
 
 export interface ReferenceViewSettings {
-    /** One note range per panel row (same for all tiles in that row). */
-    noteRangesPerRow: UserRoutineNoteRange[];
+    /** One note range per tile; same order as {@link gridSelections} (row-major). */
+    noteRanges: UserRoutineNoteRange[];
     patternRows: number;
     /** One entry per row; column count for that row (1…6). Tile order is row-major. */
     patternColsPerRow: number[];
@@ -62,6 +62,7 @@ export function mergeStoredReferencePresets(raw: unknown): ReferenceViewPreset[]
         const name = nameRaw.slice(0, PRESET_NAME_MAX);
         const id = typeof o.id === "string" && o.id.length > 0 ? o.id : newPresetId();
         const snap = mergeStoredReferenceView({
+            noteRanges: o.noteRanges,
             noteRangesPerRow: o.noteRangesPerRow,
             noteRange: o.noteRange,
             patternRows: o.patternRows,
@@ -116,6 +117,32 @@ export function cloneUserRoutineNoteRange(nr: UserRoutineNoteRange): UserRoutine
     return {type: nr.type, range: {...nr.range}};
 }
 
+/** Row index (0…patternRows−1) for a tile in row-major flat order. */
+export function rowIndexForReferenceFlatTile(flatIndex: number, patternColsPerRow: number[]): number {
+    let i = flatIndex;
+    for (let r = 0; r < patternColsPerRow.length; r++) {
+        const c = patternColsPerRow[r]!;
+        if (i < c) {
+            return r;
+        }
+        i -= c;
+    }
+    return Math.max(0, patternColsPerRow.length - 1);
+}
+
+function padTrimNoteRanges(
+    ranges: UserRoutineNoteRange[],
+    target: number,
+    baseFallback: UserRoutineNoteRange,
+): UserRoutineNoteRange[] {
+    const out = ranges.map(cloneUserRoutineNoteRange);
+    while (out.length < target) {
+        const last = out[out.length - 1] ?? baseFallback;
+        out.push(cloneUserRoutineNoteRange(last));
+    }
+    return out.slice(0, target);
+}
+
 /** Total number of reference tiles from row column counts. */
 export function totalReferenceTileCount(patternColsPerRow: number[]): number {
     return patternColsPerRow.reduce((s, c) => s + c, 0);
@@ -155,7 +182,7 @@ export function defaultReferenceViewSettings(): ReferenceViewSettings {
     const nTiles = totalReferenceTileCount(patternColsPerRow);
     const nr0 = defaultUserRoutineNoteRange();
     return {
-        noteRangesPerRow: [cloneUserRoutineNoteRange(nr0)],
+        noteRanges: Array.from({length: nTiles}, () => cloneUserRoutineNoteRange(nr0)),
         patternRows,
         patternColsPerRow,
         gridSelections: Array.from({length: nTiles}, () => defaultReferenceGridSlot()),
@@ -172,23 +199,39 @@ export function mergeStoredReferenceView(raw: unknown): ReferenceViewSettings {
     const o = raw as Record<string, unknown>;
     const patternRows = clampReferencePatternDim(Number(o.patternRows) || d.patternRows);
     const patternColsPerRow = mergePatternColsPerRow(o, patternRows, d);
-    const baseNrFallback = d.noteRangesPerRow[0] ?? defaultUserRoutineNoteRange();
-    let noteRangesPerRow: UserRoutineNoteRange[];
-    if (Array.isArray(o.noteRangesPerRow)) {
-        noteRangesPerRow = o.noteRangesPerRow.map((raw, i) =>
-            normalizeStoredNoteRange(raw, d.noteRangesPerRow[i] ?? baseNrFallback),
+    const target = totalReferenceTileCount(patternColsPerRow);
+    const baseNrFallback = d.noteRanges[0] ?? defaultUserRoutineNoteRange();
+
+    let noteRanges: UserRoutineNoteRange[];
+    if (Array.isArray(o.noteRanges)) {
+        noteRanges = o.noteRanges.map((raw, i) =>
+            normalizeStoredNoteRange(raw, d.noteRanges[i] ?? baseNrFallback),
         );
+        noteRanges = padTrimNoteRanges(noteRanges, target, baseNrFallback);
+    } else if (Array.isArray(o.noteRangesPerRow)) {
+        let rowRanges = o.noteRangesPerRow.map((raw) =>
+            normalizeStoredNoteRange(raw, baseNrFallback),
+        );
+        while (rowRanges.length < patternRows) {
+            const last = rowRanges[rowRanges.length - 1] ?? baseNrFallback;
+            rowRanges.push(cloneUserRoutineNoteRange(last));
+        }
+        rowRanges = rowRanges.slice(0, patternRows);
+        noteRanges = [];
+        for (let fi = 0; fi < target; fi++) {
+            const r = rowIndexForReferenceFlatTile(fi, patternColsPerRow);
+            noteRanges.push(cloneUserRoutineNoteRange(rowRanges[r] ?? baseNrFallback));
+        }
     } else if (o.noteRange != null) {
         const one = normalizeStoredNoteRange(o.noteRange, baseNrFallback);
-        noteRangesPerRow = Array.from({length: patternRows}, () => cloneUserRoutineNoteRange(one));
+        noteRanges = Array.from({length: target}, () => cloneUserRoutineNoteRange(one));
     } else {
-        noteRangesPerRow = d.noteRangesPerRow.map(cloneUserRoutineNoteRange);
+        noteRanges = padTrimNoteRanges(
+            d.noteRanges.map(cloneUserRoutineNoteRange),
+            target,
+            baseNrFallback,
+        );
     }
-    while (noteRangesPerRow.length < patternRows) {
-        const last = noteRangesPerRow[noteRangesPerRow.length - 1] ?? defaultUserRoutineNoteRange();
-        noteRangesPerRow.push(cloneUserRoutineNoteRange(last));
-    }
-    noteRangesPerRow = noteRangesPerRow.slice(0, patternRows);
 
     let gridSelections: ReferenceGridSlot[];
     if (Array.isArray(o.gridSelections)) {
@@ -196,12 +239,11 @@ export function mergeStoredReferenceView(raw: unknown): ReferenceViewSettings {
     } else {
         gridSelections = [...d.gridSelections];
     }
-    const target = totalReferenceTileCount(patternColsPerRow);
     while (gridSelections.length < target) {
         gridSelections.push(defaultReferenceGridSlot());
     }
     gridSelections = gridSelections.slice(0, target);
     const showTileControls =
         typeof o.showTileControls === "boolean" ? o.showTileControls : d.showTileControls;
-    return {noteRangesPerRow, patternRows, patternColsPerRow, gridSelections, showTileControls};
+    return {noteRanges, patternRows, patternColsPerRow, gridSelections, showTileControls};
 }

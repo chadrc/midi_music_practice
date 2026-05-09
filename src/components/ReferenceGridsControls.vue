@@ -83,7 +83,7 @@ function deleteSelectedPreset() {
             </div>
           </div>
           <p class="pattern-hint">
-            With tile controls visible, set columns and the note range (type + bounds) per row above each row.
+            With tile controls visible, set columns per row above each row, and note range (type + bounds) on each tile.
           </p>
         </div>
       </div>

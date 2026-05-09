@@ -31,14 +31,14 @@ const {referenceView} = storeToRefs(settingsStore);
 
 const theoryDialogVisible = ref(false);
 const theorySourceSlot = ref<ReferenceGridSlot | null>(null);
-const theorySourceRow = ref(0);
+const theorySourceFlatIndex = ref(0);
 
 function theoryTooltip(kind: ReferenceGridSlot["kind"]): string {
     return kind === "chord" ? "Scales with Chord" : "Chords in Scale";
 }
 
-function openTheoryDialog(slot: ReferenceGridSlot, rowIdx: number) {
-    theorySourceRow.value = rowIdx;
+function openTheoryDialog(slot: ReferenceGridSlot, flatIndex: number) {
+    theorySourceFlatIndex.value = flatIndex;
     theorySourceSlot.value = {
         kind: slot.kind,
         scaleType: slot.scaleType,
@@ -48,13 +48,13 @@ function openTheoryDialog(slot: ReferenceGridSlot, rowIdx: number) {
     theoryDialogVisible.value = true;
 }
 
-const layoutsPerRow = computed(() =>
-    referenceView.value.noteRangesPerRow.map((nr) => noteGridLayoutFromNoteRange(nr)),
+const layoutsPerTile = computed(() =>
+    referenceView.value.noteRanges.map((nr) => noteGridLayoutFromNoteRange(nr)),
 );
 
 const theoryLayout = computed(() => {
-    const layouts = layoutsPerRow.value;
-    const i = Math.min(Math.max(0, theorySourceRow.value), layouts.length - 1);
+    const layouts = layoutsPerTile.value;
+    const i = Math.min(Math.max(0, theorySourceFlatIndex.value), layouts.length - 1);
     return layouts[i]!;
 });
 
@@ -110,10 +110,10 @@ const isSingleReferenceTile = computed(
     () => totalReferenceTileCount(referenceView.value.patternColsPerRow) === 1,
 );
 
-function hintsAt(rowIdx: number, index: number): number[] {
+function hintsAt(flatIndex: number): number[] {
     return hintMidisForReferenceSlot(
-        layoutsPerRow.value[rowIdx]!.notes,
-        referenceView.value.gridSelections[index]!,
+        layoutsPerTile.value[flatIndex]!.notes,
+        referenceView.value.gridSelections[flatIndex]!,
     );
 }
 
@@ -121,14 +121,18 @@ function onRowColsInput(row: number, v: number | null) {
     settingsStore.referenceSetPatternColsForRow(row, v);
 }
 
-function onRowNoteRangeType(row: number, t: NoteRangeType) {
-    settingsStore.referenceSetNoteRangeTypeForRow(row, t);
+function onTileNoteRangeType(flatIndex: number, t: NoteRangeType) {
+    settingsStore.referenceSetNoteRangeTypeForTile(flatIndex, t);
 }
 
-function onRowRangeSlider(row: number, range: number | number[]) {
+function onTileRangeSlider(flatIndex: number, range: number | number[]) {
     if (Array.isArray(range) && range.length >= 2) {
-        settingsStore.referenceSetNoteRangeSliderForRow(row, [range[0]!, range[1]!]);
+        settingsStore.referenceSetNoteRangeSliderForTile(flatIndex, [range[0]!, range[1]!]);
     }
+}
+
+function onTileShiftNoteRange(flatIndex: number, delta: number) {
+    settingsStore.referenceShiftNoteRangeBy(flatIndex, delta);
 }
 </script>
 
@@ -161,41 +165,6 @@ function onRowRangeSlider(row: number, range: number | number[]) {
               @update:model-value="(v: number | null) => onRowColsInput(rowIdx, v)"
             />
           </div>
-          <div class="reference-row-toolbar-group reference-row-toolbar-group--grow">
-            <label
-              class="reference-row-sublabel"
-              :for="`ref-range-type-${rowIdx}`"
-            >Range type</label>
-            <Select
-              :id="`ref-range-type-${rowIdx}`"
-              :model-value="referenceView.noteRangesPerRow[rowIdx]!.type"
-              :options="makeNoteRangeOptions()"
-              option-value="value"
-              option-label="name"
-              class="reference-row-range-type-select"
-              size="small"
-              :aria-label="`Note range type for row ${rowIdx + 1}`"
-              @update:model-value="(t: NoteRangeType) => onRowNoteRangeType(rowIdx, t)"
-            />
-          </div>
-          <div class="reference-row-toolbar-group reference-row-range-slider-group">
-            <span class="reference-row-sublabel">Bounds</span>
-            <div class="reference-row-range-slider-wrap">
-              <span class="range-bound">{{ referenceView.noteRangesPerRow[rowIdx]!.range.start }}</span>
-              <Slider
-                :model-value="[
-                  referenceView.noteRangesPerRow[rowIdx]!.range.start,
-                  referenceView.noteRangesPerRow[rowIdx]!.range.end,
-                ]"
-                :max="maxForNoteRangeType(referenceView.noteRangesPerRow[rowIdx]!.type)"
-                range
-                class="reference-row-range-slider"
-                :aria-label="`Note range bounds for row ${rowIdx + 1}`"
-                @value-change="(r: number | number[]) => onRowRangeSlider(rowIdx, r)"
-              />
-              <span class="range-bound">{{ referenceView.noteRangesPerRow[rowIdx]!.range.end }}</span>
-            </div>
-          </div>
         </div>
         <div
           class="reference-row-tiles"
@@ -225,7 +194,7 @@ function onRowRangeSlider(row: number, range: number | number[]) {
                 @click="
                   openTheoryDialog(
                     referenceView.gridSelections[tileFlatIndex(rowIdx, colIdx)]!,
-                    rowIdx,
+                    tileFlatIndex(rowIdx, colIdx),
                   )
                 "
               >
@@ -277,23 +246,85 @@ function onRowRangeSlider(row: number, range: number | number[]) {
               />
             </div>
             <div
+              v-if="referenceView.showTileControls"
+              class="tile-note-range"
+            >
+              <label
+                class="tile-range-sublabel"
+                :for="`tile-range-type-${tileFlatIndex(rowIdx, colIdx)}`"
+              >Range type</label>
+              <Select
+                :id="`tile-range-type-${tileFlatIndex(rowIdx, colIdx)}`"
+                :model-value="referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.type"
+                :options="makeNoteRangeOptions()"
+                option-value="value"
+                option-label="name"
+                class="tile-range-type-select"
+                size="small"
+                :aria-label="`Note range type for tile ${tileFlatIndex(rowIdx, colIdx) + 1}`"
+                @update:model-value="(t: NoteRangeType) =>
+                  onTileNoteRangeType(tileFlatIndex(rowIdx, colIdx), t)"
+              />
+              <span class="tile-range-sublabel tile-range-bounds-label">Bounds</span>
+              <div class="tile-range-slider-wrap">
+                <Button
+                  v-tooltip.top="'Decrease start and end by 1'"
+                  type="button"
+                  icon="pi pi-minus"
+                  rounded
+                  text
+                  size="small"
+                  severity="secondary"
+                  class="tile-range-shift-btn"
+                  aria-label="Shift note range down by 1"
+                  @click="onTileShiftNoteRange(tileFlatIndex(rowIdx, colIdx), -1)"
+                />
+                <span class="range-bound">{{ referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.range.start }}</span>
+                <Slider
+                  :model-value="[
+                    referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.range.start,
+                    referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.range.end,
+                  ]"
+                  :max="maxForNoteRangeType(referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.type)"
+                  range
+                  class="tile-range-slider"
+                  :aria-label="`Note range bounds for tile ${tileFlatIndex(rowIdx, colIdx) + 1}`"
+                  @value-change="(r: number | number[]) =>
+                    onTileRangeSlider(tileFlatIndex(rowIdx, colIdx), r)"
+                />
+                <span class="range-bound">{{ referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.range.end }}</span>
+                <Button
+                  v-tooltip.top="'Increase start and end by 1'"
+                  type="button"
+                  icon="pi pi-plus"
+                  rounded
+                  text
+                  size="small"
+                  severity="secondary"
+                  class="tile-range-shift-btn"
+                  aria-label="Shift note range up by 1"
+                  @click="onTileShiftNoteRange(tileFlatIndex(rowIdx, colIdx), 1)"
+                />
+              </div>
+            </div>
+            <div
               class="tile-grid-wrap"
               :class="{
                 'tile-grid-wrap--single': isSingleReferenceTile,
                 'tile-grid-wrap--octaves':
-                  referenceView.noteRangesPerRow[rowIdx]!.type === NoteRangeType.Octaves,
+                  referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.type === NoteRangeType.Octaves,
                 'tile-grid-wrap--frets':
-                  referenceView.noteRangesPerRow[rowIdx]!.type === NoteRangeType.Frets,
+                  referenceView.noteRanges[tileFlatIndex(rowIdx, colIdx)]!.type === NoteRangeType.Frets,
               }"
             >
               <NoteGrid
-                :notes="layoutsPerRow[rowIdx]!.notes"
+                :notes="layoutsPerTile[tileFlatIndex(rowIdx, colIdx)]!.notes"
                 :scale="chromaticMembership"
-                :note-style="layoutsPerRow[rowIdx]!.noteStyle"
-                :headers="layoutsPerRow[rowIdx]!.headers"
-                :columns="layoutsPerRow[rowIdx]!.columns"
-                :note-format="layoutsPerRow[rowIdx]!.noteFormat"
-                :hints="hintsAt(rowIdx, tileFlatIndex(rowIdx, colIdx))"
+                :note-style="layoutsPerTile[tileFlatIndex(rowIdx, colIdx)]!.noteStyle"
+                :headers="layoutsPerTile[tileFlatIndex(rowIdx, colIdx)]!.headers"
+                :columns="layoutsPerTile[tileFlatIndex(rowIdx, colIdx)]!.columns"
+                :note-format="layoutsPerTile[tileFlatIndex(rowIdx, colIdx)]!.noteFormat"
+                :hints="hintsAt(tileFlatIndex(rowIdx, colIdx))"
               />
             </div>
           </div>
@@ -354,52 +385,6 @@ function onRowRangeSlider(row: number, range: number | number[]) {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.35rem 0.5rem;
-}
-
-.reference-row-toolbar-group--grow {
-    flex: 1 1 11rem;
-    min-width: 9rem;
-    align-items: flex-end;
-}
-
-.reference-row-sublabel {
-    font-size: 0.72rem;
-    opacity: 0.78;
-    width: 100%;
-    flex: 0 0 100%;
-}
-
-/** In column groups, % flex-basis is height — avoid consuming the whole stack (hides the slider). */
-.reference-row-range-slider-group .reference-row-sublabel {
-    flex: 0 0 auto;
-}
-
-.reference-row-range-type-select {
-    width: 100%;
-    min-width: 0;
-}
-
-.reference-row-range-slider-group {
-    flex: 2 1 16rem;
-    min-width: 12rem;
-    flex-direction: column;
-    align-items: stretch;
-    align-self: stretch;
-}
-
-.reference-row-range-slider-wrap {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    min-width: 0;
-}
-
-.reference-row-range-slider {
-    flex: 1 1 auto;
-    min-width: 7rem;
-    width: 100%;
 }
 
 .range-bound {
@@ -498,6 +483,52 @@ function onRowRangeSlider(row: number, range: number | number[]) {
     width: 6.5rem;
     max-width: 100%;
     flex: 0 0 auto;
+}
+
+.tile-note-range {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    width: 100%;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--p-content-border-color, rgba(255, 255, 255, 0.1));
+}
+
+.tile-range-sublabel {
+    font-size: 0.72rem;
+    opacity: 0.78;
+    width: 100%;
+}
+
+.tile-range-bounds-label {
+    margin-top: 0.15rem;
+}
+
+.tile-range-type-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.tile-range-slider-wrap {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem 0.5rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.tile-range-slider {
+    flex: 1 1 8rem;
+    min-width: 4rem;
+}
+
+.tile-range-shift-btn {
+    flex-shrink: 0;
+    padding: 0;
+    min-width: 2.25rem;
 }
 
 .tile-grid-wrap {

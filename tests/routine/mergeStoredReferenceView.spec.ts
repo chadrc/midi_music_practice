@@ -39,7 +39,7 @@ test("mergeStoredReferenceView restores full snapshot", () => {
         patternRows: 2,
         patternColsPerRow: [1, 1],
         showTileControls: false,
-        noteRangesPerRow: [
+        noteRanges: [
             {
                 type: NoteRangeType.Notes,
                 range: {start: 21, end: 33},
@@ -86,7 +86,7 @@ test("mergeStoredReferenceView restores showTileControls when true", () => {
         patternRows: 1,
         patternColsPerRow: [1],
         showTileControls: true,
-        noteRangesPerRow: [{type: NoteRangeType.Notes, range: {start: 60, end: 72}}],
+        noteRanges: [{type: NoteRangeType.Notes, range: {start: 60, end: 72}}],
         gridSelections: [
             {
                 kind: "scale",
@@ -111,15 +111,15 @@ test("mergeStoredReferenceView uses patternColsPerRow when present", () => {
         patternRows: 2,
         patternColsPerRow: [3, 2],
         showTileControls: false,
-        noteRangesPerRow: [
-            {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
-            {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
-        ],
+        noteRanges: Array.from({length: 5}, () => ({
+            type: NoteRangeType.Notes,
+            range: {start: 60, end: 72},
+        })),
         gridSelections: Array.from({length: 5}, () => ({...oneSlot})),
     });
 });
 
-test("mergeStoredReferenceView keeps distinct noteRangesPerRow when present", () => {
+test("mergeStoredReferenceView expands legacy noteRangesPerRow to per-tile noteRanges", () => {
     const oneSlot = defaultReferenceViewSettings().gridSelections[0]!;
     expect(
         mergeStoredReferenceView({
@@ -135,7 +135,31 @@ test("mergeStoredReferenceView keeps distinct noteRangesPerRow when present", ()
         patternRows: 2,
         patternColsPerRow: [1, 1],
         showTileControls: false,
-        noteRangesPerRow: [
+        noteRanges: [
+            {type: NoteRangeType.Notes, range: {start: 10, end: 20}},
+            {type: NoteRangeType.Frets, range: {start: 0, end: 5}},
+        ],
+        gridSelections: Array.from({length: 2}, () => ({...oneSlot})),
+    });
+});
+
+test("mergeStoredReferenceView keeps distinct noteRanges when present", () => {
+    const oneSlot = defaultReferenceViewSettings().gridSelections[0]!;
+    expect(
+        mergeStoredReferenceView({
+            patternRows: 1,
+            patternColsPerRow: [2],
+            noteRanges: [
+                {type: NoteRangeType.Notes, range: {start: 10, end: 20}},
+                {type: NoteRangeType.Frets, range: {start: 0, end: 5}},
+            ],
+            gridSelections: [],
+        }),
+    ).to.deep.equal({
+        patternRows: 1,
+        patternColsPerRow: [2],
+        showTileControls: false,
+        noteRanges: [
             {type: NoteRangeType.Notes, range: {start: 10, end: 20}},
             {type: NoteRangeType.Frets, range: {start: 0, end: 5}},
         ],

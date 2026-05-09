@@ -1,5 +1,5 @@
 import {expect, test} from "vitest";
-import NumberRange from "../../src/common/NumberRange";
+import NumberRange, {shiftNumberRangeWithinMax} from "../../src/common/NumberRange";
 
 test('Create forward Range', () => {
     const range = new NumberRange(0, 127);
@@ -77,3 +77,12 @@ test('from reads start and end properties', () => {
 
     expect(result).toEqual(new NumberRange(0, 5));
 })
+
+test("shiftNumberRangeWithinMax shifts and clamps", () => {
+    expect(shiftNumberRangeWithinMax({start: 5, end: 10}, 3, 127)).to.deep.equal({start: 8, end: 13});
+    expect(shiftNumberRangeWithinMax({start: 0, end: 5}, -3, 127)).to.deep.equal({start: 0, end: 5});
+    expect(shiftNumberRangeWithinMax({start: 125, end: 127}, 2, 127)).to.deep.equal({start: 125, end: 127});
+    expect(shiftNumberRangeWithinMax({start: 120, end: 126}, 5, 127)).to.deep.equal({start: 121, end: 127});
+    expect(shiftNumberRangeWithinMax({start: 10, end: 5}, 2, 127)).to.deep.equal({start: 7, end: 12});
+    expect(shiftNumberRangeWithinMax({start: 3, end: 3}, 1, 8)).to.deep.equal({start: 4, end: 4});
+});
