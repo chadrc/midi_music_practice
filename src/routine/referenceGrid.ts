@@ -69,6 +69,21 @@ function baseNoteDisplayName(mapKey: string): string {
     return b != null ? b.getName() : displayNameFromMapKey(mapKey);
 }
 
+function shortScaleTypeLabel(scaleType: ScaleTypeId): string {
+    const full = SCALE_TYPE_LABEL[scaleType];
+    const paren = full.indexOf(" (");
+    return paren >= 0 ? full.slice(0, paren) : full;
+}
+
+/** User-facing label for a reference tile, e.g. "A Minor Scale", "D Major Chord". */
+export function referenceSlotDisplayTitle(slot: ReferenceGridSlot): string {
+    const root = baseNoteDisplayName(slot.baseNoteMapKey);
+    if (slot.kind === "scale") {
+        return `${root} ${shortScaleTypeLabel(slot.scaleType)} Scale`;
+    }
+    return `${root} ${CHORD_TYPE_LABEL[slot.chordType]} Chord`;
+}
+
 /** One selectable row in the reference theory dialog; {@link highlightSlot} drives {@link hintMidisForReferenceSlot}. */
 export interface ReferenceTheoryListItem {
     label: string;

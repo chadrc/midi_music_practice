@@ -3,7 +3,6 @@ import {RNBOParameter} from "./types";
 import {
     defaultPracticeForType,
     defaultUserRoutineNoteRange,
-    maxForNoteRangeType,
     midiNotesForNoteRange,
     noteScaleFromPractice,
     setNoteRangeType,
@@ -19,6 +18,7 @@ import {
     defaultReferenceGridSlot,
 } from "../routine/referenceGrid";
 import {
+    cloneUserRoutineNoteRange,
     defaultReferenceViewSettings,
     mergeStoredReferenceView,
     mergeStoredReferencePresets,
@@ -217,13 +217,6 @@ export const useSettingsStore = defineStore('settings', {
             const practiceStore = usePracticeStore();
             return practiceStore.practicing;
         },
-        referenceNoteRangeMax(state) {
-            return maxForNoteRangeType(state.referenceView.noteRange.type);
-        },
-        referenceNoteRangeSliderValues(state): [number, number] {
-            const r = state.referenceView.noteRange.range;
-            return [r.start, r.end];
-        },
     },
     actions: {
         toggleAutoReceiveInstrument(deviceId: string) {
@@ -247,7 +240,7 @@ export const useSettingsStore = defineStore('settings', {
             }
         },
         referenceSyncTileCount() {
-            const target = this.referenceView.patternRows * this.referenceView.patternCols;
+            const target = this.referenceView.patternColsPerRow.reduce((s, c) => s + c, 0);
             const gs = this.referenceView.gridSelections;
             while (gs.length < target) {
                 gs.push(defaultReferenceGridSlot());
@@ -257,24 +250,55 @@ export const useSettingsStore = defineStore('settings', {
             }
         },
         referenceSetPatternRows(value: number | null) {
-            if (value != null) {
-                this.referenceView.patternRows = clampReferencePatternDim(value);
-                this.referenceSyncTileCount();
+            if (value == null) {
+                return;
             }
-        },
-        referenceSetPatternCols(value: number | null) {
-            if (value != null) {
-                this.referenceView.patternCols = clampReferencePatternDim(value);
-                this.referenceSyncTileCount();
+            const n = clampReferencePatternDim(value);
+            const p = this.referenceView.patternColsPerRow;
+            this.referenceView.patternRows = n;
+            const fillCol = clampReferencePatternDim(p[p.length - 1] ?? 2);
+            while (p.length < n) {
+                p.push(fillCol);
             }
+            if (p.length > n) {
+                p.splice(n);
+            }
+            const nr = this.referenceView.noteRangesPerRow;
+            while (nr.length < n) {
+                const last = nr[nr.length - 1] ?? defaultUserRoutineNoteRange();
+                nr.push(cloneUserRoutineNoteRange(last));
+            }
+            if (nr.length > n) {
+                nr.splice(n);
+            }
+            this.referenceSyncTileCount();
         },
-        referenceSetNoteRangeType(t: NoteRangeType) {
-            setNoteRangeType(this.referenceView.noteRange, t);
+        referenceSetPatternColsForRow(row: number, value: number | null) {
+            if (value == null) {
+                return;
+            }
+            const p = this.referenceView.patternColsPerRow;
+            if (row < 0 || row >= this.referenceView.patternRows) {
+                return;
+            }
+            p[row] = clampReferencePatternDim(value);
+            this.referenceSyncTileCount();
         },
-        referenceSetNoteRangeSlider(range: number[]) {
-            const r = this.referenceView.noteRange.range;
-            r.start = range[0]!;
-            r.end = range[1]!;
+        referenceSetNoteRangeTypeForRow(row: number, t: NoteRangeType) {
+            const nr = this.referenceView.noteRangesPerRow;
+            if (row < 0 || row >= this.referenceView.patternRows || nr[row] == null) {
+                return;
+            }
+            setNoteRangeType(nr[row]!, t);
+        },
+        referenceSetNoteRangeSliderForRow(row: number, range: number[]) {
+            const entry = this.referenceView.noteRangesPerRow[row];
+            if (row < 0 || row >= this.referenceView.patternRows || entry == null) {
+                return;
+            }
+            const [a, b] = range;
+            entry.range.start = a!;
+            entry.range.end = b!;
         },
         referenceSavePreset(name: string): string | null {
             const trimmed = name.trim();
@@ -296,9 +320,9 @@ export const useSettingsStore = defineStore('settings', {
                 return;
             }
             const m = mergeStoredReferenceView({
-                noteRange: p.noteRange,
+                noteRangesPerRow: p.noteRangesPerRow,
                 patternRows: p.patternRows,
-                patternCols: p.patternCols,
+                patternColsPerRow: p.patternColsPerRow,
                 gridSelections: p.gridSelections,
                 showTileControls: p.showTileControls,
             });

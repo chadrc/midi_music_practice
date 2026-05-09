@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import {Button, InputNumber, InputText, Popover, Select, Slider, ToggleButton} from "primevue";
+import {Button, InputNumber, InputText, Popover, Select, ToggleButton} from "primevue";
 import {ref, computed} from "vue";
 import {storeToRefs} from "pinia";
 import {useSettingsStore} from "../store/settings";
-import {NoteRangeType} from "../routine/types";
 
 const settingsStore = useSettingsStore();
 const {referenceView} = storeToRefs(settingsStore);
@@ -13,24 +12,8 @@ function togglePopover(event: Event) {
     popoverRef.value?.toggle(event);
 }
 
-function makeNoteRangeOptions() {
-    return [
-        {name: "Notes", value: NoteRangeType.Notes},
-        {name: "Frets", value: NoteRangeType.Frets},
-        {name: "Octaves", value: NoteRangeType.Octaves},
-    ];
-}
-
 function onPatternRows(v: number | null) {
     settingsStore.referenceSetPatternRows(v);
-}
-
-function onPatternCols(v: number | null) {
-    settingsStore.referenceSetPatternCols(v);
-}
-
-function onNoteRangeType(t: NoteRangeType) {
-    settingsStore.referenceSetNoteRangeType(t);
 }
 
 const presetNameInput = ref("");
@@ -60,12 +43,6 @@ function deleteSelectedPreset() {
         selectedPresetId.value = null;
     }
 }
-
-function onRangeSlider(range: number | number[]) {
-    if (Array.isArray(range) && range.length >= 2) {
-        settingsStore.referenceSetNoteRangeSlider([range[0]!, range[1]!]);
-    }
-}
 </script>
 
 <template>
@@ -79,7 +56,7 @@ function onRangeSlider(range: number | number[]) {
     />
     <Button
       type="button"
-      label="Layout & range"
+      label="Panel layout"
       icon="pi pi-th-large"
       size="small"
       severity="secondary"
@@ -91,7 +68,7 @@ function onRangeSlider(range: number | number[]) {
     >
       <div class="popover-panel">
         <div class="popover-field">
-          <span class="field-label">Panel grid</span>
+          <span class="field-label">Panel rows</span>
           <div class="pattern-stack">
             <div class="pattern-part">
               <span class="sublabel">Rows</span>
@@ -104,47 +81,10 @@ function onRangeSlider(range: number | number[]) {
                 @update:model-value="onPatternRows"
               />
             </div>
-            <div class="pattern-part">
-              <span class="sublabel">Columns</span>
-              <InputNumber
-                :model-value="referenceView.patternCols"
-                :min="1"
-                :max="6"
-                show-buttons
-                button-layout="horizontal"
-                @update:model-value="onPatternCols"
-              />
-            </div>
           </div>
-        </div>
-        <div class="popover-field">
-          <label
-            class="field-label"
-            for="reference-range-type"
-          >Range type</label>
-          <Select
-            id="reference-range-type"
-            :model-value="referenceView.noteRange.type"
-            :options="makeNoteRangeOptions()"
-            option-value="value"
-            option-label="name"
-            class="range-type-select"
-            @update:model-value="onNoteRangeType"
-          />
-        </div>
-        <div class="popover-field">
-          <span class="field-label">Note range</span>
-          <div class="range-slider-wrap">
-            <span class="range-bound">{{ settingsStore.referenceNoteRangeSliderValues[0] }}</span>
-            <Slider
-              :model-value="settingsStore.referenceNoteRangeSliderValues"
-              :max="settingsStore.referenceNoteRangeMax"
-              range
-              class="range-slider"
-              @value-change="onRangeSlider"
-            />
-            <span class="range-bound">{{ settingsStore.referenceNoteRangeSliderValues[1] }}</span>
-          </div>
+          <p class="pattern-hint">
+            With tile controls visible, set columns and the note range (type + bounds) per row above each row.
+          </p>
         </div>
       </div>
     </Popover>
@@ -244,27 +184,11 @@ function onRangeSlider(range: number | number[]) {
     gap: 0.25rem;
 }
 
-.range-type-select {
-    width: 100%;
-}
-
-.range-slider-wrap {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-.range-bound {
-    font-variant-numeric: tabular-nums;
-    min-width: 1.5rem;
-    text-align: center;
-    font-size: 0.85rem;
-}
-
-.range-slider {
-    flex: 1;
-    min-width: 0;
+.pattern-hint {
+    margin: 0;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    opacity: 0.72;
 }
 
 .preset-bar {

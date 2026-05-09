@@ -37,12 +37,18 @@ test("mergeStoredReferenceView restores full snapshot", () => {
     };
     expect(mergeStoredReferenceView(stored)).to.deep.equal({
         patternRows: 2,
-        patternCols: 1,
+        patternColsPerRow: [1, 1],
         showTileControls: false,
-        noteRange: {
-            type: NoteRangeType.Notes,
-            range: {start: 21, end: 33},
-        },
+        noteRangesPerRow: [
+            {
+                type: NoteRangeType.Notes,
+                range: {start: 21, end: 33},
+            },
+            {
+                type: NoteRangeType.Notes,
+                range: {start: 21, end: 33},
+            },
+        ],
         gridSelections: [
             {
                 kind: "chord",
@@ -78,9 +84,9 @@ test("mergeStoredReferenceView restores showTileControls when true", () => {
         }),
     ).to.deep.equal({
         patternRows: 1,
-        patternCols: 1,
+        patternColsPerRow: [1],
         showTileControls: true,
-        noteRange: {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+        noteRangesPerRow: [{type: NoteRangeType.Notes, range: {start: 60, end: 72}}],
         gridSelections: [
             {
                 kind: "scale",
@@ -89,5 +95,50 @@ test("mergeStoredReferenceView restores showTileControls when true", () => {
                 baseNoteMapKey: BaseNotes.C.mapKey,
             },
         ],
+    });
+});
+
+test("mergeStoredReferenceView uses patternColsPerRow when present", () => {
+    const oneSlot = defaultReferenceViewSettings().gridSelections[0]!;
+    expect(
+        mergeStoredReferenceView({
+            patternRows: 2,
+            patternColsPerRow: [3, 2],
+            noteRange: {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+            gridSelections: [],
+        }),
+    ).to.deep.equal({
+        patternRows: 2,
+        patternColsPerRow: [3, 2],
+        showTileControls: false,
+        noteRangesPerRow: [
+            {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+            {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+        ],
+        gridSelections: Array.from({length: 5}, () => ({...oneSlot})),
+    });
+});
+
+test("mergeStoredReferenceView keeps distinct noteRangesPerRow when present", () => {
+    const oneSlot = defaultReferenceViewSettings().gridSelections[0]!;
+    expect(
+        mergeStoredReferenceView({
+            patternRows: 2,
+            patternColsPerRow: [1, 1],
+            noteRangesPerRow: [
+                {type: NoteRangeType.Notes, range: {start: 10, end: 20}},
+                {type: NoteRangeType.Frets, range: {start: 0, end: 5}},
+            ],
+            gridSelections: [],
+        }),
+    ).to.deep.equal({
+        patternRows: 2,
+        patternColsPerRow: [1, 1],
+        showTileControls: false,
+        noteRangesPerRow: [
+            {type: NoteRangeType.Notes, range: {start: 10, end: 20}},
+            {type: NoteRangeType.Frets, range: {start: 0, end: 5}},
+        ],
+        gridSelections: Array.from({length: 2}, () => ({...oneSlot})),
     });
 });

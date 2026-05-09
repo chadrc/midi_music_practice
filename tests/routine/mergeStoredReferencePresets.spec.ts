@@ -38,9 +38,9 @@ test("mergeStoredReferencePresets skips invalid entries and restores full preset
             id: "preset-1",
             name: "Triads",
             showTileControls: false,
-            noteRange: {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+            noteRangesPerRow: [{type: NoteRangeType.Notes, range: {start: 60, end: 72}}],
             patternRows: 1,
-            patternCols: 2,
+            patternColsPerRow: [2],
             gridSelections: [
                 {
                     kind: "chord",
@@ -61,16 +61,18 @@ test("mergeStoredReferencePresets skips invalid entries and restores full preset
 
 test("snapshotReferenceViewSettings returns merge-normalized copy", () => {
     const live = defaultReferenceViewSettings();
-    live.noteRange.range.start = 55;
-    live.noteRange.range.end = 77;
+    live.noteRangesPerRow[0]!.range.start = 55;
+    live.noteRangesPerRow[0]!.range.end = 77;
     const snap = snapshotReferenceViewSettings(live);
     expect(snap).to.deep.equal({
-        noteRange: {
-            type: NoteRangeType.Notes,
-            range: {start: 55, end: 77},
-        },
+        noteRangesPerRow: [
+            {
+                type: NoteRangeType.Notes,
+                range: {start: 55, end: 77},
+            },
+        ],
         patternRows: 1,
-        patternCols: 2,
+        patternColsPerRow: [2],
         showTileControls: false,
         gridSelections: [
             {
