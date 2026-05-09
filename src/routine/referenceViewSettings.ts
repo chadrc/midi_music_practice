@@ -22,6 +22,8 @@ export interface ReferenceViewSettings {
     patternRows: number;
     patternCols: number;
     gridSelections: ReferenceGridSlot[];
+    /** Per-tile scale/chord/root selects and theory button row in Reference view. */
+    showTileControls: boolean;
 }
 
 export interface ReferenceViewPreset extends ReferenceViewSettings {
@@ -62,6 +64,7 @@ export function mergeStoredReferencePresets(raw: unknown): ReferenceViewPreset[]
             patternRows: o.patternRows,
             patternCols: o.patternCols,
             gridSelections: o.gridSelections,
+            showTileControls: o.showTileControls,
         });
         out.push({
             id,
@@ -113,6 +116,7 @@ export function defaultReferenceViewSettings(): ReferenceViewSettings {
         patternRows,
         patternCols,
         gridSelections: Array.from({length: patternRows * patternCols}, () => defaultReferenceGridSlot()),
+        showTileControls: false,
     };
 }
 
@@ -137,5 +141,7 @@ export function mergeStoredReferenceView(raw: unknown): ReferenceViewSettings {
         gridSelections.push(defaultReferenceGridSlot());
     }
     gridSelections = gridSelections.slice(0, target);
-    return {noteRange, patternRows, patternCols, gridSelections};
+    const showTileControls =
+        typeof o.showTileControls === "boolean" ? o.showTileControls : d.showTileControls;
+    return {noteRange, patternRows, patternCols, gridSelections, showTileControls};
 }

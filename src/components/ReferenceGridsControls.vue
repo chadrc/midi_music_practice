@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Button, InputNumber, InputText, Popover, Select, Slider} from "primevue";
+import {Button, InputNumber, InputText, Popover, Select, Slider, ToggleButton} from "primevue";
 import {ref, computed} from "vue";
 import {storeToRefs} from "pinia";
 import {useSettingsStore} from "../store/settings";
@@ -70,6 +70,13 @@ function onRangeSlider(range: number | number[]) {
 
 <template>
   <div class="reference-toolbar">
+    <ToggleButton
+      v-model="referenceView.showTileControls"
+      on-label="Hide tile controls"
+      off-label="Show tile controls"
+      size="small"
+      class="tile-controls-toggle"
+    />
     <Button
       type="button"
       label="Layout & range"
@@ -192,6 +199,10 @@ function onRangeSlider(range: number | number[]) {
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem 0.75rem;
+}
+
+.tile-controls-toggle {
+    flex-shrink: 0;
 }
 
 .popover-panel {

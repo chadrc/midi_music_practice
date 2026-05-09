@@ -300,6 +300,7 @@ export const useSettingsStore = defineStore('settings', {
                 patternRows: p.patternRows,
                 patternCols: p.patternCols,
                 gridSelections: p.gridSelections,
+                showTileControls: p.showTileControls,
             });
             this.$patch({referenceView: m});
         },

@@ -97,7 +97,10 @@ function hintsAt(index: number): number[] {
         :key="t.index"
         class="reference-tile"
       >
-        <div class="tile-controls">
+        <div
+          v-if="referenceView.showTileControls"
+          class="tile-controls"
+        >
           <SelectButton
             v-model="referenceView.gridSelections[t.index]!.kind"
             :options="kindOptions"

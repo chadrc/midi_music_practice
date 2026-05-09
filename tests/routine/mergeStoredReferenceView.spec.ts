@@ -38,6 +38,7 @@ test("mergeStoredReferenceView restores full snapshot", () => {
     expect(mergeStoredReferenceView(stored)).to.deep.equal({
         patternRows: 2,
         patternCols: 1,
+        showTileControls: false,
         noteRange: {
             type: NoteRangeType.Notes,
             range: {start: 21, end: 33},
@@ -54,6 +55,38 @@ test("mergeStoredReferenceView restores full snapshot", () => {
                 scaleType: MAJOR_SCALE_SET_NAME,
                 chordType: MAJOR_CHORDS_SET_NAME,
                 baseNoteMapKey: BaseNotes.G.mapKey,
+            },
+        ],
+    });
+});
+
+test("mergeStoredReferenceView restores showTileControls when true", () => {
+    expect(
+        mergeStoredReferenceView({
+            patternRows: 1,
+            patternCols: 1,
+            noteRange: {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+            gridSelections: [
+                {
+                    kind: "scale",
+                    scaleType: MAJOR_SCALE_SET_NAME,
+                    chordType: MAJOR_CHORDS_SET_NAME,
+                    baseNoteMapKey: BaseNotes.C.mapKey,
+                },
+            ],
+            showTileControls: true,
+        }),
+    ).to.deep.equal({
+        patternRows: 1,
+        patternCols: 1,
+        showTileControls: true,
+        noteRange: {type: NoteRangeType.Notes, range: {start: 60, end: 72}},
+        gridSelections: [
+            {
+                kind: "scale",
+                scaleType: MAJOR_SCALE_SET_NAME,
+                chordType: MAJOR_CHORDS_SET_NAME,
+                baseNoteMapKey: BaseNotes.C.mapKey,
             },
         ],
     });
