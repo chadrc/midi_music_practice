@@ -196,6 +196,11 @@ export const LOCRIAN_MODE_PATTERN = [1, 2, 4, 6, 7, 9, 11]
 export const CHROMATIC_DEGREES: ScaleDegreePattern = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 export const MAJOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 3, 5, 8, 10]
 export const MINOR_PENTATONIC_DEGREES: ScaleDegreePattern = [1, 4, 6, 8, 11]
+export const DORIAN_PENTATONIC_PATTERN = [1, 3, 6, 8, 11]
+export const PHRYGIAN_PENTATONIC_PATTERN = [1, 4, 6, 9, 11]
+export const LYDIAN_PENTATONIC_PATTERN = [3, 5, 8, 10, 12]
+export const MIXOLYDIAN_PENTATONIC_PATTERN = [1, 3, 6, 8, 10]
+export const LOCRIAN_PENTATONIC_PATTERN = [2, 4, 6, 9, 11]
 
 // When NoteScale held per-degree chord type labels, these paired with IONIAN / AEOLIAN for diatonic harmony.
 // export const MAJOR_SCALE_CHORDS = [MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MAJOR_CHORDS_SET_NAME, MINOR_CHORDS_SET_NAME, DIMINISHED_CHORDS_SET_NAME];
@@ -265,6 +270,21 @@ DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MAJOR_PENTATONIC_DEGREE
 
 export const MINOR_PENTATONIC_SCALE_SET_NAME = "MinorPentatonic";
 DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MINOR_PENTATONIC_DEGREES, MINOR_PENTATONIC_SCALE_SET_NAME));
+
+export const DORIAN_PENTATONIC_SCALE_SET_NAME = "DorianPentatonic";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, DORIAN_PENTATONIC_PATTERN, DORIAN_PENTATONIC_SCALE_SET_NAME));
+
+export const PHRYGIAN_PENTATONIC_SCALE_SET_NAME = "PhrygianPentatonic";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, PHRYGIAN_PENTATONIC_PATTERN, PHRYGIAN_PENTATONIC_SCALE_SET_NAME));
+
+export const LYDIAN_PENTATONIC_SCALE_SET_NAME = "LydianPentatonic";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, LYDIAN_PENTATONIC_PATTERN, LYDIAN_PENTATONIC_SCALE_SET_NAME));
+
+export const MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME = "MixolydianPentatonic";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, MIXOLYDIAN_PENTATONIC_PATTERN, MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME));
+
+export const LOCRIAN_PENTATONIC_SCALE_SET_NAME = "LocrianPentatonic";
+DIATONIC_KEY_ROOTS.forEach((note) => registerScale(note, LOCRIAN_PENTATONIC_PATTERN, LOCRIAN_PENTATONIC_SCALE_SET_NAME));
 
 export const SCALES = SCALES_MAP;
 

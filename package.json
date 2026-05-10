@@ -1,7 +1,7 @@
 {
   "name": "midi_music_practice",
   "productName": "midi_music_practice",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Practice your instrument with MIDI",
   "main": ".vite/build/main.js",
   "scripts": {

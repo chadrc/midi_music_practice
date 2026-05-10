@@ -1,14 +1,19 @@
 import {Flow} from "vexflow";
 import {
   CHROMATIC_SCALE_SET_NAME,
+  DORIAN_PENTATONIC_SCALE_SET_NAME,
   DORIAN_SCALE_SET_NAME,
+  LOCRIAN_PENTATONIC_SCALE_SET_NAME,
   LOCRIAN_SCALE_SET_NAME,
+  LYDIAN_PENTATONIC_SCALE_SET_NAME,
   LYDIAN_SCALE_SET_NAME,
   MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME,
+  MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME,
   MIXOLYDIAN_SCALE_SET_NAME,
   MINOR_PENTATONIC_SCALE_SET_NAME,
   MINOR_SCALE_SET_NAME,
+  PHRYGIAN_PENTATONIC_SCALE_SET_NAME,
   PHRYGIAN_SCALE_SET_NAME,
 } from "../notes/scales";
 import {scientificOctaveFromMidi} from "../notes";
@@ -239,14 +244,19 @@ export function scaleTypeToVexKey(tonicVex: string, scaleType: ScaleTypeId): str
     case MINOR_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(`${tonicVex}m`);
     case DORIAN_SCALE_SET_NAME:
+    case DORIAN_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(majorPcToVexKey((rootPc + 10) % 12));
     case PHRYGIAN_SCALE_SET_NAME:
+    case PHRYGIAN_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(majorPcToVexKey((rootPc + 8) % 12));
     case LYDIAN_SCALE_SET_NAME:
+    case LYDIAN_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(majorPcToVexKey((rootPc + 7) % 12));
     case MIXOLYDIAN_SCALE_SET_NAME:
+    case MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(majorPcToVexKey((rootPc + 5) % 12));
     case LOCRIAN_SCALE_SET_NAME:
+    case LOCRIAN_PENTATONIC_SCALE_SET_NAME:
       return normalizeVexKey(majorPcToVexKey((rootPc + 1) % 12));
     default:
       return "C";
