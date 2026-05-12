@@ -1,6 +1,7 @@
 <script setup lang="ts">
 
 import {ref} from "vue";
+import {useGlobalStore} from "../store/globals";
 import {useMidiStore} from "../store/midi";
 import {useRoutineStore} from "../store/routineEdit";
 import {useSettingsStore} from "../store/settings";
@@ -11,6 +12,7 @@ import {
 } from "../settings/appSettingsBundle";
 import {Button, Checkbox, DataTable, Column, Message} from "primevue";
 
+const globalStore = useGlobalStore();
 const midiStore = useMidiStore();
 const settingsStore = useSettingsStore();
 const routineStore = useRoutineStore();
@@ -170,6 +172,9 @@ function isAutoReceiving(id: string) {
       </template>
     </Column>
   </DataTable>
+  <footer class="settings-version">
+    Version {{ globalStore.appVersion || "…" }}
+  </footer>
 </template>
 
 <style scoped>
@@ -211,5 +216,14 @@ function isAutoReceiving(id: string) {
 
 .import-feedback {
   margin-top: 0.75rem;
+}
+
+.settings-version {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--p-content-border-color, rgba(0, 0, 0, 0.12));
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--p-text-muted-color, rgba(255, 255, 255, 0.5));
 }
 </style>

@@ -74,6 +74,23 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         selectedPartIndex.value = 0;
     }
 
+    function cloneRoutine() {
+        const src = currentEdit.value;
+        if (!src) {
+            return;
+        }
+        const copy = JSON.parse(JSON.stringify(src)) as RoutineSettings;
+        copy.id = window.crypto.randomUUID();
+        copy.appVersion = "[unset]";
+        copy.schemaVersion = ROUTINE_SCHEMA_VERSION;
+        const baseName = src.name.trim();
+        copy.name = baseName ? `${baseName} (copy)` : "Copy";
+        routines.value.push(copy);
+        settingsStore.practice.selectedRoutine = copy.id;
+        selectedPartIndex.value = 0;
+        saveRoutine();
+    }
+
     function addNewPart() {
         currentEdit.value!.parts.push(makeDefaultRoutinePartSettings());
     }
@@ -81,6 +98,23 @@ export const useRoutineStore = defineStore('routineEdit', () => {
     function addPartAndSelect() {
         addNewPart();
         selectedPartIndex.value = currentEdit.value!.parts.length - 1;
+    }
+
+    function clonePartAndSelect() {
+        const edit = currentEdit.value;
+        if (!edit) {
+            return;
+        }
+        const idx = selectedPartIndex.value;
+        const src = edit.parts[idx];
+        if (!src) {
+            return;
+        }
+        const copy = JSON.parse(JSON.stringify(src)) as RoutinePartSettings;
+        const baseName = (copy.name ?? "").trim();
+        copy.name = baseName ? `${baseName} (copy)` : "Copy";
+        edit.parts.splice(idx + 1, 0, copy);
+        selectedPartIndex.value = idx + 1;
     }
 
     function selectPart(index: number) {
@@ -198,11 +232,13 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         currentEdit,
         savedRoutines,
         createRoutine,
+        cloneRoutine,
         saveRoutine,
         deleteRoutine,
         applyImportedRoutines,
         removeStep,
         addPartAndSelect,
+        clonePartAndSelect,
         selectPart,
         movePart,
     }
