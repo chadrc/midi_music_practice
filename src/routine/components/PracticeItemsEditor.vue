@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, watchEffect} from "vue";
-import {MultiSelect, Select} from "primevue";
+import {MultiSelect, Select, InputNumber} from "primevue";
 import {
     CHORD_TYPE_LABEL,
     SCALE_TYPE_LABEL,
@@ -40,11 +40,19 @@ const scaleTypeOptions = SCALE_TYPE_OPTIONS.map((v) => ({
     value: v,
 }));
 
-const poolModeOptions = [
+const chordPoolModeOptions = [
     {label: "Up", value: PracticePoolMode.Up},
     {label: "Down", value: PracticePoolMode.Down},
     {label: "Random", value: PracticePoolMode.Random},
 ];
+
+const scalePoolModeOptions = [
+    ...chordPoolModeOptions,
+    {label: "Up-Down", value: PracticePoolMode.UpDown},
+];
+
+/** UI cap; each scale segment clamps at generation time to its own length − 1. */
+const UP_DOWN_OFFSET_MAX = 11;
 
 const chordFields = computed(() => practice.value as RoutineChordsPractice);
 const scaleFields = computed(() => practice.value as RoutineScalesPractice);
@@ -59,6 +67,14 @@ watchEffect(() => {
         const p = practice.value;
         if (!p.octaveRange) {
             p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+        }
+        if (p.mode === PracticePoolMode.UpDown) {
+            if (p.upDownOffsetUp == null) {
+                p.upDownOffsetUp = 0;
+            }
+            if (p.upDownOffsetDown == null) {
+                p.upDownOffsetDown = 0;
+            }
         }
     }
 });
@@ -78,7 +94,7 @@ watchEffect(() => {
       />
       <Select
         v-model="chordFields.mode"
-        :options="poolModeOptions"
+        :options="chordPoolModeOptions"
         option-label="label"
         option-value="value"
         class="practice-item-control"
@@ -114,11 +130,39 @@ watchEffect(() => {
       />
       <Select
         v-model="scaleFields.mode"
-        :options="poolModeOptions"
+        :options="scalePoolModeOptions"
         option-label="label"
         option-value="value"
         class="practice-item-control"
       />
+      <div
+        v-if="scaleFields.mode === PracticePoolMode.UpDown"
+        class="updown-offset-block"
+      >
+        <span class="octave-range-label">Up-Down: starting scale step (0 = first degree in that direction; clamped per scale at run time)</span>
+        <div class="updown-offset-row">
+          <label class="updown-offset-label">Up repeat</label>
+          <InputNumber
+            v-model="scaleFields.upDownOffsetUp"
+            :min="0"
+            :max="UP_DOWN_OFFSET_MAX"
+            show-buttons
+            button-layout="horizontal"
+            class="practice-item-control updown-offset-input"
+          />
+        </div>
+        <div class="updown-offset-row">
+          <label class="updown-offset-label">Down repeat</label>
+          <InputNumber
+            v-model="scaleFields.upDownOffsetDown"
+            :min="0"
+            :max="UP_DOWN_OFFSET_MAX"
+            show-buttons
+            button-layout="horizontal"
+            class="practice-item-control updown-offset-input"
+          />
+        </div>
+      </div>
       <MultiSelect
         v-model="scaleFields.scaleTypes"
         :options="scaleTypeOptions"
@@ -167,5 +211,28 @@ watchEffect(() => {
 .octave-range-label {
   font-size: 0.875rem;
   opacity: 0.9;
+}
+
+.updown-offset-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.updown-offset-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.updown-offset-label {
+  font-size: 0.875rem;
+  min-width: 7rem;
+}
+
+.updown-offset-input {
+  width: auto;
 }
 </style>

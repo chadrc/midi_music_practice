@@ -122,6 +122,8 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
                 scaleTypes: [],
                 mode: PracticePoolMode.Random,
                 octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
+                upDownOffsetUp: 0,
+                upDownOffsetDown: 0,
             };
     }
 }
@@ -444,7 +446,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
     const repeatN = Number.isFinite(raw) ? Math.max(0, Math.floor(raw)) : 0;
     const totalReps = repeatN + 1;
     if (settings.cloneRepeat) {
-        const rep = generatePrompts(settings, generator);
+        const rep = generatePrompts(settings, generator, 0);
         for (let i = 0; i < totalReps; i++) {
             repetitions.push({
                 prompts: clone(rep.prompts),
@@ -453,7 +455,7 @@ export const generateRoutineSet = (settings: BakedRoutinePartSettings): RoutineP
         }
     } else {
         for (let i = 0; i < totalReps; i++) {
-            const rep = generatePrompts(settings, generator);
+            const rep = generatePrompts(settings, generator, i);
             repetitions.push({
                 prompts: rep.prompts,
                 ...packRepeatFocus(rep),
@@ -519,13 +521,18 @@ function scaleRepeatFocusLabel(
     practice: RoutineScalesPractice,
     pool: ScaleTypeId[],
     randomScaleType: ScaleTypeId | undefined,
+    upDownLeg: "up" | "down" | null,
 ): string {
     const root = displayNameFromMapKey(fundKey);
     const typesLegend = pool.map((t) => SCALE_TYPE_LABEL[t]).join(", ");
     if (practice.mode === PracticePoolMode.Random && randomScaleType !== undefined) {
         return `${root} ${SCALE_TYPE_LABEL[randomScaleType]}`;
     }
-    return `${root} ${typesLegend}`;
+    let base = `${root} ${typesLegend}`;
+    if (practice.mode === PracticePoolMode.UpDown && upDownLeg !== null) {
+        base = `${base} (${upDownLeg})`;
+    }
+    return base;
 }
 
 export const generateNotesForRange = (settings: Pick<BakedRoutinePartSettings, "noteRange">) => {
@@ -563,6 +570,8 @@ export function pickPoolIndex(
     }
     switch (mode) {
         case PracticePoolMode.Up:
+            return promptIndex % poolLength;
+        case PracticePoolMode.UpDown:
             return promptIndex % poolLength;
         case PracticePoolMode.Down:
             return poolLength - 1 - (promptIndex % poolLength);
@@ -800,6 +809,7 @@ export function generateNotePrompts(
 export function generateChordPrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
+    repetitionIndex = 0,
 ): GeneratedRepetitionPrompts {
     const practiceUntyped = settings.practice;
     if (practiceUntyped.type !== PracticeType.Chords) {
@@ -900,7 +910,14 @@ export function generateChordPrompts(
 
     const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
     const multiTypePool = pool.length > 1;
-    const up = practice.mode === PracticePoolMode.Up;
+    let up: boolean;
+    if (practice.mode === PracticePoolMode.Down) {
+        up = false;
+    } else if (practice.mode === PracticePoolMode.UpDown) {
+        up = repetitionIndex % 2 === 0;
+    } else {
+        up = practice.mode === PracticePoolMode.Up;
+    }
     const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, up);
     const steps: {
         target: number;
@@ -947,9 +964,20 @@ export function generateChordPrompts(
     return {prompts, repeatFocusLabel};
 }
 
+export function rotateScaleSegmentOrdered(segment: number[], rawOffset: number): number[] {
+    const L = segment.length;
+    if (L === 0) {
+        return segment;
+    }
+    const o = Math.floor(rawOffset);
+    const offset = Math.max(0, Math.min(L - 1, o));
+    return [...segment.slice(offset), ...segment.slice(0, offset)];
+}
+
 export function generateScalePrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
+    repetitionIndex = 0,
 ): GeneratedRepetitionPrompts {
     const practiceUntyped = settings.practice;
     if (practiceUntyped.type !== PracticeType.Scales) {
@@ -992,7 +1020,7 @@ export function generateScalePrompts(
             return {prompts: []};
         }
 
-        const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, scaleType);
+        const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, scaleType, null);
 
         const scale = getRegisteredScale(scaleType, fundKey);
         const ensembleMidi: number[] = [];
@@ -1061,13 +1089,24 @@ export function generateScalePrompts(
         return {prompts, repeatFocusLabel};
     }
 
-    const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined);
-    const up = practice.mode === PracticePoolMode.Up;
+    const upLeg =
+        practice.mode === PracticePoolMode.UpDown ? repetitionIndex % 2 === 0 : practice.mode === PracticePoolMode.Up;
+    const upDownLeg: "up" | "down" | null =
+        practice.mode === PracticePoolMode.UpDown ? (upLeg ? "up" : "down") : null;
+    const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined, upDownLeg);
+    const up = upLeg;
+    const degreeOffset =
+        practice.mode === PracticePoolMode.UpDown
+            ? upLeg
+                ? (practice.upDownOffsetUp ?? 0)
+                : (practice.upDownOffsetDown ?? 0)
+            : 0;
     const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, settings, up);
     const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
     for (const seg of segments) {
+        const rotatedSeg = rotateScaleSegmentOrdered(seg, degreeOffset);
         const ensemblePitchClasses = pitchClassesFromMidis(seg);
-        const ensemble = seg.filter((n) => allowed.has(n));
+        const ensemble = rotatedSeg.filter((n) => allowed.has(n));
         if (ensemble.length === 0) {
             continue;
         }
@@ -1102,13 +1141,14 @@ export function generateScalePrompts(
 export function generatePrompts(
     settings: BakedRoutinePartSettings,
     generator: NumberGenerator,
+    repetitionIndex = 0,
 ): GeneratedRepetitionPrompts {
     switch (settings.practice.type) {
         case PracticeType.Notes:
             return generateNotePrompts(settings, generator);
         case PracticeType.Chords:
-            return generateChordPrompts(settings, generator);
+            return generateChordPrompts(settings, generator, repetitionIndex);
         case PracticeType.Scales:
-            return generateScalePrompts(settings, generator);
+            return generateScalePrompts(settings, generator, repetitionIndex);
     }
 }

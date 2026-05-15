@@ -77,6 +77,8 @@ export enum PracticePoolMode {
     Up = "Up",
     Down = "Down",
     Random = "Random",
+    /** Scales only: alternate “up then down” traversal each repeat (repetition 0 = up leg, 1 = down, …). */
+    UpDown = "UpDown",
 }
 
 /** Default scientific octave span for chord/scale roots (see {@link formatMidiNote} octaves). */
@@ -110,6 +112,16 @@ export interface RoutineScalesPractice {
     scaleTypes: ScaleTypeId[];
     /** Order / traversal of the scale-type pool; default Random. */
     mode: PracticePoolMode;
+    /**
+     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting scale degree (0 = root in traversal order)
+     * for “up” repeats. Clamped to each generated segment length minus one.
+     */
+    upDownOffsetUp?: number;
+    /**
+     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting scale degree for “down” repeats
+     * (index into the descending degree list for that segment). Clamped per segment.
+     */
+    upDownOffsetDown?: number;
     /**
      * Scientific octaves allowed for scale prompts; one octave is chosen at random per prompt
      * (uniform over inclusive start…end).

@@ -23,5 +23,7 @@ test("Scales default uses empty type pool and Random mode", () => {
         scaleTypes: [],
         mode: PracticePoolMode.Random,
         octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
+        upDownOffsetUp: 0,
+        upDownOffsetDown: 0,
     });
 });
