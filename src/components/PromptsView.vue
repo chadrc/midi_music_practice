@@ -11,6 +11,15 @@ import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
 
+/** Tooltips for session stats column headers */
+const STATS_TT_INCORRECT_NOTES =
+  "Wrong presses at eligible velocity (at or above your minimum success velocity) over total Midi targets planned for each step—the sum across prompts of notes per chord (or equivalent).";
+
+const STATS_TT_AVG_VELOCITY =
+  "Mean Midi note-on velocity (1–127) for presses that meet your minimum success velocity. Shows “—” if there were none.";
+
+const STATS_TT_BPM =
+  "Completed prompt cards per minute. Each step timing starts at the first eligible-velocity strike on that step and ends when the last prompt there is cleared; overall BPM uses your session’s first such strike through the last cleared prompt anywhere, so silence between steps is included.";
 /**
  * Key signature must follow the routine part that built these prompts. When “Not Matching” is on,
  * {@link useSettingsStore.currentSettings} still reflects the sidebar and may be a different practice type.
@@ -196,7 +205,7 @@ function promptCardClass(prompt: PromptData) {
     <section
       v-if="practiceStore.sessionNoteStats"
       class="session-stats"
-      aria-label="Practice note accuracy"
+      aria-label="Practice session statistics"
     >
       <table class="stats-table">
         <thead>
@@ -205,7 +214,52 @@ function promptCardClass(prompt: PromptData) {
               Step
             </th>
             <th scope="col">
-              Incorrect / notes in step
+              <span class="stats-th-inner">
+                <span>Incorrect / notes in step</span>
+                <button
+                  v-tooltip.top="STATS_TT_INCORRECT_NOTES"
+                  type="button"
+                  class="stats-header-info-btn"
+                  :aria-label="STATS_TT_INCORRECT_NOTES"
+                >
+                  <span
+                    class="pi pi-info-circle"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
+            </th>
+            <th scope="col">
+              <span class="stats-th-inner">
+                <span>Avg velocity</span>
+                <button
+                  v-tooltip.top="STATS_TT_AVG_VELOCITY"
+                  type="button"
+                  class="stats-header-info-btn"
+                  :aria-label="STATS_TT_AVG_VELOCITY"
+                >
+                  <span
+                    class="pi pi-info-circle"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
+            </th>
+            <th scope="col">
+              <span class="stats-th-inner">
+                <span>BPM</span>
+                <button
+                  v-tooltip.top="STATS_TT_BPM"
+                  type="button"
+                  class="stats-header-info-btn"
+                  :aria-label="STATS_TT_BPM"
+                >
+                  <span
+                    class="pi pi-info-circle"
+                    aria-hidden="true"
+                  />
+                </button>
+              </span>
             </th>
           </tr>
         </thead>
@@ -215,10 +269,16 @@ function promptCardClass(prompt: PromptData) {
             :key="ri"
           >
             <th scope="row">
-              {{ row.partName.trim() !== "" ? row.partName : `Step ${ri + 1}` }}
+              {{ row.partName.trim() !== '' ? row.partName : `Step ${ri + 1}` }}
             </th>
-            <td>
+            <td class="stats-table-numeric">
               {{ row.incorrect }} / {{ row.expected }}
+            </td>
+            <td class="stats-table-numeric">
+              {{ row.avgVelocity != null ? row.avgVelocity : "—" }}
+            </td>
+            <td class="stats-table-numeric">
+              {{ row.bpm != null ? row.bpm : "—" }}
             </td>
           </tr>
         </tbody>
@@ -227,15 +287,18 @@ function promptCardClass(prompt: PromptData) {
             <th scope="row">
               Overall
             </th>
-            <td>
+            <td class="stats-table-numeric">
               {{ practiceStore.sessionNoteStats.totalIncorrect }} / {{ practiceStore.sessionNoteStats.totalExpected }}
+            </td>
+            <td class="stats-table-numeric">
+              {{ practiceStore.sessionNoteStats.overallAvgVelocity != null ? practiceStore.sessionNoteStats.overallAvgVelocity : "—" }}
+            </td>
+            <td class="stats-table-numeric">
+              {{ practiceStore.sessionNoteStats.overallBpm != null ? practiceStore.sessionNoteStats.overallBpm : "—" }}
             </td>
           </tr>
         </tfoot>
       </table>
-      <p class="stats-caption">
-        Wrong note presses (eligible velocity), over total midi targets scheduled for each step (sum of prompts × notes per chord).
-      </p>
     </section>
     <Button @click="practiceStore.finalize">
       Finish
@@ -416,7 +479,7 @@ function promptCardClass(prompt: PromptData) {
 
 .session-stats {
   margin-bottom: 1.25rem;
-  max-width: min(36rem, 100%);
+  max-width: min(54rem, 100%);
 }
 
 .stats-table {
@@ -437,14 +500,53 @@ function promptCardClass(prompt: PromptData) {
   color: var(--p-zinc-400);
 }
 
+.stats-th-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.stats-header-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: var(--p-content-border-radius, 9999px);
+  background: transparent;
+  color: var(--p-primary-color);
+  opacity: 0.65;
+  cursor: help;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+
+.stats-header-info-btn:hover {
+  opacity: 1;
+  background: var(--p-content-hover-background, rgba(255, 255, 255, 0.06));
+}
+
+.stats-header-info-btn:focus-visible {
+  outline: 2px solid var(--p-primary-color);
+  outline-offset: 2px;
+  opacity: 1;
+}
+
+.stats-header-info-btn .pi {
+  font-size: 0.85rem;
+}
+
+.stats-table-numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .stats-table tfoot tr {
   font-weight: 600;
 }
 
-.stats-caption {
-  margin: 0.5rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.35;
-  color: var(--p-zinc-500);
-}
 </style>

@@ -26,6 +26,33 @@ export function totalExpectedMidiNotesForPart(part: RoutinePart): number {
     return n;
 }
 
+/** Mean velocity for Midi 1–127; `null` if no qualifying strikes. */
+export function averageVelocityFromTotals(sum: number, count: number): number | null {
+    if (count <= 0) {
+        return null;
+    }
+    return Math.round((sum / count) * 10) / 10;
+}
+
+/**
+ * Beats/min where each beat is one completed prompt card in the step.
+ * Time window starts at the first Midi note-on that meets velocity (same gate as strikes), ends at last prompt success timestamp.
+ */
+export function bpmFromPromptSuccesses(
+    promptSuccessCount: number,
+    firstStrikeMs: number | null,
+    lastSuccessMs: number | null,
+): number | null {
+    if (promptSuccessCount <= 0 || firstStrikeMs === null || lastSuccessMs === null) {
+        return null;
+    }
+    const elapsed = lastSuccessMs - firstStrikeMs;
+    if (elapsed <= 0) {
+        return null;
+    }
+    return Math.round(promptSuccessCount / (elapsed / MILISECONDS_IN_MINUTE));
+}
+
 function midiMatchesPromptTarget(
     playedMidi: number,
     targetMidi: number,
@@ -75,6 +102,19 @@ export const usePracticeStore = defineStore('practice', () => {
     const attempts = ref<PracticeAttempt[]>([]);
     /** Count of velocity-eligible note-ons that failed the current prompt before moving on (per routine part/step). */
     const incorrectAttemptsByPart = ref<number[]>([]);
+    /** Sum of Midi velocities (data2) per step for note-ons at or above {@link SettingsStore}'s success threshold during this session. */
+    const velocityStrikeSumByPart = ref<number[]>([]);
+    const velocityStrikeCountByPart = ref<number[]>([]);
+
+    /** First qualifying note-on timestamp per step (`null` until first hit meets min velocity). */
+    const stepFirstStrikeMs = ref<Array<number | null>>([]);
+    /** Last prompt-completion time per step. */
+    const stepLastPromptSuccessMs = ref<Array<number | null>>([]);
+    /** Prompt cards cleared per step (same as increments to {@link successCount} while that step was active). */
+    const stepPromptSuccessCountByPart = ref<number[]>([]);
+    /** Session-wide first qualifying strike / last prompt hit (overall BPM window). */
+    const sessionFirstQualifyingStrikeMs = ref<number | null>(null);
+    const sessionLastPromptSuccessMs = ref<number | null>(null);
 
     const freePlayLastAcceptedPc = ref<number | null>(null);
     const freePlayConsecutiveSamePitch = ref(0);
@@ -154,15 +194,36 @@ export const usePracticeStore = defineStore('practice', () => {
         const steps = r.parts.map((part, idx) => {
             const expected = totalExpectedMidiNotesForPart(part);
             const incorrect = incorrectAttemptsByPart.value[idx] ?? 0;
+            const vSum = velocityStrikeSumByPart.value[idx] ?? 0;
+            const vCt = velocityStrikeCountByPart.value[idx] ?? 0;
+            const promptDone = stepPromptSuccessCountByPart.value[idx] ?? 0;
+            const firstStrike = stepFirstStrikeMs.value[idx] ?? null;
+            const lastSuccess = stepLastPromptSuccessMs.value[idx] ?? null;
             return {
                 partName: part.name,
                 incorrect,
                 expected,
+                avgVelocity: averageVelocityFromTotals(vSum, vCt),
+                bpm: bpmFromPromptSuccesses(promptDone, firstStrike, lastSuccess),
             };
         });
         const totalExpected = steps.reduce((s, x) => s + x.expected, 0);
         const totalIncorrect = steps.reduce((s, x) => s + x.incorrect, 0);
-        return {steps, totalExpected, totalIncorrect};
+        const totalVelSum = velocityStrikeSumByPart.value.reduce((a, b) => a + b, 0);
+        const totalVelCount = velocityStrikeCountByPart.value.reduce((a, b) => a + b, 0);
+        const overallAvgVelocity = averageVelocityFromTotals(totalVelSum, totalVelCount);
+        const overallBpm = bpmFromPromptSuccesses(
+            successCount.value,
+            sessionFirstQualifyingStrikeMs.value,
+            sessionLastPromptSuccessMs.value,
+        );
+        return {
+            steps,
+            totalExpected,
+            totalIncorrect,
+            overallAvgVelocity,
+            overallBpm,
+        };
     });
 
     const playRateDisplay = computed(() => {
@@ -301,11 +362,25 @@ export const usePracticeStore = defineStore('practice', () => {
 
         if (!exists(routine.value) || routine.value.parts.length === 0) {
             incorrectAttemptsByPart.value = [];
+            velocityStrikeSumByPart.value = [];
+            velocityStrikeCountByPart.value = [];
+            stepFirstStrikeMs.value = [];
+            stepLastPromptSuccessMs.value = [];
+            stepPromptSuccessCountByPart.value = [];
+            sessionFirstQualifyingStrikeMs.value = null;
+            sessionLastPromptSuccessMs.value = null;
             complete.value = true;
             return;
         }
 
         incorrectAttemptsByPart.value = routine.value.parts.map(() => 0);
+        velocityStrikeSumByPart.value = routine.value.parts.map(() => 0);
+        velocityStrikeCountByPart.value = routine.value.parts.map(() => 0);
+        stepFirstStrikeMs.value = routine.value.parts.map(() => null);
+        stepLastPromptSuccessMs.value = routine.value.parts.map(() => null);
+        stepPromptSuccessCountByPart.value = routine.value.parts.map(() => 0);
+        sessionFirstQualifyingStrikeMs.value = null;
+        sessionLastPromptSuccessMs.value = null;
 
         setupStep();
 
@@ -346,6 +421,22 @@ export const usePracticeStore = defineStore('practice', () => {
                     const requireOctave = settingsStore.currentSettings.requireOctave;
                     const minVel = settingsStore.currentSettings.minSuccessVelocity;
 
+                    function recordStrikeVelocityForCurrentPart(velocity: number, strikeTime: number): void {
+                        const i = currentPart.value;
+                        const sums = velocityStrikeSumByPart.value;
+                        const counts = velocityStrikeCountByPart.value;
+                        if (i >= 0 && i < sums.length && i < counts.length) {
+                            sums[i] += velocity;
+                            counts[i] += 1;
+                            if (stepFirstStrikeMs.value[i] === null) {
+                                stepFirstStrikeMs.value[i] = strikeTime;
+                            }
+                            if (sessionFirstQualifyingStrikeMs.value === null) {
+                                sessionFirstQualifyingStrikeMs.value = strikeTime;
+                            }
+                        }
+                    }
+
                     function recordIncorrectAttempt(): void {
                         const i = currentPart.value;
                         const row = incorrectAttemptsByPart.value;
@@ -357,6 +448,8 @@ export const usePracticeStore = defineStore('practice', () => {
                     if (data.data2 < minVel) {
                         return;
                     }
+
+                    recordStrikeVelocityForCurrentPart(data.data2, now);
 
                     let success: boolean;
                     if (isFreePlaySetPrompt(activePrompt.prompt)) {
@@ -416,6 +509,15 @@ export const usePracticeStore = defineStore('practice', () => {
                             activePrompt.freePlayResolvedMidi = data.data1;
                         }
                         successCount.value += 1;
+
+                        const partIdx = currentPart.value;
+                        const ns = stepPromptSuccessCountByPart.value;
+                        if (partIdx >= 0 && partIdx < ns.length) {
+                            ns[partIdx] += 1;
+                            stepLastPromptSuccessMs.value[partIdx] = now;
+                        }
+                        sessionLastPromptSuccessMs.value = now;
+
                         activePrompt.success = true;
                         activePrompt.successTime = now;
                         activePrompt.current = false;
@@ -473,6 +575,13 @@ export const usePracticeStore = defineStore('practice', () => {
         attempts.value = [];
         successes.value = [];
         incorrectAttemptsByPart.value = [];
+        velocityStrikeSumByPart.value = [];
+        velocityStrikeCountByPart.value = [];
+        stepFirstStrikeMs.value = [];
+        stepLastPromptSuccessMs.value = [];
+        stepPromptSuccessCountByPart.value = [];
+        sessionFirstQualifyingStrikeMs.value = null;
+        sessionLastPromptSuccessMs.value = null;
         activePrompts.value = [];
         routine.value = null;
         complete.value = false;
