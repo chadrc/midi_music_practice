@@ -7,6 +7,7 @@ import {inferVexKeySignature} from "../notation/staffKeySpelling";
 import {formatDisplayNote} from "../routine";
 import {isFreePlaySetPrompt, PracticeType} from "../routine/types";
 import StaffAllPromptsRow from "./StaffAllPromptsRow.vue";
+import PracticeMetronomeBar from "./PracticeMetronomeBar.vue";
 
 const practiceStore = usePracticeStore();
 const settingsStore = useSettingsStore();
@@ -75,116 +76,124 @@ function promptCardClass(prompt: PromptData) {
 </script>
 
 <template>
-  <Stepper
-    v-if="practiceStore.routine != null && (practiceStore.routine.parts?.length ?? 0) > 0"
-    :value="practiceStore.currentPart + 1"
-  >
-    <StepList>
-      <Step
-        v-for="(item, index) in practiceStore.routine.parts"
-        :key="index"
-        :value="index + 1"
-      >
-        {{ item.name }}
-      </Step>
-      <Step :value="practiceStore.routine.parts.length + 1" />
-    </StepList>
-  </Stepper>
-  <div
-    v-if="practiceStore.activePrompts.length > 0"
-    class="prompt-area"
-  >
-    <div
-      class="repetition-display"
+  <div class="prompts-view-root">
+    <Stepper
+      v-if="practiceStore.routine != null && (practiceStore.routine.parts?.length ?? 0) > 0"
+      class="prompts-stepper"
+      :value="practiceStore.currentPart + 1"
     >
+      <StepList>
+        <Step
+          v-for="(item, index) in practiceStore.routine.parts"
+          :key="index"
+          :value="index + 1"
+        >
+          {{ item.name }}
+        </Step>
+        <Step :value="practiceStore.routine.parts.length + 1" />
+      </StepList>
+    </Stepper>
+    <div
+      v-if="practiceStore.activePrompts.length > 0"
+      class="prompt-area"
+    >
+    <div class="prompt-area-main">
       <div
-        v-if="practiceStore.currentRepetitionFocusLabel"
-        class="repeat-focus-label"
-      >
-        {{ practiceStore.currentRepetitionFocusLabel }}
-      </div>
-      <div class="repetition-count">
-        {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
-      </div>
-    </div>
-    <div
-      v-if="staffAllMode"
-      class="prompt-staff-all"
-    >
-      <StaffAllPromptsRow
-        :prompts="practiceStore.activePrompts"
-        :free-play="freePlayInSet"
-        :require-octave="settingsStore.currentSettings.requireOctave"
-        :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
-        :vex-key="
-          inferVexKeySignature(
-            practiceForStaffKey,
-            activeStaffPrompt?.prompt.notes ?? [],
-            activeStaffPrompt?.prompt.staffFundamentalMapKey,
-          )
-        "
-      />
-    </div>
-    <div
-      v-if="!staffAllMode"
-      class="prompt-cards"
-      :class="{
-        'prompt-cards--over-eight': practiceStore.activePrompts.length > 8,
-      }"
-    >
-      <div
-        v-for="(prompt, pi) in practiceStore.activePrompts"
-        :key="`${pi}-${prompt.prompt.index}`"
-        :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+        class="repetition-display"
       >
         <div
-          :class="promptCardClass(prompt)"
-          :style="{backgroundColor: formatPromptColor(prompt)}"
+          v-if="practiceStore.currentRepetitionFocusLabel"
+          class="repeat-focus-label"
         >
-          <template v-if="isFreePlaySetPrompt(prompt.prompt)">
-            <div
-              v-if="prompt.success && prompt.freePlayResolvedMidi != null"
-              class="prompt-text"
-            >
-              <span>{{ freePlayPlayedLabel(prompt) }}</span>
-            </div>
-            <span
-              v-else
-              class="prompt-blank"
-              aria-hidden="true"
-            >&nbsp;</span>
-          </template>
-          <template v-else>
-            <template
-              v-for="(disp, di) in prompt.prompt.displays"
-              :key="di"
-            >
+          {{ practiceStore.currentRepetitionFocusLabel }}
+        </div>
+        <div class="repetition-count">
+          {{ practiceStore.currentRepetition + 1 }} / {{ practiceStore.targetRepetitions }}
+        </div>
+      </div>
+      <div
+        v-if="staffAllMode"
+        class="prompt-staff-all"
+      >
+        <StaffAllPromptsRow
+          :prompts="practiceStore.activePrompts"
+          :free-play="freePlayInSet"
+          :require-octave="settingsStore.currentSettings.requireOctave"
+          :staff-accidentals="settingsStore.practiceUi.staffAccidentals"
+          :vex-key="
+            inferVexKeySignature(
+              practiceForStaffKey,
+              activeStaffPrompt?.prompt.notes ?? [],
+              activeStaffPrompt?.prompt.staffFundamentalMapKey,
+            )
+          "
+        />
+      </div>
+      <div
+        v-if="!staffAllMode"
+        class="prompt-cards"
+        :class="{
+          'prompt-cards--over-eight': practiceStore.activePrompts.length > 8,
+        }"
+      >
+        <div
+          v-for="(prompt, pi) in practiceStore.activePrompts"
+          :key="`${pi}-${prompt.prompt.index}`"
+          :class="`prompt-column ${prompt.current ? 'current' : ''}`"
+        >
+          <div
+            :class="promptCardClass(prompt)"
+            :style="{backgroundColor: formatPromptColor(prompt)}"
+          >
+            <template v-if="isFreePlaySetPrompt(prompt.prompt)">
               <div
-                v-if="disp.kind === 'note'"
+                v-if="prompt.success && prompt.freePlayResolvedMidi != null"
                 class="prompt-text"
               >
-                <span>{{ disp.note }}</span>
+                <span>{{ freePlayPlayedLabel(prompt) }}</span>
               </div>
-              <div
+              <span
                 v-else
-                class="prompt-block"
-              >
-                <div class="prompt-title">
-                  {{ disp.title }}
-                </div>
-                <div class="prompt-cells">
-                  <span
-                    v-for="(cell, ci) in disp.cells"
-                    :key="ci"
-                    class="prompt-cell"
-                  >{{ cell }}</span>
-                </div>
-              </div>
+                class="prompt-blank"
+                aria-hidden="true"
+              >&nbsp;</span>
             </template>
-          </template>
+            <template v-else>
+              <template
+                v-for="(disp, di) in prompt.prompt.displays"
+                :key="di"
+              >
+                <div
+                  v-if="disp.kind === 'note'"
+                  class="prompt-text"
+                >
+                  <span>{{ disp.note }}</span>
+                </div>
+                <div
+                  v-else
+                  class="prompt-block"
+                >
+                  <div class="prompt-title">
+                    {{ disp.title }}
+                  </div>
+                  <div class="prompt-cells">
+                    <span
+                      v-for="(cell, ci) in disp.cells"
+                      :key="ci"
+                      class="prompt-cell"
+                    >{{ cell }}</span>
+                  </div>
+                </div>
+              </template>
+            </template>
+          </div>
         </div>
       </div>
     </div>
+    <PracticeMetronomeBar
+      v-if="practiceStore.practicing"
+      :bpm="settingsStore.currentSettings.targetBPM"
+    />
   </div>
   <div
     v-else-if="practiceStore.activePrompts.length === 0 && practiceStore.practicing"
@@ -306,15 +315,45 @@ function promptCardClass(prompt: PromptData) {
   </div>
   <div
     v-else
-    class="prompt-area"
+    class="prompt-area prompt-area--idle"
   >
     <h1>Press start to practice</h1>
+  </div>
   </div>
 </template>
 
 <style scoped>
+.prompts-view-root {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.prompts-stepper {
+  flex-shrink: 0;
+  width: 100%;
+}
+
 .prompt-area {
-  height: 100%;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 0;
+}
+
+.prompt-area--idle {
+  justify-content: center;
+}
+
+.prompt-area-main {
+  flex: 1;
+  min-height: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -457,7 +496,9 @@ function promptCardClass(prompt: PromptData) {
 
 .advance-step {
   display: flex;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
   flex-direction: column;
   justify-content: center;
   align-items: center;

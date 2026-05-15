@@ -168,6 +168,9 @@ function makeOverflowClass(overflow: boolean) {
   margin: 0 1rem 0 1rem;
   overflow: hidden;
   scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .overflow {
