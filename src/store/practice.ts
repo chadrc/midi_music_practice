@@ -5,7 +5,7 @@ import {useSettingsStore} from "./settings";
 import {generateRoutine, generateRoutineSet} from "../routine";
 import {clone, exists} from "../utilities";
 import {filter, Subscription} from "rxjs";
-import {ParentType, Prompt, Routine, isFreePlaySetPrompt} from "../routine/types";
+import {ParentType, Prompt, Routine, type RoutinePart, isFreePlaySetPrompt} from "../routine/types";
 import {useRoutineStore} from "./routineEdit";
 import {
     midiMatchesPromptSet,
@@ -14,6 +14,17 @@ import {
 } from "../practice/freePlaySetMatch";
 
 const MILISECONDS_IN_MINUTE = 60000;
+
+/** Sum of Midi targets per repetition (each prompt contributes its note count). Used for practice stats denominator. */
+export function totalExpectedMidiNotesForPart(part: RoutinePart): number {
+    let n = 0;
+    for (const rep of part.repetitions) {
+        for (const prompt of rep.prompts) {
+            n += prompt.notes.length;
+        }
+    }
+    return n;
+}
 
 function midiMatchesPromptTarget(
     playedMidi: number,
@@ -62,6 +73,8 @@ export const usePracticeStore = defineStore('practice', () => {
 
     const successes = ref<PromptData[]>([]);
     const attempts = ref<PracticeAttempt[]>([]);
+    /** Count of velocity-eligible note-ons that failed the current prompt before moving on (per routine part/step). */
+    const incorrectAttemptsByPart = ref<number[]>([]);
 
     const freePlayLastAcceptedPc = ref<number | null>(null);
     const freePlayConsecutiveSamePitch = ref(0);
@@ -132,6 +145,25 @@ export const usePracticeStore = defineStore('practice', () => {
     });
 
     const playRate = computed(() => notesPerMinute.value / settingsStore.userRoutine.targetBPM);
+
+    const sessionNoteStats = computed(() => {
+        const r = routine.value;
+        if (!exists(r)) {
+            return null;
+        }
+        const steps = r.parts.map((part, idx) => {
+            const expected = totalExpectedMidiNotesForPart(part);
+            const incorrect = incorrectAttemptsByPart.value[idx] ?? 0;
+            return {
+                partName: part.name,
+                incorrect,
+                expected,
+            };
+        });
+        const totalExpected = steps.reduce((s, x) => s + x.expected, 0);
+        const totalIncorrect = steps.reduce((s, x) => s + x.incorrect, 0);
+        return {steps, totalExpected, totalIncorrect};
+    });
 
     const playRateDisplay = computed(() => {
         const p = playRate.value;
@@ -268,9 +300,12 @@ export const usePracticeStore = defineStore('practice', () => {
         generatePrompts();
 
         if (!exists(routine.value) || routine.value.parts.length === 0) {
+            incorrectAttemptsByPart.value = [];
             complete.value = true;
             return;
         }
+
+        incorrectAttemptsByPart.value = routine.value.parts.map(() => 0);
 
         setupStep();
 
@@ -311,6 +346,14 @@ export const usePracticeStore = defineStore('practice', () => {
                     const requireOctave = settingsStore.currentSettings.requireOctave;
                     const minVel = settingsStore.currentSettings.minSuccessVelocity;
 
+                    function recordIncorrectAttempt(): void {
+                        const i = currentPart.value;
+                        const row = incorrectAttemptsByPart.value;
+                        if (i >= 0 && i < row.length) {
+                            row[i]++;
+                        }
+                    }
+
                     if (data.data2 < minVel) {
                         return;
                     }
@@ -319,6 +362,7 @@ export const usePracticeStore = defineStore('practice', () => {
                     if (isFreePlaySetPrompt(activePrompt.prompt)) {
                         const p = activePrompt.prompt;
                         if (!midiMatchesPromptSet(data.data1, p, requireOctave)) {
+                            recordIncorrectAttempt();
                             return;
                         }
                         const playedPc = normPitchClass(data.data1);
@@ -331,6 +375,7 @@ export const usePracticeStore = defineStore('practice', () => {
                                 baked.maxConsecutiveSamePitchSuccess,
                             )
                         ) {
+                            recordIncorrectAttempt();
                             return;
                         }
                         if (
@@ -360,6 +405,10 @@ export const usePracticeStore = defineStore('practice', () => {
                                 success = false;
                             }
                         }
+                    }
+
+                    if (!success && !isFreePlaySetPrompt(activePrompt.prompt)) {
+                        recordIncorrectAttempt();
                     }
 
                     if (success) {
@@ -423,6 +472,7 @@ export const usePracticeStore = defineStore('practice', () => {
         midiSubscription.value = null;
         attempts.value = [];
         successes.value = [];
+        incorrectAttemptsByPart.value = [];
         activePrompts.value = [];
         routine.value = null;
         complete.value = false;
@@ -450,6 +500,7 @@ export const usePracticeStore = defineStore('practice', () => {
         practicing,
         complete,
         playRateDisplay,
+        sessionNoteStats,
         start,
         stop,
         advanceStep: skipToNextStep,

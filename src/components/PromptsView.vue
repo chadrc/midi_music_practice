@@ -188,9 +188,55 @@ function promptCardClass(prompt: PromptData) {
   </div>
   <div
     v-else-if="!practiceStore.practicing && practiceStore.complete"
-    class="advance-step"
+    class="advance-step advance-step--complete"
   >
-    <span>Complete</span>
+    <span class="complete-title">
+      Complete
+    </span>
+    <section
+      v-if="practiceStore.sessionNoteStats"
+      class="session-stats"
+      aria-label="Practice note accuracy"
+    >
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th scope="col">
+              Step
+            </th>
+            <th scope="col">
+              Incorrect / notes in step
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="(row, ri) in practiceStore.sessionNoteStats.steps"
+            :key="ri"
+          >
+            <th scope="row">
+              {{ row.partName.trim() !== "" ? row.partName : `Step ${ri + 1}` }}
+            </th>
+            <td>
+              {{ row.incorrect }} / {{ row.expected }}
+            </td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row">
+              Overall
+            </th>
+            <td>
+              {{ practiceStore.sessionNoteStats.totalIncorrect }} / {{ practiceStore.sessionNoteStats.totalExpected }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+      <p class="stats-caption">
+        Wrong note presses (eligible velocity), over total midi targets scheduled for each step (sum of prompts × notes per chord).
+      </p>
+    </section>
     <Button @click="practiceStore.finalize">
       Finish
     </Button>
@@ -356,5 +402,49 @@ function promptCardClass(prompt: PromptData) {
 
 .advance-step > span {
   margin-bottom: 1rem;
+}
+
+.advance-step--complete {
+  gap: 0.25rem;
+}
+
+.complete-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem !important;
+}
+
+.session-stats {
+  margin-bottom: 1.25rem;
+  max-width: min(36rem, 100%);
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 0.35rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--p-content-border-color, rgba(255, 255, 255, 0.08));
+}
+
+.stats-table thead th {
+  font-weight: 600;
+  color: var(--p-zinc-400);
+}
+
+.stats-table tfoot tr {
+  font-weight: 600;
+}
+
+.stats-caption {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: var(--p-zinc-500);
 }
 </style>
