@@ -98,13 +98,13 @@ export interface RoutineChordsPractice {
     /** Order / traversal of the chord-type pool; default Random. */
     mode: PracticePoolMode;
     /**
-     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting index into each chord’s traversal
-     * (low→high MIDI per voicing) for “up” repeats. Clamped to each segment length minus one.
+     * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
+     * starting index into each chord voicing (low→high MIDI). Clamped to each segment length minus one.
      */
     upDownOffsetUp?: number;
     /**
-     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting index for “down” repeats
-     * (into the descending traversal for that voicing). Clamped per segment.
+     * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
+     * starting index into that descending order. Clamped per segment.
      */
     upDownOffsetDown?: number;
     /**
@@ -123,13 +123,13 @@ export interface RoutineScalesPractice {
     /** Order / traversal of the scale-type pool; default Random. */
     mode: PracticePoolMode;
     /**
-     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting scale degree (0 = root in traversal order)
-     * for “up” repeats. Clamped to each generated segment length minus one.
+     * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
+     * starting scale degree index (0 = first degree in that direction). Clamped per segment length minus one.
      */
     upDownOffsetUp?: number;
     /**
-     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting scale degree for “down” repeats
-     * (index into the descending degree list for that segment). Clamped per segment.
+     * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
+     * starting index into the descending degree list for that segment. Clamped per segment.
      */
     upDownOffsetDown?: number;
     /**

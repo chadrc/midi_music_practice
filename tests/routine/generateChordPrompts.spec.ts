@@ -157,6 +157,106 @@ test("Down mode walks from highest octave, chord tones descending in pitch", () 
     });
 });
 
+test("Up mode applies upDownOffsetUp to ascending voicing order", () => {
+    expect(
+        generateChordPrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Chords,
+                    baseNote: "C",
+                    chordTypes: [MAJOR_CHORDS_SET_NAME],
+                    mode: PracticePoolMode.Up,
+                    upDownOffsetUp: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [67],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorChordUpDownRotAsc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [60],
+                color: "amber",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: cMajorChordUpDownRotAsc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "cyan",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorChordUpDownRotAsc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
+});
+
+test("Down mode applies upDownOffsetDown to descending voicing order", () => {
+    expect(
+        generateChordPrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Chords,
+                    baseNote: "C",
+                    chordTypes: [MAJOR_CHORDS_SET_NAME],
+                    mode: PracticePoolMode.Down,
+                    upDownOffsetDown: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [60],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: cMajorChordUpDownRotDesc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [67],
+                color: "amber",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorChordUpDownRotDesc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "cyan",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorChordUpDownRotDesc4,
+                ensemblePitchClasses: cMajDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major",
+    });
+});
+
 test("Up mode covers full C major arpeggio across three part octaves for nine prompts", () => {
     const generated = generateChordPrompts(
         minimalBakedPart({

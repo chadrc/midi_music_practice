@@ -10,6 +10,10 @@ const cIonian4 = [60, 62, 64, 65, 67, 69, 71];
 /** Descending pitch in nominal octave (Down mode). */
 const cIonian4Desc = [71, 69, 67, 65, 64, 62, 60];
 const cIonianDegreePC = [0, 2, 4, 5, 7, 9, 11];
+/** Offset 2 on C Ionian octave 4 ascending traversal (shared by Up with offset and Up-Down “up”). */
+const cMajorUpDownRotAsc4 = [64, 65, 67, 69, 71, 60, 62];
+/** Offset 2 on descending traversal for same segment. */
+const cMajorUpDownRotDesc4 = [67, 65, 64, 62, 60, 71, 69];
 
 test("emits scale prompts with one note each for fixed seed", () => {
     const generated = generateScalePrompts(
@@ -389,8 +393,105 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
     });
 });
 
-const cMajorUpDownRotAsc4 = [64, 65, 67, 69, 71, 60, 62];
-const cMajorUpDownRotDesc4 = [67, 65, 64, 62, 60, 71, 69];
+test("Up mode applies upDownOffsetUp to ascending traversal", () => {
+    expect(
+        generateScalePrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Scales,
+                    baseNote: "C",
+                    scaleTypes: [MAJOR_SCALE_SET_NAME],
+                    mode: PracticePoolMode.Up,
+                    upDownOffsetUp: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [64],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [67],
+                color: "cyan",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
+});
+
+test("Down mode applies upDownOffsetDown to descending traversal", () => {
+    expect(
+        generateScalePrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Scales,
+                    baseNote: "C",
+                    scaleTypes: [MAJOR_SCALE_SET_NAME],
+                    mode: PracticePoolMode.Down,
+                    upDownOffsetDown: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [67],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "cyan",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
+});
 
 test("Up-Down mode alternates up then down traversal per repetition with separate offsets", () => {
     const baked = minimalBakedPart({

@@ -926,7 +926,11 @@ export function generateChordPrompts(
             ? upLeg
                 ? (practice.upDownOffsetUp ?? 0)
                 : (practice.upDownOffsetDown ?? 0)
-            : 0;
+            : practice.mode === PracticePoolMode.Up
+              ? (practice.upDownOffsetUp ?? 0)
+              : practice.mode === PracticePoolMode.Down
+                ? (practice.upDownOffsetDown ?? 0)
+                : 0;
     const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, upLeg);
     const steps: {
         target: number;
@@ -1114,7 +1118,11 @@ export function generateScalePrompts(
             ? upLeg
                 ? (practice.upDownOffsetUp ?? 0)
                 : (practice.upDownOffsetDown ?? 0)
-            : 0;
+            : practice.mode === PracticePoolMode.Up
+              ? (practice.upDownOffsetUp ?? 0)
+              : practice.mode === PracticePoolMode.Down
+                ? (practice.upDownOffsetDown ?? 0)
+                : 0;
     const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, settings, up);
     const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
     for (const seg of segments) {

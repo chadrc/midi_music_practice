@@ -47,10 +47,7 @@ const chordPoolModeOptions = [
     {label: "Random", value: PracticePoolMode.Random},
 ];
 
-const scalePoolModeOptions = [
-    ...chordPoolModeOptions,
-    {label: "Up-Down", value: PracticePoolMode.UpDown},
-];
+const scalePoolModeOptions = chordPoolModeOptions;
 
 /** UI cap; each scale segment clamps at generation time to its own length − 1. */
 const UP_DOWN_OFFSET_MAX = 11;
@@ -64,10 +61,12 @@ watchEffect(() => {
         if (!p.octaveRange) {
             p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
         }
-        if (p.mode === PracticePoolMode.UpDown) {
+        if (p.mode === PracticePoolMode.Up || p.mode === PracticePoolMode.UpDown) {
             if (p.upDownOffsetUp == null) {
                 p.upDownOffsetUp = 0;
             }
+        }
+        if (p.mode === PracticePoolMode.Down || p.mode === PracticePoolMode.UpDown) {
             if (p.upDownOffsetDown == null) {
                 p.upDownOffsetDown = 0;
             }
@@ -77,10 +76,12 @@ watchEffect(() => {
         if (!p.octaveRange) {
             p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
         }
-        if (p.mode === PracticePoolMode.UpDown) {
+        if (p.mode === PracticePoolMode.Up || p.mode === PracticePoolMode.UpDown) {
             if (p.upDownOffsetUp == null) {
                 p.upDownOffsetUp = 0;
             }
+        }
+        if (p.mode === PracticePoolMode.Down || p.mode === PracticePoolMode.UpDown) {
             if (p.upDownOffsetDown == null) {
                 p.upDownOffsetDown = 0;
             }
@@ -119,12 +120,29 @@ watchEffect(() => {
         class="practice-item-control practice-item-multiselect"
       />
       <div
-        v-if="chordFields.mode === PracticePoolMode.UpDown"
+        v-if="
+          chordFields.mode === PracticePoolMode.Up ||
+          chordFields.mode === PracticePoolMode.Down ||
+          chordFields.mode === PracticePoolMode.UpDown
+        "
         class="updown-offset-block"
       >
-        <span class="octave-range-label">Up-Down: starting chord tone index (0 = lowest MIDI in that direction; clamped per voicing at run time)</span>
-        <div class="updown-offset-row">
-          <label class="updown-offset-label">Up repeat</label>
+        <span v-if="chordFields.mode === PracticePoolMode.UpDown" class="octave-range-label">
+          Up-Down: starting chord tone index (0 = first in that direction along each voicing; clamped at run time)
+        </span>
+        <span v-else-if="chordFields.mode === PracticePoolMode.Up" class="octave-range-label">
+          Ascending traversal: starting chord tone index (0 = lowest MIDI in the voicing; clamped at run time)
+        </span>
+        <span v-else class="octave-range-label">
+          Descending traversal: starting chord tone index (0 = highest MIDI in the voicing; clamped at run time)
+        </span>
+        <div
+          v-if="chordFields.mode === PracticePoolMode.Up || chordFields.mode === PracticePoolMode.UpDown"
+          class="updown-offset-row"
+        >
+          <label class="updown-offset-label">
+            {{ chordFields.mode === PracticePoolMode.UpDown ? "Up repeat" : "Starting step" }}
+          </label>
           <InputNumber
             v-model="chordFields.upDownOffsetUp"
             :min="0"
@@ -134,8 +152,13 @@ watchEffect(() => {
             class="practice-item-control updown-offset-input"
           />
         </div>
-        <div class="updown-offset-row">
-          <label class="updown-offset-label">Down repeat</label>
+        <div
+          v-if="chordFields.mode === PracticePoolMode.Down || chordFields.mode === PracticePoolMode.UpDown"
+          class="updown-offset-row"
+        >
+          <label class="updown-offset-label">
+            {{ chordFields.mode === PracticePoolMode.UpDown ? "Down repeat" : "Starting step" }}
+          </label>
           <InputNumber
             v-model="chordFields.upDownOffsetDown"
             :min="0"
@@ -173,12 +196,29 @@ watchEffect(() => {
         class="practice-item-control"
       />
       <div
-        v-if="scaleFields.mode === PracticePoolMode.UpDown"
+        v-if="
+          scaleFields.mode === PracticePoolMode.Up ||
+          scaleFields.mode === PracticePoolMode.Down ||
+          scaleFields.mode === PracticePoolMode.UpDown
+        "
         class="updown-offset-block"
       >
-        <span class="octave-range-label">Up-Down: starting scale step (0 = first degree in that direction; clamped per scale at run time)</span>
-        <div class="updown-offset-row">
-          <label class="updown-offset-label">Up repeat</label>
+        <span v-if="scaleFields.mode === PracticePoolMode.UpDown" class="octave-range-label">
+          Up-Down: starting scale step (0 = first degree in that direction; clamped per scale at run time)
+        </span>
+        <span v-else-if="scaleFields.mode === PracticePoolMode.Up" class="octave-range-label">
+          Ascending traversal: starting scale step (0 = first degree low→high in the octave segment; clamped at run time)
+        </span>
+        <span v-else class="octave-range-label">
+          Descending traversal: starting scale step (0 = first degree high→low in the octave segment; clamped at run time)
+        </span>
+        <div
+          v-if="scaleFields.mode === PracticePoolMode.Up || scaleFields.mode === PracticePoolMode.UpDown"
+          class="updown-offset-row"
+        >
+          <label class="updown-offset-label">
+            {{ scaleFields.mode === PracticePoolMode.UpDown ? "Up repeat" : "Starting step" }}
+          </label>
           <InputNumber
             v-model="scaleFields.upDownOffsetUp"
             :min="0"
@@ -188,8 +228,13 @@ watchEffect(() => {
             class="practice-item-control updown-offset-input"
           />
         </div>
-        <div class="updown-offset-row">
-          <label class="updown-offset-label">Down repeat</label>
+        <div
+          v-if="scaleFields.mode === PracticePoolMode.Down || scaleFields.mode === PracticePoolMode.UpDown"
+          class="updown-offset-row"
+        >
+          <label class="updown-offset-label">
+            {{ scaleFields.mode === PracticePoolMode.UpDown ? "Down repeat" : "Starting step" }}
+          </label>
           <InputNumber
             v-model="scaleFields.upDownOffsetDown"
             :min="0"
