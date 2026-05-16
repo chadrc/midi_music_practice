@@ -115,6 +115,8 @@ export function defaultPracticeForType(t: PracticeType): UserRoutinePractice {
                 chordTypes: [],
                 mode: PracticePoolMode.Random,
                 octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
+                upDownOffsetUp: 0,
+                upDownOffsetDown: 0,
             };
         case PracticeType.Scales:
             return {
@@ -503,13 +505,18 @@ function chordRepeatFocusLabel(
     practice: RoutineChordsPractice,
     pool: ChordTypeId[],
     randomChordType: ChordTypeId | undefined,
+    upDownLeg: "up" | "down" | null,
 ): string {
     const root = displayNameFromMapKey(fundKey);
     const typesLegend = pool.map((t) => CHORD_TYPE_LABEL[t]).join(", ");
     if (practice.mode === PracticePoolMode.Random && randomChordType !== undefined) {
         return `${root} ${CHORD_TYPE_LABEL[randomChordType]}`;
     }
-    return `${root} ${typesLegend}`;
+    let base = `${root} ${typesLegend}`;
+    if (practice.mode === PracticePoolMode.UpDown && upDownLeg !== null) {
+        base = `${base} (${upDownLeg})`;
+    }
+    return base;
 }
 
 function chordPromptFocusLabel(fundKey: string, chordType: ChordTypeId): string {
@@ -836,7 +843,7 @@ export function generateChordPrompts(
             return {prompts: []};
         }
 
-        const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
+        const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined, null);
         const multiTypePool = pool.length > 1;
 
         let cycleVoicing: number[] | null = null;
@@ -908,17 +915,19 @@ export function generateChordPrompts(
         return {prompts, repeatFocusLabel};
     }
 
-    const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined);
+    const upLeg =
+        practice.mode === PracticePoolMode.UpDown ? repetitionIndex % 2 === 0 : practice.mode === PracticePoolMode.Up;
+    const upDownLeg: "up" | "down" | null =
+        practice.mode === PracticePoolMode.UpDown ? (upLeg ? "up" : "down") : null;
+    const repeatFocusLabel = chordRepeatFocusLabel(fundKey, practice, pool, undefined, upDownLeg);
     const multiTypePool = pool.length > 1;
-    let up: boolean;
-    if (practice.mode === PracticePoolMode.Down) {
-        up = false;
-    } else if (practice.mode === PracticePoolMode.UpDown) {
-        up = repetitionIndex % 2 === 0;
-    } else {
-        up = practice.mode === PracticePoolMode.Up;
-    }
-    const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, up);
+    const degreeOffset =
+        practice.mode === PracticePoolMode.UpDown
+            ? upLeg
+                ? (practice.upDownOffsetUp ?? 0)
+                : (practice.upDownOffsetDown ?? 0)
+            : 0;
+    const segments = chordToneMidiSegmentsOrdered(pool, fundKey, settings, upLeg);
     const steps: {
         target: number;
         ensemble: number[];
@@ -926,11 +935,16 @@ export function generateChordPrompts(
         chordType: ChordTypeId;
     }[] = [];
     for (const seg of segments) {
+        const rotatedVoicing = rotateScaleSegmentOrdered(seg.voicing, degreeOffset);
         const ensemblePitchClasses = pitchClassesFromMidis(seg.voicing);
-        for (const target of seg.voicing) {
+        const ensemble = rotatedVoicing.filter((n) => allowed.has(n));
+        if (ensemble.length === 0) {
+            continue;
+        }
+        for (const target of ensemble) {
             steps.push({
                 target,
-                ensemble: seg.voicing,
+                ensemble,
                 ensemblePitchClasses,
                 chordType: seg.chordType,
             });

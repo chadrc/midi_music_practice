@@ -14,6 +14,8 @@ test("Chords default uses empty type pool and Random mode", () => {
         chordTypes: [],
         mode: PracticePoolMode.Random,
         octaveRange: {...DEFAULT_PRACTICE_OCTAVE_RANGE},
+        upDownOffsetUp: 0,
+        upDownOffsetDown: 0,
     });
 });
 

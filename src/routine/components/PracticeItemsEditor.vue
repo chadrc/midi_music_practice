@@ -43,6 +43,7 @@ const scaleTypeOptions = SCALE_TYPE_OPTIONS.map((v) => ({
 const chordPoolModeOptions = [
     {label: "Up", value: PracticePoolMode.Up},
     {label: "Down", value: PracticePoolMode.Down},
+    {label: "Up-Down", value: PracticePoolMode.UpDown},
     {label: "Random", value: PracticePoolMode.Random},
 ];
 
@@ -62,6 +63,14 @@ watchEffect(() => {
         const p = practice.value;
         if (!p.octaveRange) {
             p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+        }
+        if (p.mode === PracticePoolMode.UpDown) {
+            if (p.upDownOffsetUp == null) {
+                p.upDownOffsetUp = 0;
+            }
+            if (p.upDownOffsetDown == null) {
+                p.upDownOffsetDown = 0;
+            }
         }
     } else if (props.kind === "scales" && practice.value.type === PracticeType.Scales) {
         const p = practice.value;
@@ -109,6 +118,34 @@ watchEffect(() => {
         placeholder="Chord types (defaults when empty)"
         class="practice-item-control practice-item-multiselect"
       />
+      <div
+        v-if="chordFields.mode === PracticePoolMode.UpDown"
+        class="updown-offset-block"
+      >
+        <span class="octave-range-label">Up-Down: starting chord tone index (0 = lowest MIDI in that direction; clamped per voicing at run time)</span>
+        <div class="updown-offset-row">
+          <label class="updown-offset-label">Up repeat</label>
+          <InputNumber
+            v-model="chordFields.upDownOffsetUp"
+            :min="0"
+            :max="UP_DOWN_OFFSET_MAX"
+            show-buttons
+            button-layout="horizontal"
+            class="practice-item-control updown-offset-input"
+          />
+        </div>
+        <div class="updown-offset-row">
+          <label class="updown-offset-label">Down repeat</label>
+          <InputNumber
+            v-model="chordFields.upDownOffsetDown"
+            :min="0"
+            :max="UP_DOWN_OFFSET_MAX"
+            show-buttons
+            button-layout="horizontal"
+            class="practice-item-control updown-offset-input"
+          />
+        </div>
+      </div>
       <div class="octave-range-block">
         <span class="octave-range-label">Chord root octaves</span>
         <RangeSlider

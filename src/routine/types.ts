@@ -77,7 +77,7 @@ export enum PracticePoolMode {
     Up = "Up",
     Down = "Down",
     Random = "Random",
-    /** Scales only: alternate “up then down” traversal each repeat (repetition 0 = up leg, 1 = down, …). */
+    /** Chords/scales: alternate “up then down” traversal each repeat (repetition 0 = up leg, 1 = down, …). */
     UpDown = "UpDown",
 }
 
@@ -97,6 +97,16 @@ export interface RoutineChordsPractice {
     chordTypes: ChordTypeId[];
     /** Order / traversal of the chord-type pool; default Random. */
     mode: PracticePoolMode;
+    /**
+     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting index into each chord’s traversal
+     * (low→high MIDI per voicing) for “up” repeats. Clamped to each segment length minus one.
+     */
+    upDownOffsetUp?: number;
+    /**
+     * When {@link mode} is {@link PracticePoolMode.UpDown}: starting index for “down” repeats
+     * (into the descending traversal for that voicing). Clamped per segment.
+     */
+    upDownOffsetDown?: number;
     /**
      * Scientific octave bounds for chord roots (same numbering as note labels, e.g. “C4” → 4).
      * Defaults to {@link DEFAULT_PRACTICE_OCTAVE_RANGE} when missing.
