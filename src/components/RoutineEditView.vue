@@ -377,6 +377,7 @@ function onPartRowClick(index: number) {
             v-model="selectedPart.practice"
             :can-set="false"
             :component="RoutinePartPracticeEditor"
+            :component-props="{noteRange: selectedPart.noteRange}"
           />
         </div>
       </div>

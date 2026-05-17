@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import {computed} from "vue";
-import {PracticeType, type UserRoutinePractice} from "../types";
+import {PracticeType, type UserRoutinePractice, type UserRoutineNoteRange} from "../types";
 import PracticeTypeSelect from "./PracticeTypeSelect.vue";
 import PracticeItemsEditor from "./PracticeItemsEditor.vue";
 import {defaultPracticeForType} from "..";
+
+defineProps<{
+    /** Part playable range; improves traversal letter preview next to stored step indices. */
+    noteRange?: UserRoutineNoteRange | null,
+}>();
 
 const model = defineModel<UserRoutinePractice>({required: true});
 
@@ -31,11 +36,13 @@ const practiceTypeChoice = computed({
       v-if="model.type === PracticeType.Chords"
       v-model="model"
       kind="chords"
+      :note-range="noteRange ?? undefined"
     />
     <PracticeItemsEditor
       v-else-if="model.type === PracticeType.Scales"
       v-model="model"
       kind="scales"
+      :note-range="noteRange ?? undefined"
     />
   </div>
 </template>

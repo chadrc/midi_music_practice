@@ -702,6 +702,200 @@ function scaleToneMidiSegmentsOrdered(
     return segments;
 }
 
+function bakedRoutinePreviewShell(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    noteRange: UserRoutineNoteRange,
+): BakedRoutinePartSettings {
+    return {
+        name: "",
+        seed: 0,
+        targetBPM: 120,
+        noteRange,
+        practice,
+        requireOctave: false,
+        minSuccessVelocity: 64,
+        promptCount: 1,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
+        repeatCount: 0,
+        cloneRepeat: false,
+        parentSettings: ParentType.Settings,
+    };
+}
+
+/** Highest stored traversal step index (UI); ordered prompts wrap rotation modulo each segment length. */
+export const ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX = 12;
+
+/**
+ * Rotation / tooltip index along one ordered chord-or-scale traversal: negative clamps to zero;
+ * nonnegative values wrap with {@link segmentLength} (e.g. step 8 on a 7-note scale → same as step 1).
+ */
+export function traversalRotateIndex(segmentLength: number, rawStepIndex: number): number {
+    const L = Math.floor(segmentLength);
+    if (L <= 0) {
+        return 0;
+    }
+    const idx = Math.floor(Number(rawStepIndex));
+    if (!Number.isFinite(idx) || idx < 0) {
+        return 0;
+    }
+    return idx % L;
+}
+
+/** Max chord/scale types listed per tooltip row when resolving default (full-registry) pools. */
+const TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP = 28;
+
+/** One label per chord/scale type at the same starting part-octave as ordered prompts (“type: letter”). */
+export function traversalPreviewOffsetLabels(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    noteRange: UserRoutineNoteRange,
+    leg: "up" | "down",
+    stepIndex: number | null | undefined,
+): string[] {
+    const baked = bakedRoutinePreviewShell(practice, noteRange);
+    const allowed = playableMidiSet(baked);
+    const fundKey = practice.baseNote ?? BaseNotes.C.mapKey;
+    const up = leg === "up";
+    const idx = Math.floor(Number(stepIndex ?? 0));
+
+    if (practice.type === PracticeType.Chords) {
+        const pool =
+            practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
+        const octSpan = resolvedChordScaleOctaveRange(practice);
+        const orderOctaves = orderedPartOctaves(octSpan.start, octSpan.end, up);
+        const partOct = orderOctaves[0];
+        if (partOct === undefined) {
+            return [];
+        }
+        const capped = pool.slice(0, TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP);
+        const lines: string[] = [];
+        for (const chordType of capped) {
+            const chord = CHORDS[chordType][fundKey];
+            if (!chord) {
+                continue;
+            }
+            const fund = fundamentalMidiForChordInPartOctave(chord, partOct, octSpan);
+            if (fund === null) {
+                continue;
+            }
+            const rawVoicing = midiVoicingForChordAtFundamental(chord, fund);
+            const fitted = transposeChordVoicingIntoAllowed(rawVoicing, allowed);
+            if (fitted === null || fitted.length === 0) {
+                continue;
+            }
+            const traversal = up ? fitted : [...fitted].reverse();
+            const ci = traversalRotateIndex(traversal.length, idx);
+            const midi = traversal[ci]!;
+            lines.push(`${CHORD_TYPE_LABEL[chordType]}: ${formatMidiLetter(midi, chordSpellPrefersFlats(chordType))}`);
+        }
+        if (pool.length > TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP) {
+            lines.push(`… ${pool.length - TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP} more chord types not shown`);
+        }
+        return lines;
+    }
+
+    const pool =
+        practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [MAJOR_SCALE_SET_NAME];
+    const octSpan = resolvedChordScaleOctaveRange(practice);
+    const orderOctaves = orderedPartOctaves(octSpan.start, octSpan.end, up);
+    const partOct = orderOctaves[0];
+    if (partOct === undefined) {
+        return [];
+    }
+    const capped = pool.slice(0, TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP);
+    const lines: string[] = [];
+    for (const scaleType of capped) {
+        const scale = getRegisteredScale(scaleType, fundKey);
+        const inOct: number[] = [];
+        for (let n = 0; n <= MAX_MIDI_NOTES; n++) {
+            if (scale.contains(n) && scientificOctaveFromMidi(n) === partOct) {
+                inOct.push(n);
+            }
+        }
+        if (inOct.length === 0) {
+            continue;
+        }
+        inOct.sort((a, b) => a - b);
+        const rootPc = scale.fundamental.pitchClass;
+        const rootFirst = rotateScaleMidisRootFirst(inOct, rootPc);
+        const fitted = transposeChordVoicingIntoAllowed(rootFirst, allowed);
+        if (fitted === null || fitted.length === 0) {
+            continue;
+        }
+        const traversal = up ? fitted : [...fitted].reverse();
+        const si = traversalRotateIndex(traversal.length, idx);
+        const midi = traversal[si]!;
+        lines.push(`${SCALE_TYPE_LABEL[scaleType]}: ${formatMidiLetter(midi, false)}`);
+    }
+    if (pool.length > TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP) {
+        lines.push(`… ${pool.length - TRAVERSAL_PREVIEW_TOOLTIP_POOL_CAP} more scale types not shown`);
+    }
+    return lines;
+}
+
+/** First traversal segment used by {@link traversalStepPreviewLetter} / offset preview (ordered modes). */
+export function orderedPreviewFirstSegmentMidi(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    noteRange: UserRoutineNoteRange,
+    leg: "up" | "down",
+): {midis: number[]; chordType: ChordTypeId | undefined} {
+    const baked = bakedRoutinePreviewShell(practice, noteRange);
+    const fundKey = practice.baseNote ?? BaseNotes.C.mapKey;
+    const up = leg === "up";
+
+    if (practice.type === PracticeType.Chords) {
+        const pool =
+            practice.chordTypes.length > 0 ? [...practice.chordTypes] : [...CHORD_TYPE_OPTIONS];
+        const segments = chordToneMidiSegmentsOrdered(pool, fundKey, baked, up);
+        const seg = segments[0];
+        if (!seg || seg.voicing.length === 0) {
+            return {midis: [], chordType: undefined};
+        }
+        return {midis: seg.voicing, chordType: seg.chordType};
+    }
+
+    const pool =
+        practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [MAJOR_SCALE_SET_NAME];
+    const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, baked, up);
+    const seg = segments[0];
+    if (!seg || seg.length === 0) {
+        return {midis: [], chordType: undefined};
+    }
+    return {midis: seg, chordType: undefined};
+}
+
+/** Max step index persisted in traversal offset UI; effective rotation index wraps modulo each segment length. */
+export function traversalPreviewMaxStepIndex(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    noteRange: UserRoutineNoteRange,
+    leg: "up" | "down",
+): number {
+    void practice;
+    void noteRange;
+    void leg;
+    return ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX;
+}
+
+/**
+ * Pitch-class letter for the MIDI at `stepIndex` on the first ordered chord/scale segment
+ * (matches prompt construction). For offset/step UI previews only.
+ */
+export function traversalStepPreviewLetter(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    noteRange: UserRoutineNoteRange,
+    leg: "up" | "down",
+    stepIndex: number | null | undefined,
+): string {
+    const idx = Math.floor(Number(stepIndex ?? 0));
+    const {midis, chordType} = orderedPreviewFirstSegmentMidi(practice, noteRange, leg);
+    if (midis.length === 0) {
+        return "—";
+    }
+    const i = traversalRotateIndex(midis.length, idx);
+    const midi = midis[i]!;
+    return formatMidiLetter(midi, chordType !== undefined && chordSpellPrefersFlats(chordType));
+}
+
 export function midiVoicingForChordAtFundamental(chord: Chord, fundamentalMidi: number): number[] {
     const relative = chord.pattern.map((deg) => fundamentalMidi + (deg - 1));
     return relative;
@@ -987,8 +1181,7 @@ export function rotateScaleSegmentOrdered(segment: number[], rawOffset: number):
     if (L === 0) {
         return segment;
     }
-    const o = Math.floor(rawOffset);
-    const offset = Math.max(0, Math.min(L - 1, o));
+    const offset = traversalRotateIndex(L, rawOffset);
     return [...segment.slice(offset), ...segment.slice(0, offset)];
 }
 

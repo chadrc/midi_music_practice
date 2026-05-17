@@ -99,12 +99,12 @@ export interface RoutineChordsPractice {
     mode: PracticePoolMode;
     /**
      * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
-     * starting index into each chord voicing (low→high MIDI). Clamped to each segment length minus one.
+     * starting rotation into each chord voicing (low→high MIDI); wraps modulo segment length.
      */
     upDownOffsetUp?: number;
     /**
      * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
-     * starting index into that descending order. Clamped per segment.
+     * starting rotation into that descending order; wraps modulo segment length.
      */
     upDownOffsetDown?: number;
     /**
@@ -124,12 +124,12 @@ export interface RoutineScalesPractice {
     mode: PracticePoolMode;
     /**
      * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
-     * starting scale degree index (0 = first degree in that direction). Clamped per segment length minus one.
+     * starting scale degree index (0 = first degree in that direction); wraps modulo segment length.
      */
     upDownOffsetUp?: number;
     /**
      * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
-     * starting index into the descending degree list for that segment. Clamped per segment.
+     * starting rotation into the descending degree list for that segment; wraps modulo segment length.
      */
     upDownOffsetDown?: number;
     /**

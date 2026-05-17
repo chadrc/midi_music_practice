@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, watchEffect} from "vue";
-import {MultiSelect, Select, InputNumber} from "primevue";
+import {InputNumber, MultiSelect, Select} from "primevue";
 import {
     CHORD_TYPE_LABEL,
     SCALE_TYPE_LABEL,
@@ -15,12 +15,20 @@ import {
     type ScaleTypeId,
     type RoutineChordsPractice,
     type RoutineScalesPractice,
+    type UserRoutineNoteRange,
 } from "../types";
 import {BaseNotes} from "../../notes/scales";
+import {
+    defaultUserRoutineNoteRange,
+    ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX,
+    traversalPreviewOffsetLabels,
+} from "..";
 import RangeSlider from "./RangeSlider.vue";
 
 const props = defineProps<{
     kind: "chords" | "scales",
+    /** When set (e.g. from part/instrument settings), preview matches playable MIDI filtering. */
+    noteRange?: UserRoutineNoteRange | null,
 }>();
 
 const practice = defineModel<RoutineChordsPractice | RoutineScalesPractice>({required: true});
@@ -49,43 +57,65 @@ const chordPoolModeOptions = [
 
 const scalePoolModeOptions = chordPoolModeOptions;
 
-/** UI cap; each scale segment clamps at generation time to its own length − 1. */
-const UP_DOWN_OFFSET_MAX = 11;
+const previewNoteRange = computed(() => props.noteRange ?? defaultUserRoutineNoteRange());
 
 const chordFields = computed(() => practice.value as RoutineChordsPractice);
 const scaleFields = computed(() => practice.value as RoutineScalesPractice);
 
+function offsetTooltipBinding(
+    practice: RoutineChordsPractice | RoutineScalesPractice,
+    leg: "up" | "down",
+    step: number | null | undefined,
+) {
+    const lines = traversalPreviewOffsetLabels(practice, previewNoteRange.value, leg, step);
+    const value =
+        lines.length === 0 ? "No playable preview for this octave range." : lines.join("\n");
+    return {
+        value,
+        class: "routine-offset-tooltip-root",
+        fitContent: false,
+    };
+}
+
+const chordUpTooltipBinding = computed(() =>
+    offsetTooltipBinding(chordFields.value, "up", chordFields.value.upDownOffsetUp),
+);
+const chordDownTooltipBinding = computed(() =>
+    offsetTooltipBinding(chordFields.value, "down", chordFields.value.upDownOffsetDown),
+);
+const scaleUpTooltipBinding = computed(() =>
+    offsetTooltipBinding(scaleFields.value, "up", scaleFields.value.upDownOffsetUp),
+);
+const scaleDownTooltipBinding = computed(() =>
+    offsetTooltipBinding(scaleFields.value, "down", scaleFields.value.upDownOffsetDown),
+);
+
 watchEffect(() => {
-    if (props.kind === "chords" && practice.value.type === PracticeType.Chords) {
-        const p = practice.value;
-        if (!p.octaveRange) {
-            p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+    const pv = practice.value;
+    const chordsOk = props.kind === "chords" && pv.type === PracticeType.Chords;
+    const scalesOk = props.kind === "scales" && pv.type === PracticeType.Scales;
+    if (!chordsOk && !scalesOk) {
+        return;
+    }
+    const p = pv as RoutineChordsPractice | RoutineScalesPractice;
+    if (!p.octaveRange) {
+        p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
+    }
+    if (p.mode === PracticePoolMode.Up || p.mode === PracticePoolMode.UpDown) {
+        if (p.upDownOffsetUp == null) {
+            p.upDownOffsetUp = 0;
         }
-        if (p.mode === PracticePoolMode.Up || p.mode === PracticePoolMode.UpDown) {
-            if (p.upDownOffsetUp == null) {
-                p.upDownOffsetUp = 0;
-            }
+    }
+    if (p.mode === PracticePoolMode.Down || p.mode === PracticePoolMode.UpDown) {
+        if (p.upDownOffsetDown == null) {
+            p.upDownOffsetDown = 0;
         }
-        if (p.mode === PracticePoolMode.Down || p.mode === PracticePoolMode.UpDown) {
-            if (p.upDownOffsetDown == null) {
-                p.upDownOffsetDown = 0;
-            }
-        }
-    } else if (props.kind === "scales" && practice.value.type === PracticeType.Scales) {
-        const p = practice.value;
-        if (!p.octaveRange) {
-            p.octaveRange = {...DEFAULT_PRACTICE_OCTAVE_RANGE};
-        }
-        if (p.mode === PracticePoolMode.Up || p.mode === PracticePoolMode.UpDown) {
-            if (p.upDownOffsetUp == null) {
-                p.upDownOffsetUp = 0;
-            }
-        }
-        if (p.mode === PracticePoolMode.Down || p.mode === PracticePoolMode.UpDown) {
-            if (p.upDownOffsetDown == null) {
-                p.upDownOffsetDown = 0;
-            }
-        }
+    }
+
+    const up = Math.max(0, Math.min(ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX, Math.floor(p.upDownOffsetUp ?? 0)));
+    const down = Math.max(0, Math.min(ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX, Math.floor(p.upDownOffsetDown ?? 0)));
+    if ((p.upDownOffsetUp ?? 0) !== up || (p.upDownOffsetDown ?? 0) !== down) {
+        practice.value = {...p, upDownOffsetUp: up, upDownOffsetDown: down};
     }
 });
 </script>
@@ -128,13 +158,13 @@ watchEffect(() => {
         class="updown-offset-block"
       >
         <span v-if="chordFields.mode === PracticePoolMode.UpDown" class="octave-range-label">
-          Up-Down: starting chord tone index (0 = first in that direction along each voicing; clamped at run time)
+          Up-Down: starting step (hover number for preview note per chord type in pool)
         </span>
         <span v-else-if="chordFields.mode === PracticePoolMode.Up" class="octave-range-label">
-          Ascending traversal: starting chord tone index (0 = lowest MIDI in the voicing; clamped at run time)
+          Ascending: starting step — lowest part octave, each selected chord quality in pool order (tooltip)
         </span>
         <span v-else class="octave-range-label">
-          Descending traversal: starting chord tone index (0 = highest MIDI in the voicing; clamped at run time)
+          Descending: starting step — tooltip shows note per chord type at this step index
         </span>
         <div
           v-if="chordFields.mode === PracticePoolMode.Up || chordFields.mode === PracticePoolMode.UpDown"
@@ -143,14 +173,19 @@ watchEffect(() => {
           <label class="updown-offset-label">
             {{ chordFields.mode === PracticePoolMode.UpDown ? "Up repeat" : "Starting step" }}
           </label>
-          <InputNumber
-            v-model="chordFields.upDownOffsetUp"
-            :min="0"
-            :max="UP_DOWN_OFFSET_MAX"
-            show-buttons
-            button-layout="horizontal"
-            class="practice-item-control updown-offset-input"
-          />
+          <span
+            v-tooltip.top="chordUpTooltipBinding"
+            class="offset-input-hint-wrap"
+          >
+            <InputNumber
+              v-model="chordFields.upDownOffsetUp"
+              :min="0"
+              :max="ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX"
+              show-buttons
+              button-layout="horizontal"
+              class="practice-item-control updown-offset-input"
+            />
+          </span>
         </div>
         <div
           v-if="chordFields.mode === PracticePoolMode.Down || chordFields.mode === PracticePoolMode.UpDown"
@@ -159,14 +194,19 @@ watchEffect(() => {
           <label class="updown-offset-label">
             {{ chordFields.mode === PracticePoolMode.UpDown ? "Down repeat" : "Starting step" }}
           </label>
-          <InputNumber
-            v-model="chordFields.upDownOffsetDown"
-            :min="0"
-            :max="UP_DOWN_OFFSET_MAX"
-            show-buttons
-            button-layout="horizontal"
-            class="practice-item-control updown-offset-input"
-          />
+          <span
+            v-tooltip.top="chordDownTooltipBinding"
+            class="offset-input-hint-wrap"
+          >
+            <InputNumber
+              v-model="chordFields.upDownOffsetDown"
+              :min="0"
+              :max="ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX"
+              show-buttons
+              button-layout="horizontal"
+              class="practice-item-control updown-offset-input"
+            />
+          </span>
         </div>
       </div>
       <div class="octave-range-block">
@@ -204,13 +244,13 @@ watchEffect(() => {
         class="updown-offset-block"
       >
         <span v-if="scaleFields.mode === PracticePoolMode.UpDown" class="octave-range-label">
-          Up-Down: starting scale step (0 = first degree in that direction; clamped per scale at run time)
+          Up-Down: starting step (hover number for preview note per scale type in pool)
         </span>
         <span v-else-if="scaleFields.mode === PracticePoolMode.Up" class="octave-range-label">
-          Ascending traversal: starting scale step (0 = first degree low→high in the octave segment; clamped at run time)
+          Ascending: starting step — tooltip lists each scale in the multi-select pool
         </span>
         <span v-else class="octave-range-label">
-          Descending traversal: starting scale step (0 = first degree high→low in the octave segment; clamped at run time)
+          Descending: starting step — tooltip lists preview note per selected scale type
         </span>
         <div
           v-if="scaleFields.mode === PracticePoolMode.Up || scaleFields.mode === PracticePoolMode.UpDown"
@@ -219,14 +259,19 @@ watchEffect(() => {
           <label class="updown-offset-label">
             {{ scaleFields.mode === PracticePoolMode.UpDown ? "Up repeat" : "Starting step" }}
           </label>
-          <InputNumber
-            v-model="scaleFields.upDownOffsetUp"
-            :min="0"
-            :max="UP_DOWN_OFFSET_MAX"
-            show-buttons
-            button-layout="horizontal"
-            class="practice-item-control updown-offset-input"
-          />
+          <span
+            v-tooltip.top="scaleUpTooltipBinding"
+            class="offset-input-hint-wrap"
+          >
+            <InputNumber
+              v-model="scaleFields.upDownOffsetUp"
+              :min="0"
+              :max="ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX"
+              show-buttons
+              button-layout="horizontal"
+              class="practice-item-control updown-offset-input"
+            />
+          </span>
         </div>
         <div
           v-if="scaleFields.mode === PracticePoolMode.Down || scaleFields.mode === PracticePoolMode.UpDown"
@@ -235,14 +280,19 @@ watchEffect(() => {
           <label class="updown-offset-label">
             {{ scaleFields.mode === PracticePoolMode.UpDown ? "Down repeat" : "Starting step" }}
           </label>
-          <InputNumber
-            v-model="scaleFields.upDownOffsetDown"
-            :min="0"
-            :max="UP_DOWN_OFFSET_MAX"
-            show-buttons
-            button-layout="horizontal"
-            class="practice-item-control updown-offset-input"
-          />
+          <span
+            v-tooltip.top="scaleDownTooltipBinding"
+            class="offset-input-hint-wrap"
+          >
+            <InputNumber
+              v-model="scaleFields.upDownOffsetDown"
+              :min="0"
+              :max="ROUTINE_TRAVERSAL_OFFSET_MAX_STEP_INDEX"
+              show-buttons
+              button-layout="horizontal"
+              class="practice-item-control updown-offset-input"
+            />
+          </span>
         </div>
       </div>
       <MultiSelect
@@ -284,6 +334,10 @@ watchEffect(() => {
   max-width: 28rem;
 }
 
+.offset-input-hint-wrap {
+  display: inline-flex;
+}
+
 .octave-range-block {
   display: flex;
   flex-direction: column;
@@ -316,5 +370,18 @@ watchEffect(() => {
 
 .updown-offset-input {
   width: auto;
+}
+</style>
+
+<style>
+/* PrimeVue tooltips are portaled to body; class comes from v-tooltip object binding */
+.routine-offset-tooltip-root.p-tooltip {
+  max-width: min(26rem, 94vw);
+}
+
+.routine-offset-tooltip-root .p-tooltip-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 </style>
