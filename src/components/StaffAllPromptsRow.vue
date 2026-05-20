@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import {Factory, Formatter} from "vexflow";
-import type {EasyScore, Note} from "vexflow";
+import {Factory, Formatter, StaveNote} from "vexflow";
+import type {EasyScore, Note, StemmableNote} from "vexflow";
 import {onMounted, onUnmounted, ref, useId, watch} from "vue";
 import type {PromptData} from "../store/practice";
 import {
@@ -26,12 +26,31 @@ const domId = useId().replace(/[^a-zA-Z0-9_-]/g, "-");
 
 let resizeObserver: ResizeObserver | null = null;
 
-function applyPromptStyle(prompt: PromptData, noteElements: {setStyle: (s: object) => void}[]) {
+/** VexFlow noteheads are drawn with fill(); stems with stroke — use the same accent for both. */
+function applyStaveNoteStyle(note: StaveNote, style: {fillStyle: string; strokeStyle: string}) {
+  note.setStyle(style);
+  note.setStemStyle(style);
+  for (let i = 0; i < note.getKeys().length; i++) {
+    note.setKeyStyle(i, style);
+  }
+}
+
+function applyPromptStyle(prompt: PromptData, noteElements: StemmableNote[]) {
   for (const note of noteElements) {
     if (prompt.success) {
-      note.setStyle({fillStyle: "#64748b", strokeStyle: "#64748b"});
+      const muted = {fillStyle: "#64748b", strokeStyle: "#64748b"};
+      if (note instanceof StaveNote) {
+        applyStaveNoteStyle(note, muted);
+      } else {
+        note.setStyle(muted);
+      }
     } else if (prompt.current) {
-      note.setStyle({fillStyle: "#0f172a", strokeStyle: "#38bdf8"});
+      const active = {fillStyle: "#38bdf8", strokeStyle: "#38bdf8"};
+      if (note instanceof StaveNote) {
+        applyStaveNoteStyle(note, active);
+      } else {
+        note.setStyle(active);
+      }
     }
   }
 }
