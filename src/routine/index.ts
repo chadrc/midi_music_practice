@@ -523,18 +523,22 @@ function chordPromptFocusLabel(fundKey: string, chordType: ChordTypeId): string 
     return `${displayNameFromMapKey(fundKey)} ${CHORD_TYPE_LABEL[chordType]}`;
 }
 
+function scalePromptFocusLabel(fundKey: string, scaleType: ScaleTypeId): string {
+    return `${displayNameFromMapKey(fundKey)} ${SCALE_TYPE_LABEL[scaleType]}`;
+}
+
 function scaleRepeatFocusLabel(
     fundKey: string,
     practice: RoutineScalesPractice,
-    pool: ScaleTypeId[],
     randomScaleType: ScaleTypeId | undefined,
     upDownLeg: "up" | "down" | null,
 ): string {
+    const pool = effectiveScaleTypesPool(practice);
     const root = displayNameFromMapKey(fundKey);
-    const typesLegend = pool.map((t) => SCALE_TYPE_LABEL[t]).join(", ");
     if (practice.mode === PracticePoolMode.Random && randomScaleType !== undefined) {
-        return `${root} ${SCALE_TYPE_LABEL[randomScaleType]}`;
+        return scalePromptFocusLabel(fundKey, randomScaleType);
     }
+    const typesLegend = pool.map((t) => SCALE_TYPE_LABEL[t]).join(", ");
     let base = `${root} ${typesLegend}`;
     if (practice.mode === PracticePoolMode.UpDown && upDownLeg !== null) {
         base = `${base} (${upDownLeg})`;
@@ -552,7 +556,8 @@ export function formatDisplayNote(requireOctave: boolean, midi: number, chordTyp
 }
 
 function effectiveScaleTypesPool(practice: RoutineScalesPractice): ScaleTypeId[] {
-    return practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [MAJOR_SCALE_SET_NAME];
+    const selected = practice.scaleTypes ?? [];
+    return selected.length > 0 ? [...selected] : [MAJOR_SCALE_SET_NAME];
 }
 
 export function resolveFundamentalMapKey(
@@ -663,13 +668,13 @@ function chordToneMidiSegmentsOrdered(
     return segments;
 }
 
-/** Each inner array is one scale’s degrees in one nominal part octave, root first, whole-octave-shifted into {@link playableMidiSet} when possible (same as chord voicings). */
+/** Each entry is one scale’s degrees in one nominal part octave, root first, whole-octave-shifted into {@link playableMidiSet} when possible (same as chord voicings). */
 function scaleToneMidiSegmentsOrdered(
     pool: ScaleTypeId[],
     fundamentalMapKey: string,
     settings: BakedRoutinePartSettings,
     up: boolean,
-): number[][] {
+): {traversal: number[]; scaleType: ScaleTypeId}[] {
     const practice = settings.practice;
     if (practice.type !== PracticeType.Scales) {
         return [];
@@ -678,7 +683,7 @@ function scaleToneMidiSegmentsOrdered(
     const octSpan = resolvedChordScaleOctaveRange(practice);
     const lo = octSpan.start;
     const hi = octSpan.end;
-    const segments: number[][] = [];
+    const segments: {traversal: number[]; scaleType: ScaleTypeId}[] = [];
     for (const partOct of orderedPartOctaves(lo, hi, up)) {
         for (const scaleType of pool) {
             const scale = getRegisteredScale(scaleType, fundamentalMapKey);
@@ -696,7 +701,7 @@ function scaleToneMidiSegmentsOrdered(
                 continue;
             }
             const traversal = up ? fitted : [...fitted].reverse();
-            segments.push(traversal);
+            segments.push({traversal, scaleType});
         }
     }
     return segments;
@@ -858,10 +863,10 @@ export function orderedPreviewFirstSegmentMidi(
         practice.scaleTypes.length > 0 ? [...practice.scaleTypes] : [MAJOR_SCALE_SET_NAME];
     const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, baked, up);
     const seg = segments[0];
-    if (!seg || seg.length === 0) {
+    if (!seg || seg.traversal.length === 0) {
         return {midis: [], chordType: undefined};
     }
-    return {midis: seg, chordType: undefined};
+    return {midis: seg.traversal, chordType: undefined};
 }
 
 /** Max step index persisted in traversal offset UI; effective rotation index wraps modulo each segment length. */
@@ -1231,7 +1236,7 @@ export function generateScalePrompts(
             return {prompts: []};
         }
 
-        const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, scaleType, null);
+        const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, scaleType, null);
 
         const scale = getRegisteredScale(scaleType, fundKey);
         const ensembleMidi: number[] = [];
@@ -1304,7 +1309,8 @@ export function generateScalePrompts(
         practice.mode === PracticePoolMode.UpDown ? repetitionIndex % 2 === 0 : practice.mode === PracticePoolMode.Up;
     const upDownLeg: "up" | "down" | null =
         practice.mode === PracticePoolMode.UpDown ? (upLeg ? "up" : "down") : null;
-    const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, pool, undefined, upDownLeg);
+    const repeatFocusLabel = scaleRepeatFocusLabel(fundKey, practice, undefined, upDownLeg);
+    const multiTypePool = pool.length > 1;
     const up = upLeg;
     const degreeOffset =
         practice.mode === PracticePoolMode.UpDown
@@ -1317,23 +1323,28 @@ export function generateScalePrompts(
                 ? (practice.upDownOffsetDown ?? 0)
                 : 0;
     const segments = scaleToneMidiSegmentsOrdered(pool, fundKey, settings, up);
-    const steps: {target: number; ensemble: number[]; ensemblePitchClasses: number[]}[] = [];
+    const steps: {
+        target: number;
+        ensemble: number[];
+        ensemblePitchClasses: number[];
+        scaleType: ScaleTypeId;
+    }[] = [];
     for (const seg of segments) {
-        const rotatedSeg = rotateScaleSegmentOrdered(seg, degreeOffset);
-        const ensemblePitchClasses = pitchClassesFromMidis(seg);
+        const rotatedSeg = rotateScaleSegmentOrdered(seg.traversal, degreeOffset);
+        const ensemblePitchClasses = pitchClassesFromMidis(seg.traversal);
         const ensemble = rotatedSeg.filter((n) => allowed.has(n));
         if (ensemble.length === 0) {
             continue;
         }
         for (const target of ensemble) {
-            steps.push({target, ensemble, ensemblePitchClasses});
+            steps.push({target, ensemble, ensemblePitchClasses, scaleType: seg.scaleType});
         }
     }
     if (steps.length === 0) {
         return {prompts: []};
     }
     for (let i = 0; i < settings.promptCount; i++) {
-        const {target, ensemble, ensemblePitchClasses} = steps[i % steps.length]!;
+        const {target, ensemble, ensemblePitchClasses, scaleType} = steps[i % steps.length]!;
         const colorRoll = generator.rangeExclusiveI(0, colorOptions.length);
         prompts.push(
             makeChordScalePrompt(
@@ -1345,6 +1356,9 @@ export function generateScalePrompts(
                     ensembleMidi: ensemble,
                     ensemblePitchClasses,
                     staffFundamentalMapKey: fundKey,
+                    repeatFocusLabel: multiTypePool
+                        ? scalePromptFocusLabel(fundKey, scaleType)
+                        : undefined,
                 },
                 [{kind: "note", note: formatDisplayNote(settings.requireOctave, target)}],
             ),

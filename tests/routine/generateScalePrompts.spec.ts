@@ -1,7 +1,7 @@
 import {expect, test} from "vitest";
 import {generateScalePrompts} from "../../src/routine";
 import {PracticePoolMode, PracticeType, NoteRangeType} from "../../src/routine/types";
-import {MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
+import {DORIAN_SCALE_SET_NAME, MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
@@ -644,6 +644,45 @@ test("Up-Down mode alternates up then down traversal per repetition with separat
         ],
         repeatFocusLabel: "C Major (Ionian) (down)",
     });
+});
+
+test("empty scaleTypes repeat focus defaults to C major (Ionian) only, not the full scale registry", () => {
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 1,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(12347),
+    );
+    expect(generated.repeatFocusLabel).to.equal("C Major (Ionian)");
+});
+
+test("ordered mode with multiple configured scale types sets per-prompt repeatFocusLabel", () => {
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 4,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [MAJOR_SCALE_SET_NAME, DORIAN_SCALE_SET_NAME],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(12347),
+    );
+    expect(generated.prompts.length).toBe(4);
+    for (const p of generated.prompts) {
+        expect(
+            p.repeatFocusLabel === "C Major (Ionian)" || p.repeatFocusLabel === "C Dorian",
+        ).toBe(true);
+    }
 });
 
 test("freePlayInSet uses freePlaySet prompt type for scales", () => {
