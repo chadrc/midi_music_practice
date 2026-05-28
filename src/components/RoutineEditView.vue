@@ -432,7 +432,7 @@ function onPartRowClick(index: number) {
 }
 
 /* Let children of *other* rows ignore pointer events so the <li> receives dragover/drop.
-   Do not apply to the source row: pointer-events:none on the drag handle aborts the drag in Chromium/Electron. */
+   Do not apply to the source row: pointer-events:none on the drag handle aborts the drag in Chromium. */
 .part-list--drag-active .part-list-item:not(.part-list-item--dragging) :deep(*) {
     pointer-events: none;
 }
