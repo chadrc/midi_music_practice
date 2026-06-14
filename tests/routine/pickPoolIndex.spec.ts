@@ -9,6 +9,12 @@ test("Up mode wraps prompt index modulo pool length", () => {
     expect(pickPoolIndex(PracticePoolMode.Up, 3, 4, g)).to.equal(1);
 });
 
+test("Up-Down pool index matches Up (used for Random-mode scale type picks)", () => {
+    const g = new NumberGenerator(0);
+    expect(pickPoolIndex(PracticePoolMode.UpDown, 3, 0, g)).to.equal(0);
+    expect(pickPoolIndex(PracticePoolMode.UpDown, 3, 4, g)).to.equal(1);
+});
+
 test("Down mode reverses pool order with wrap", () => {
     expect(pickPoolIndex(PracticePoolMode.Down, 3, 0, new NumberGenerator(0))).to.equal(2);
 });

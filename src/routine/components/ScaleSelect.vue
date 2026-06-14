@@ -4,14 +4,19 @@ import {CascadeSelect} from "primevue";
 import {
   BaseNotes,
   CHROMATIC_SCALE_SET_NAME,
+  DORIAN_PENTATONIC_SCALE_SET_NAME,
   DORIAN_SCALE_SET_NAME,
+  LOCRIAN_PENTATONIC_SCALE_SET_NAME,
   LOCRIAN_SCALE_SET_NAME,
+  LYDIAN_PENTATONIC_SCALE_SET_NAME,
   LYDIAN_SCALE_SET_NAME,
   MAJOR_PENTATONIC_SCALE_SET_NAME,
   MAJOR_SCALE_SET_NAME,
+  MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME,
   MIXOLYDIAN_SCALE_SET_NAME,
   MINOR_PENTATONIC_SCALE_SET_NAME,
   MINOR_SCALE_SET_NAME,
+  PHRYGIAN_PENTATONIC_SCALE_SET_NAME,
   PHRYGIAN_SCALE_SET_NAME,
   SCALES,
 } from "../../notes/scales";
@@ -66,6 +71,11 @@ function makeScaleOptions() {
     makeScaleOption("Locrian", LOCRIAN_SCALE_SET_NAME, (k) => `${k} Loc.`),
     makeScaleOption("Major Pentatonic", MAJOR_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Maj. Pent.`),
     makeScaleOption("Minor Pentatonic", MINOR_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Min. Pent.`),
+    makeScaleOption("Dorian Pentatonic", DORIAN_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Dor. Pent.`),
+    makeScaleOption("Phrygian Pentatonic", PHRYGIAN_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Phryg. Pent.`),
+    makeScaleOption("Lydian Pentatonic", LYDIAN_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Lyd. Pent.`),
+    makeScaleOption("Mixolydian Pentatonic", MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Mix. Pent.`),
+    makeScaleOption("Locrian Pentatonic", LOCRIAN_PENTATONIC_SCALE_SET_NAME, (k) => `${k} Loc. Pent.`),
   ]
 }
 

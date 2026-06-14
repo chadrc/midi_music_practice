@@ -3,14 +3,19 @@ import type {NumberGenerator} from "../common/NumberGenerator";
 import {CHORD_TYPE_OPTIONS} from "../notes/chords";
 import {
     CHROMATIC_SCALE_SET_NAME,
+    DORIAN_PENTATONIC_SCALE_SET_NAME,
     DORIAN_SCALE_SET_NAME,
+    LOCRIAN_PENTATONIC_SCALE_SET_NAME,
     LOCRIAN_SCALE_SET_NAME,
+    LYDIAN_PENTATONIC_SCALE_SET_NAME,
     LYDIAN_SCALE_SET_NAME,
     MAJOR_PENTATONIC_SCALE_SET_NAME,
     MAJOR_SCALE_SET_NAME,
+    MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME,
     MIXOLYDIAN_SCALE_SET_NAME,
     MINOR_PENTATONIC_SCALE_SET_NAME,
     MINOR_SCALE_SET_NAME,
+    PHRYGIAN_PENTATONIC_SCALE_SET_NAME,
     PHRYGIAN_SCALE_SET_NAME,
 } from "../notes/scales";
 
@@ -29,6 +34,11 @@ export const SCALE_TYPE_OPTIONS = [
     LOCRIAN_SCALE_SET_NAME,
     MAJOR_PENTATONIC_SCALE_SET_NAME,
     MINOR_PENTATONIC_SCALE_SET_NAME,
+    DORIAN_PENTATONIC_SCALE_SET_NAME,
+    PHRYGIAN_PENTATONIC_SCALE_SET_NAME,
+    LYDIAN_PENTATONIC_SCALE_SET_NAME,
+    MIXOLYDIAN_PENTATONIC_SCALE_SET_NAME,
+    LOCRIAN_PENTATONIC_SCALE_SET_NAME,
 ] as const;
 
 export type ScaleTypeId = (typeof SCALE_TYPE_OPTIONS)[number];
@@ -67,6 +77,8 @@ export enum PracticePoolMode {
     Up = "Up",
     Down = "Down",
     Random = "Random",
+    /** Chords/scales: alternate “up then down” traversal each repeat (repetition 0 = up leg, 1 = down, …). */
+    UpDown = "UpDown",
 }
 
 /** Default scientific octave span for chord/scale roots (see {@link formatMidiNote} octaves). */
@@ -86,6 +98,16 @@ export interface RoutineChordsPractice {
     /** Order / traversal of the chord-type pool; default Random. */
     mode: PracticePoolMode;
     /**
+     * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
+     * starting rotation into each chord voicing (low→high MIDI); wraps modulo segment length.
+     */
+    upDownOffsetUp?: number;
+    /**
+     * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
+     * starting rotation into that descending order; wraps modulo segment length.
+     */
+    upDownOffsetDown?: number;
+    /**
      * Scientific octave bounds for chord roots (same numbering as note labels, e.g. “C4” → 4).
      * Defaults to {@link DEFAULT_PRACTICE_OCTAVE_RANGE} when missing.
      */
@@ -100,6 +122,16 @@ export interface RoutineScalesPractice {
     scaleTypes: ScaleTypeId[];
     /** Order / traversal of the scale-type pool; default Random. */
     mode: PracticePoolMode;
+    /**
+     * Ascending traversal ({@link PracticePoolMode.Up}, or “up” leg of {@link PracticePoolMode.UpDown}):
+     * starting scale degree index (0 = first degree in that direction); wraps modulo segment length.
+     */
+    upDownOffsetUp?: number;
+    /**
+     * Descending traversal ({@link PracticePoolMode.Down}, or “down” leg of {@link PracticePoolMode.UpDown}):
+     * starting rotation into the descending degree list for that segment; wraps modulo segment length.
+     */
+    upDownOffsetDown?: number;
     /**
      * Scientific octaves allowed for scale prompts; one octave is chosen at random per prompt
      * (uniform over inclusive start…end).

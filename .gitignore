@@ -93,3 +93,4 @@ typings/
 
 # Vite
 .vite/
+dist/

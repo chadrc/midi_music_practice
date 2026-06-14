@@ -1,31 +1,28 @@
 <script setup lang="ts">
-import {SplitButton, Select} from "primevue";
-import {useRoutineStore} from "../store/routineEdit";
+import {SplitButton} from "primevue";
 import {computed} from "vue";
-import {exists, notEmptyOr} from "../utilities";
-import {useSettingsStore} from "../store/settings";
+import {useRoutineStore} from "../store/routineEdit";
+import {exists} from "../utilities";
 import RoutineSelect from "./RoutineSelect.vue";
 
 const routineStore = useRoutineStore();
-const settingsStore = useSettingsStore();
 
 function onSave() {
   routineStore.saveRoutine();
 }
 
-const routineSelectOptions = computed(() =>
-  routineStore.routines
-      .map(routine => ({
-    name: notEmptyOr(routine.name, "[Unnamed Routine]"),
-    value: routine.id,
-  }))
-)
-
-const actions = [
+const actions = computed(() => [
   {
     label: "Create",
     command: () => {
       routineStore.createRoutine();
+    }
+  },
+  {
+    label: "Clone",
+    disabled: !exists(routineStore.currentEdit),
+    command: () => {
+      routineStore.cloneRoutine();
     }
   },
   {
@@ -34,7 +31,7 @@ const actions = [
       routineStore.deleteRoutine(routineStore.currentRoutine);
     }
   }
-]
+])
 </script>
 
 <template>

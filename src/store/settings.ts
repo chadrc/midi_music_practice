@@ -66,7 +66,7 @@ interface PracticeUiSettings {
     staffAccidentals: StaffAccidentalsMode;
 }
 
-interface SettingsStore {
+export interface SettingsStore {
     noteGrid: NoteGridSettings;
     audio: AudioSettings;
     instruments: InstrumentSettings;
@@ -79,106 +79,46 @@ interface SettingsStore {
 
 export const NONE_VALUE = "none";
 
-export const useSettingsStore = defineStore('settings', {
-    state: (): SettingsStore => {
-        const defaultNoteGrid: NoteGridSettings = {
-            formatted: false
-        }
+/** Merge persisted settings JSON (or export `settings` subtree) into a full store snapshot. */
+export function hydrateSettingsFromStoredBlob(stored: Record<string, unknown> | null): SettingsStore {
+    const defaultNoteGrid: NoteGridSettings = {
+        formatted: false,
+    };
 
-        const defaultAudio: AudioSettings = {
-            instrumentAudioEnabled: false,
-            autoReceiveInstruments: []
-        }
+    const defaultAudio: AudioSettings = {
+        instrumentAudioEnabled: false,
+        autoReceiveInstruments: [],
+    };
 
-        const defaultInstrument: InstrumentSettings = {
-            volume: .5,
-            instrumentData: []
-        }
+    const defaultInstrument: InstrumentSettings = {
+        volume: 0.5,
+        instrumentData: [],
+    };
 
-        const defaultUserRoutine: UserRoutinePartSettings = {
-            name: "",
-            seed: null,
-            targetBPM: 120,
-            noteRange: defaultUserRoutineNoteRange(),
-            practice: defaultPracticeForType(PracticeType.Notes),
-            requireOctave: true,
-            minSuccessVelocity: 20,
-            promptCount: 8,
-            freePlayInSet: false,
-            maxConsecutiveSamePitchSuccess: null,
-        }
+    const defaultUserRoutine: UserRoutinePartSettings = {
+        name: "",
+        seed: null,
+        targetBPM: 120,
+        noteRange: defaultUserRoutineNoteRange(),
+        practice: defaultPracticeForType(PracticeType.Notes),
+        requireOctave: true,
+        minSuccessVelocity: 20,
+        promptCount: 8,
+        freePlayInSet: false,
+        maxConsecutiveSamePitchSuccess: null,
+    };
 
-        const defaultPractice: PracticeSettings = {
-            selectedRoutine: NONE_VALUE,
-            matchPracticeRoutine: true,
-        }
+    const defaultPractice: PracticeSettings = {
+        selectedRoutine: NONE_VALUE,
+        matchPracticeRoutine: true,
+    };
 
-        const defaultPracticeUi: PracticeUiSettings = {
-            promptDisplay: "bubbles",
-            staffAccidentals: "eachNote",
-        };
+    const defaultPracticeUi: PracticeUiSettings = {
+        promptDisplay: "bubbles",
+        staffAccidentals: "eachNote",
+    };
 
-        if (localStorage.getItem('settings')) {
-            const stored = JSON.parse(localStorage.getItem('settings')!);
-            const rawUr = {...defaultUserRoutine, ...stored.userRoutine};
-            let practice = rawUr.practice as UserRoutinePractice | undefined;
-            if (practice != null) {
-                const rawType = practice.type as PracticeType | string;
-                if (typeof rawType === "string") {
-                    practice = {
-                        ...practice,
-                        type: Number.parseInt(rawType, 10) as PracticeType,
-                    } as UserRoutinePractice;
-                }
-            }
-            let hoistedNoteRange: UserRoutineNoteRange | undefined;
-            if (practice && practice.type === PracticeType.Notes && "noteRange" in practice) {
-                const nr = (practice as UserRoutinePractice & {noteRange?: UserRoutineNoteRange}).noteRange;
-                if (nr !== undefined) {
-                    hoistedNoteRange = nr;
-                }
-                practice = {type: PracticeType.Notes} as UserRoutinePractice;
-            }
-            const userRoutine: UserRoutinePartSettings = {
-                name: rawUr.name,
-                seed: rawUr.seed,
-                targetBPM: rawUr.targetBPM,
-                noteRange:
-                    rawUr.noteRange ?? hoistedNoteRange ?? defaultUserRoutineNoteRange(),
-                practice: practice ?? defaultPracticeForType(PracticeType.Notes),
-                requireOctave: rawUr.requireOctave,
-                minSuccessVelocity: rawUr.minSuccessVelocity,
-                promptCount: rawUr.promptCount,
-                freePlayInSet: rawUr.freePlayInSet ?? defaultUserRoutine.freePlayInSet,
-                maxConsecutiveSamePitchSuccess:
-                    rawUr.maxConsecutiveSamePitchSuccess !== undefined
-                        ? rawUr.maxConsecutiveSamePitchSuccess
-                        : defaultUserRoutine.maxConsecutiveSamePitchSuccess,
-            };
-
-            const storedPracticeUi = stored.practiceUi ?? {};
-            const migratedPromptDisplay =
-                storedPracticeUi.promptDisplay === "staff"
-                    ? "bubbles"
-                    : (storedPracticeUi.promptDisplay ?? defaultPracticeUi.promptDisplay);
-            const practiceUi: PracticeUiSettings = {
-                ...defaultPracticeUi,
-                ...storedPracticeUi,
-                promptDisplay: migratedPromptDisplay as PromptDisplayMode,
-            };
-
-            return {
-                noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
-                audio: Object.assign(defaultAudio, stored.audio),
-                instruments: Object.assign(defaultInstrument, stored.instruments),
-                userRoutine,
-                practice: Object.assign(defaultPractice, stored.practice),
-                practiceUi,
-                referenceView: mergeStoredReferenceView(stored.referenceView),
-                referencePresets: mergeStoredReferencePresets(stored.referencePresets),
-            }
-        }
-
+    if (!stored) {
         return {
             noteGrid: defaultNoteGrid,
             audio: defaultAudio,
@@ -188,7 +128,76 @@ export const useSettingsStore = defineStore('settings', {
             practiceUi: defaultPracticeUi,
             referenceView: defaultReferenceViewSettings(),
             referencePresets: [],
+        };
+    }
+
+    const rawUr = {...defaultUserRoutine, ...stored.userRoutine as object};
+    let practice = rawUr.practice as UserRoutinePractice | undefined;
+    if (practice != null) {
+        const rawType = practice.type as PracticeType | string;
+        if (typeof rawType === "string") {
+            practice = {
+                ...practice,
+                type: Number.parseInt(rawType, 10) as PracticeType,
+            } as UserRoutinePractice;
         }
+    }
+    let hoistedNoteRange: UserRoutineNoteRange | undefined;
+    if (practice && practice.type === PracticeType.Notes && "noteRange" in practice) {
+        const nr = (practice as UserRoutinePractice & {noteRange?: UserRoutineNoteRange}).noteRange;
+        if (nr !== undefined) {
+            hoistedNoteRange = nr;
+        }
+        practice = {type: PracticeType.Notes} as UserRoutinePractice;
+    }
+    const userRoutine: UserRoutinePartSettings = {
+        name: rawUr.name,
+        seed: rawUr.seed,
+        targetBPM: rawUr.targetBPM,
+        noteRange:
+            rawUr.noteRange ?? hoistedNoteRange ?? defaultUserRoutineNoteRange(),
+        practice: practice ?? defaultPracticeForType(PracticeType.Notes),
+        requireOctave: rawUr.requireOctave,
+        minSuccessVelocity: rawUr.minSuccessVelocity,
+        promptCount: rawUr.promptCount,
+        freePlayInSet: rawUr.freePlayInSet ?? defaultUserRoutine.freePlayInSet,
+        maxConsecutiveSamePitchSuccess:
+            rawUr.maxConsecutiveSamePitchSuccess !== undefined
+                ? rawUr.maxConsecutiveSamePitchSuccess
+                : defaultUserRoutine.maxConsecutiveSamePitchSuccess,
+    };
+
+    const storedPracticeUi = (stored.practiceUi ?? {}) as Record<string, unknown>;
+    const migratedPromptDisplay =
+        storedPracticeUi.promptDisplay === "staff"
+            ? "bubbles"
+            : ((storedPracticeUi.promptDisplay as PromptDisplayMode | undefined)
+                ?? defaultPracticeUi.promptDisplay);
+    const practiceUi: PracticeUiSettings = {
+        ...defaultPracticeUi,
+        ...(stored.practiceUi as Partial<PracticeUiSettings>),
+        promptDisplay: migratedPromptDisplay,
+    };
+
+    return {
+        noteGrid: Object.assign(defaultNoteGrid, stored.noteGrid),
+        audio: Object.assign(defaultAudio, stored.audio),
+        instruments: Object.assign(defaultInstrument, stored.instruments),
+        userRoutine,
+        practice: Object.assign(defaultPractice, stored.practice),
+        practiceUi,
+        referenceView: mergeStoredReferenceView(stored.referenceView),
+        referencePresets: mergeStoredReferencePresets(stored.referencePresets),
+    };
+}
+
+export const useSettingsStore = defineStore('settings', {
+    state: (): SettingsStore => {
+        if (localStorage.getItem("settings")) {
+            const stored = JSON.parse(localStorage.getItem("settings")!) as Record<string, unknown>;
+            return hydrateSettingsFromStoredBlob(stored);
+        }
+        return hydrateSettingsFromStoredBlob(null);
     },
     getters: {
         noteScale(state) {
@@ -220,6 +229,9 @@ export const useSettingsStore = defineStore('settings', {
         },
     },
     actions: {
+        applyImportedSettingsSnapshot(snapshot: SettingsStore) {
+            this.$patch(snapshot);
+        },
         toggleAutoReceiveInstrument(deviceId: string) {
             const index = this.audio.autoReceiveInstruments
                 .findIndex((id: string) => id === deviceId)

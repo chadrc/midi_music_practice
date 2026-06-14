@@ -26,7 +26,7 @@ function makeDefaultRoutinePartSettings(): RoutinePartSettings {
     }
 }
 
-function normalizeRoutinesFromStorage(list: RoutineSettings[]): void {
+export function normalizeRoutinesFromStorage(list: RoutineSettings[]): void {
     for (const routine of list) {
         if (!Array.isArray(routine.parts)) {
             continue;
@@ -74,6 +74,23 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         selectedPartIndex.value = 0;
     }
 
+    function cloneRoutine() {
+        const src = currentEdit.value;
+        if (!src) {
+            return;
+        }
+        const copy = JSON.parse(JSON.stringify(src)) as RoutineSettings;
+        copy.id = window.crypto.randomUUID();
+        copy.appVersion = "[unset]";
+        copy.schemaVersion = ROUTINE_SCHEMA_VERSION;
+        const baseName = src.name.trim();
+        copy.name = baseName ? `${baseName} (copy)` : "Copy";
+        routines.value.push(copy);
+        settingsStore.practice.selectedRoutine = copy.id;
+        selectedPartIndex.value = 0;
+        saveRoutine();
+    }
+
     function addNewPart() {
         currentEdit.value!.parts.push(makeDefaultRoutinePartSettings());
     }
@@ -81,6 +98,23 @@ export const useRoutineStore = defineStore('routineEdit', () => {
     function addPartAndSelect() {
         addNewPart();
         selectedPartIndex.value = currentEdit.value!.parts.length - 1;
+    }
+
+    function clonePartAndSelect() {
+        const edit = currentEdit.value;
+        if (!edit) {
+            return;
+        }
+        const idx = selectedPartIndex.value;
+        const src = edit.parts[idx];
+        if (!src) {
+            return;
+        }
+        const copy = JSON.parse(JSON.stringify(src)) as RoutinePartSettings;
+        const baseName = (copy.name ?? "").trim();
+        copy.name = baseName ? `${baseName} (copy)` : "Copy";
+        edit.parts.splice(idx + 1, 0, copy);
+        selectedPartIndex.value = idx + 1;
     }
 
     function selectPart(index: number) {
@@ -137,6 +171,21 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         }
     }
 
+    /**
+     * Replace in-memory and persisted routines from an import. Normalizes parts; does not validate schema beyond array shape.
+     */
+    function applyImportedRoutines(imported: RoutineSettings[]) {
+        const copy = JSON.parse(JSON.stringify(imported)) as RoutineSettings[];
+        normalizeRoutinesFromStorage(copy);
+        routines.value = copy;
+        localStorage.setItem(ROUTINES_LOCAL_STORAGE_KEY, JSON.stringify(copy));
+        const selected = settingsStore.practice.selectedRoutine;
+        if (!copy.some((r) => r.id === selected)) {
+            settingsStore.practice.selectedRoutine = copy[0]?.id ?? NONE_VALUE;
+        }
+        selectedPartIndex.value = 0;
+    }
+
     function getSavedRoutines(): RoutineSettings[] {
         const stored = localStorage.getItem(ROUTINES_LOCAL_STORAGE_KEY);
         if (exists(stored)) {
@@ -183,10 +232,13 @@ export const useRoutineStore = defineStore('routineEdit', () => {
         currentEdit,
         savedRoutines,
         createRoutine,
+        cloneRoutine,
         saveRoutine,
         deleteRoutine,
+        applyImportedRoutines,
         removeStep,
         addPartAndSelect,
+        clonePartAndSelect,
         selectPart,
         movePart,
     }

@@ -184,11 +184,13 @@ function updateNoteRange(range: number[]) {
               v-if="currentSettings.practice.type === PracticeType.Chords"
               v-model="currentSettings.practice"
               kind="chords"
+              :note-range="currentSettings.noteRange"
             />
             <PracticeItemsEditor
               v-else-if="currentSettings.practice.type === PracticeType.Scales"
               v-model="currentSettings.practice"
               kind="scales"
+              :note-range="currentSettings.noteRange"
             />
           </div>
           <div class="instrument-option">

@@ -1,7 +1,7 @@
 import {expect, test} from "vitest";
 import {generateScalePrompts} from "../../src/routine";
 import {PracticePoolMode, PracticeType, NoteRangeType} from "../../src/routine/types";
-import {MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
+import {DORIAN_SCALE_SET_NAME, MAJOR_SCALE_SET_NAME} from "../../src/notes/scales";
 import {NumberGenerator} from "../../src/common/NumberGenerator";
 import {minimalBakedPart} from "./fixtures";
 
@@ -10,6 +10,10 @@ const cIonian4 = [60, 62, 64, 65, 67, 69, 71];
 /** Descending pitch in nominal octave (Down mode). */
 const cIonian4Desc = [71, 69, 67, 65, 64, 62, 60];
 const cIonianDegreePC = [0, 2, 4, 5, 7, 9, 11];
+/** Offset 2 on C Ionian octave 4 ascending traversal (shared by Up with offset and Up-Down “up”). */
+const cMajorUpDownRotAsc4 = [64, 65, 67, 69, 71, 60, 62];
+/** Offset 2 on descending traversal for same segment. */
+const cMajorUpDownRotDesc4 = [67, 65, 64, 62, 60, 71, 69];
 
 test("emits scale prompts with one note each for fixed seed", () => {
     const generated = generateScalePrompts(
@@ -387,6 +391,298 @@ test("Down mode walks from highest part octave, degrees descending in pitch", ()
         ],
         repeatFocusLabel: "C Major (Ionian)",
     });
+});
+
+test("Up mode applies upDownOffsetUp to ascending traversal", () => {
+    expect(
+        generateScalePrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Scales,
+                    baseNote: "C",
+                    scaleTypes: [MAJOR_SCALE_SET_NAME],
+                    mode: PracticePoolMode.Up,
+                    upDownOffsetUp: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [64],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [67],
+                color: "cyan",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
+});
+
+test("Down mode applies upDownOffsetDown to descending traversal", () => {
+    expect(
+        generateScalePrompts(
+            minimalBakedPart({
+                promptCount: 3,
+                practice: {
+                    type: PracticeType.Scales,
+                    baseNote: "C",
+                    scaleTypes: [MAJOR_SCALE_SET_NAME],
+                    mode: PracticePoolMode.Down,
+                    upDownOffsetDown: 2,
+                    octaveRange: {start: 4, end: 4},
+                },
+            }),
+            new NumberGenerator(12347),
+        ),
+    ).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [67],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "cyan",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian)",
+    });
+});
+
+test("Up-Down mode alternates up then down traversal per repetition with separate offsets", () => {
+    const baked = minimalBakedPart({
+        promptCount: 7,
+        practice: {
+            type: PracticeType.Scales,
+            baseNote: "C",
+            scaleTypes: [MAJOR_SCALE_SET_NAME],
+            mode: PracticePoolMode.UpDown,
+            upDownOffsetUp: 2,
+            upDownOffsetDown: 2,
+            octaveRange: {start: 4, end: 4},
+        },
+    });
+    const gen = new NumberGenerator(12347);
+    expect(generateScalePrompts(baked, gen, 0)).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [64],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [67],
+                color: "cyan",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 3,
+                notes: [69],
+                color: "pink",
+                displays: [{kind: "note", note: "A4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 4,
+                notes: [71],
+                color: "slate",
+                displays: [{kind: "note", note: "B4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 5,
+                notes: [60],
+                color: "teal",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 6,
+                notes: [62],
+                color: "amber",
+                displays: [{kind: "note", note: "D4"}],
+                ensembleMidi: cMajorUpDownRotAsc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian) (up)",
+    });
+    gen.reset();
+    expect(generateScalePrompts(baked, gen, 1)).to.deep.equal({
+        prompts: [
+            {
+                index: 0,
+                notes: [67],
+                color: "fuchsia",
+                displays: [{kind: "note", note: "G4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 1,
+                notes: [65],
+                color: "amber",
+                displays: [{kind: "note", note: "F4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 2,
+                notes: [64],
+                color: "cyan",
+                displays: [{kind: "note", note: "E4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 3,
+                notes: [62],
+                color: "pink",
+                displays: [{kind: "note", note: "D4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 4,
+                notes: [60],
+                color: "slate",
+                displays: [{kind: "note", note: "C4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 5,
+                notes: [71],
+                color: "teal",
+                displays: [{kind: "note", note: "B4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+            {
+                index: 6,
+                notes: [69],
+                color: "amber",
+                displays: [{kind: "note", note: "A4"}],
+                ensembleMidi: cMajorUpDownRotDesc4,
+                ensemblePitchClasses: cIonianDegreePC,
+                staffFundamentalMapKey: "C",
+            },
+        ],
+        repeatFocusLabel: "C Major (Ionian) (down)",
+    });
+});
+
+test("empty scaleTypes repeat focus defaults to C major (Ionian) only, not the full scale registry", () => {
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 1,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(12347),
+    );
+    expect(generated.repeatFocusLabel).to.equal("C Major (Ionian)");
+});
+
+test("ordered mode with multiple configured scale types sets per-prompt repeatFocusLabel", () => {
+    const generated = generateScalePrompts(
+        minimalBakedPart({
+            promptCount: 4,
+            practice: {
+                type: PracticeType.Scales,
+                baseNote: "C",
+                scaleTypes: [MAJOR_SCALE_SET_NAME, DORIAN_SCALE_SET_NAME],
+                mode: PracticePoolMode.Up,
+                octaveRange: {start: 4, end: 4},
+            },
+        }),
+        new NumberGenerator(12347),
+    );
+    expect(generated.prompts.length).toBe(4);
+    for (const p of generated.prompts) {
+        expect(
+            p.repeatFocusLabel === "C Major (Ionian)" || p.repeatFocusLabel === "C Dorian",
+        ).toBe(true);
+    }
 });
 
 test("freePlayInSet uses freePlaySet prompt type for scales", () => {

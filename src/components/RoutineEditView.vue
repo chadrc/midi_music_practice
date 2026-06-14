@@ -231,18 +231,32 @@ function onPartRowClick(index: number) {
             />
           </li>
         </ul>
-        <Button
-          type="button"
-          icon="pi pi-plus"
-          rounded
-          size="small"
-          severity="secondary"
-          aria-label="Add part"
-          class="add-part-button"
-          draggable="false"
-          @dragstart.prevent
-          @click="routineEditStore.addPartAndSelect"
-        />
+        <div class="part-list-actions">
+          <Button
+            type="button"
+            icon="pi pi-copy"
+            rounded
+            size="small"
+            severity="secondary"
+            aria-label="Clone part"
+            class="part-action-button"
+            draggable="false"
+            @dragstart.prevent
+            @click="routineEditStore.clonePartAndSelect"
+          />
+          <Button
+            type="button"
+            icon="pi pi-plus"
+            rounded
+            size="small"
+            severity="secondary"
+            aria-label="Add part"
+            class="part-action-button"
+            draggable="false"
+            @dragstart.prevent
+            @click="routineEditStore.addPartAndSelect"
+          />
+        </div>
       </div>
     </div>
   </section>
@@ -363,6 +377,7 @@ function onPartRowClick(index: number) {
             v-model="selectedPart.practice"
             :can-set="false"
             :component="RoutinePartPracticeEditor"
+            :component-props="{noteRange: selectedPart.noteRange}"
           />
         </div>
       </div>
@@ -427,7 +442,7 @@ function onPartRowClick(index: number) {
     align-items: stretch;
     gap: 0.5rem;
     flex: 0 1 auto;
-    max-width: calc(100% - 3rem);
+    max-width: calc(100% - 6rem);
     min-width: 0;
 }
 
@@ -497,7 +512,15 @@ function onPartRowClick(index: number) {
     margin: -0.25rem -0.35rem -0.25rem 0;
 }
 
-.add-part-button {
+.part-list-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.part-action-button {
     flex-shrink: 0;
     width: 2.5rem;
     height: 2.5rem;
